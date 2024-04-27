@@ -49,7 +49,7 @@ class Config private constructor() {
         "report.poi.deprecated" to true,
         "report.poi.custom_scalars" to true,
         "report.poi.custom_keywords" to "",
-        "logging.level" to "WARN",
+        "logging.level" to "DEBUG",
         "proxy.highlight_enabled" to true,
         "proxy.highlight_color" to HighlightColor.BLUE.displayName(),
         "editor.formatting.enabled" to true,

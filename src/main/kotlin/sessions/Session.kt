@@ -12,19 +12,16 @@ import java.util.*
 
 class Session(val name: String, val id: String = UUID.randomUUID().toString()) : SavesDataToProject {
     companion object {
-        val EXCLUDED_HEADERS = setOf<String>(
+        val INCLUDED_HEADERS = setOf<String>(
             // Keep these lowercase
-            "connection",
-            "host",
-            "content-type",
-            "content-length",
-            "content-encoding",
-            "accept",
-            "accept-language",
-            "accept-encoding",
-            "cache-control",
-            "origin"
+            "authorization",
+            "cookie",
+            "x-"
         )
+
+        fun isValidName(name: String): Boolean {
+            return name.isNotEmpty() && !name.contains(Regex("[^A-Za-z0-9._-]"))
+        }
     }
 
     class Deserializer(key: String) : DeserializerFactory<Session>(key) {
@@ -42,7 +39,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
 
     val customHeaders: MutableMap<String, String> = LinkedHashMap<String, String>()
 
-    fun overwrite(headers: Map<String, String>) {
+    private fun overwrite(headers: Map<String, String>) {
         this.customHeaders.clear()
         this.customHeaders.putAll(headers)
         this.saveToProjectFileAsync()
@@ -76,15 +73,15 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         return r.withUpsertedHeaders(this.customHeaders)
     }
 
-    fun loadFromRequest(r: HttpRequest) {
+    fun loadFromRequestFiltered(r: HttpRequest) {
         val reqHeaders = r.headers().associate { header -> header.name() to header.value() }
-        val defaultHeaders = HttpRequest.httpRequest().withDefaultHeaders().headers()
-            .associate { header -> header.name().lowercase() to header.value() }
         // Keep the header from the request if it's not a default one OR the value is different from the default
-        val custom =
-            reqHeaders
-                .filter { (!defaultHeaders.containsKey(it.key.lowercase())) || (defaultHeaders.containsKey(it.key.lowercase()) && defaultHeaders[it.key] != it.value) }
-                .filter { !EXCLUDED_HEADERS.contains(it.key.lowercase())  }
+        val custom = reqHeaders.filter { (rh, _) -> INCLUDED_HEADERS.any { h -> rh.lowercase().startsWith(h) }  }
         this.overwrite(custom)
+    }
+
+    fun loadFromRequestAll(r: HttpRequest) {
+        val reqHeaders = r.headers().associate { header -> header.name() to header.value() }
+        this.overwrite(reqHeaders)
     }
 }
