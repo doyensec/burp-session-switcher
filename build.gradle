@@ -22,8 +22,6 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
     implementation 'org.apache.commons:commons-text:1.10.0'
     implementation 'commons-codec:commons-codec:1.16.0'
-    implementation 'io.ktor:ktor-server-core:2.3.4'
-    implementation 'io.ktor:ktor-server-netty:2.3.4'
 }
 
 java {
@@ -81,6 +79,7 @@ defaultTasks "build"
 jar {
     manifest {
         attributes('Class-Path': configurations.compileClasspath.collect { it.getName() }.join(' '))
+        archiveFileName = 'BurpSessions.jar'
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     destinationDirectory = rootDir
