@@ -58,6 +58,23 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
     private var originalRequest: HttpRequest? = null
     private var modified: Boolean = false
     private var isUpdating: Boolean = false
+    private var _isEdited: Boolean = false
+    private var isEdited: Boolean
+        get() = _isEdited
+        set(v) {
+            if (v == _isEdited) return
+            if (isUpdating) return
+            _isEdited = v
+            if (v) {
+                this.saveSessionBtn.isEnabled = true
+                val name = this.sessionNameLabel.text
+                this.sessionNameLabel.text = "$name (Modified)"
+            } else {
+                val selected = this.selectedSession
+                this.sessionNameLabel.text = selected?.name ?: "None"
+                this.saveSessionBtn.isEnabled = false
+            }
+        }
     private var _selectedSession: Session? = null
     private var selectedSession: Session?
         get() = this._selectedSession
@@ -81,7 +98,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
                 this.modified = false
             }
             this.updateEditor()
-            this.saveSessionBtn.isEnabled = false // Must be after editor update
+            this.isEdited = false // Must be placed after editor update
         }
     // END State-holding stuff
 
@@ -95,7 +112,6 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
     private fun updateSessionsList() {
         this.sessionsComboBox.removeAllItems()
         this.sessionsComboBox.addItem(SESSION_NONE)
-        this.sessionsComboBox.toolTipText = "Select a session"
         this.plugin.getSessions().forEach { this.sessionsComboBox.addItem(it) }
     }
 
@@ -107,7 +123,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
 
     private fun saveToSessionFromEditor() {
         // TODO: implement
-        this.saveSessionBtn.isEnabled = false
+        this.isEdited = false
     }
 
     class EditorChangeListener(val callback: () -> Unit) : DocumentListener {
@@ -146,7 +162,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
 
                 this.selectedSession = null
                 this.deleteSessionBtn.isEnabled = false
-                this.saveSessionBtn.isEnabled = false
+                this.isEdited = false
             }
 
             else -> {
@@ -185,6 +201,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
         it.maximumSize = it.preferredSize
         it.minimumSize = Dimension(300, it.preferredSize.height)
         it.preferredSize = Dimension(300, it.preferredSize.height)
+        it.toolTipText = "Select a session"
         it.addActionListener { this.selectedSessionChanged() }
     }
     private val newSessionBtn = JButton("New").also {
@@ -204,6 +221,10 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
         it.addActionListener {
             this.saveToSessionFromEditor()
         }
+    }
+
+    private fun editorChangeHandler() {
+        this.isEdited = true
     }
 
     // End UI Stuff
@@ -241,7 +262,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
         this.component.add(BorderLayout.PAGE_START, BorderPanel(10).also { it.add(rootContainer) })
         this.component.add(BorderLayout.CENTER, this.editor.uiComponent())
 
-        val listener = EditorChangeListener { this.saveSessionBtn.isEnabled = true }
+        val listener = EditorChangeListener { this.editorChangeHandler() }
         val jt = this.editor.getTextAreaComponent()
         jt.document.addDocumentListener(listener)
     }
@@ -253,10 +274,13 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
         this.isUpdating = true
         val selectedItem = this.sessionsComboBox.selectedItem
         this.updateSessionsList()
-        this.sessionsComboBox.selectedItem = selectedItem
+        if (selectedItem != null) {
+            this.sessionsComboBox.toolTipText = "Select a session"
+        }
+        Logger.debug("SELECTED ITEM: " + ((selectedItem as Session?)?.name ?: "null"))
         this.isUpdating = false
         this.updateEditor()
-        this.saveSessionBtn.isEnabled = false
+        this.isEdited = false
     }
 
     override fun isEnabledFor(requestResponse: HttpRequestResponse): Boolean = true
