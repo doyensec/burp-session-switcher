@@ -25,7 +25,7 @@ class BurpSessions : TabbedPane(), SavesAndLoadData {
     init {
         Burp.Montoya.logging().raiseInfoEvent("BurpSession ${BurpExtender.version} Started")
 
-        val logLevel = config.getString("logging.level") ?: "DEBUG"
+        val logLevel = config.getString("logging.level") ?: "INFO"
         Logger.setLevel(logLevel)
 
 
