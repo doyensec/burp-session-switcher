@@ -9,6 +9,10 @@ class Settings private constructor() {
         private lateinit var instance: Settings
         lateinit var globalStore: Preferences
         lateinit var projectStore: PersistedObject
+        private val registeredSettings = ArrayList<SettingsItem<out Any>>()
+        fun registerSettingItem(item: SettingsItem<out Any>) {
+            this.registeredSettings.add(item)
+        }
         fun getInstance(): Settings {
             if (this::instance.isInitialized) return instance
             globalStore = Burp.Montoya.persistence().preferences()
@@ -18,14 +22,8 @@ class Settings private constructor() {
         }
     }
 
-    private val registeredSettings = ArrayList<SettingsItem<out Any>>()
-    fun registerSettingItem(item: SettingsItem<out Any>) {
-        this.registeredSettings.add(item)
-    }
-
     // SETTINGS
     public val loggingLevel = StringSetting("logging.level", "Logging level", "INFO")
     public val proxyHighlightInjectedColor = StringSetting("proxy.highlight_injected_color", "Highlight color of injected requests", "yellow")
-
 
 }

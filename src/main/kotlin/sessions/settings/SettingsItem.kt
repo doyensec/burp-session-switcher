@@ -75,7 +75,7 @@ abstract class SettingsItem<T>(val key: String, val description: String, val def
 
 class BooleanSetting(key: String, description: String, default: Boolean): SettingsItem<Boolean>(key, description, default) {
     init {
-        Settings.getInstance().registerSettingItem(this)
+        Settings.registerSettingItem(this)
     }
     override fun getType(): String = "Boolean"
     override fun _getProjectStore(key: String): Boolean? = this.projectStore.getBoolean(key)
@@ -86,7 +86,7 @@ class BooleanSetting(key: String, description: String, default: Boolean): Settin
 
 class IntSetting(key: String, description: String, default: Int): SettingsItem<Int>(key, description, default) {
     init {
-        Settings.getInstance().registerSettingItem(this)
+        Settings.registerSettingItem(this)
     }
     override fun getType(): String = "Int"
     override fun _getProjectStore(key: String): Int? = this.projectStore.getInteger(key)
@@ -97,7 +97,7 @@ class IntSetting(key: String, description: String, default: Int): SettingsItem<I
 
 class StringSetting(key: String, description: String, default: String): SettingsItem<String>(key, description, default) {
     init {
-        Settings.getInstance().registerSettingItem(this)
+        Settings.registerSettingItem(this)
     }
     override fun getType(): String = "String"
     override fun _getProjectStore(key: String): String? = this.projectStore.getString(key)
