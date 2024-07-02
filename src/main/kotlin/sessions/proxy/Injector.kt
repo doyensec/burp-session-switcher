@@ -7,9 +7,9 @@ import burp.api.montoya.proxy.http.ProxyRequestHandler
 import burp.api.montoya.proxy.http.ProxyRequestReceivedAction
 import burp.api.montoya.proxy.http.ProxyRequestToBeSentAction
 import sessions.BurpSessions
-import sessions.Config
 import sessions.Logger
 import sessions.Session
+import sessions.settings.Settings
 import sessions.utils.get
 import sessions.utils.withUpsertedHeader
 
@@ -27,7 +27,7 @@ class Injector(private val plugin: BurpSessions): ProxyRequestHandler {
             return newReq
         }
     }
-    private val color: HighlightColor = HighlightColor.highlightColor(Config.getInstance().getString("proxy.highlight_color"))
+    private val color: HighlightColor = HighlightColor.highlightColor(Settings.getInstance().proxyHighlightInjectedColor.get())
 
 
     // Part of ProxyRequestHandler interface, executed first on every request coming through Burp's Proxy tool

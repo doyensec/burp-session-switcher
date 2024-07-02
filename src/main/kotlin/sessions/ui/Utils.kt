@@ -92,7 +92,7 @@ open class Input<out T : JComponent>(val component: T, val description: String =
     }
 }
 
-class CheckBox(description: String, selected: Boolean = false, disabled: Boolean = false) :
+open class CheckBox(description: String, selected: Boolean = false, disabled: Boolean = false) :
     Input<JCheckBox>(JCheckBox(description, selected), "") {
     init {
         this.component.isEnabled = !disabled
@@ -106,7 +106,7 @@ class CheckBox(description: String, selected: Boolean = false, disabled: Boolean
     fun addItemListener(il: ItemListener) = this.component.addItemListener(il)
 }
 
-class ComboBox(description: String, vararg items: String) :
+open class ComboBox(description: String, vararg items: String) :
     Input<JComboBox<String>>(JComboBox<String>(items), description) {
 
     fun getSelectedItem(): String = this.component.selectedItem as String
@@ -122,7 +122,7 @@ class ComboBox(description: String, vararg items: String) :
     fun addItemListener(il: ItemListener) = this.component.addItemListener(il)
 }
 
-class Spinner(description: String, min: Int, val max: Int, val step: Int = 1) :
+open class Spinner(description: String, min: Int, val max: Int, val step: Int = 1) :
     Input<JSpinner>(JSpinner(SpinnerNumberModel(min, min, max, step)), description) {
 
     fun getValue(): Int = this.component.value as Int
@@ -133,7 +133,7 @@ class Spinner(description: String, min: Int, val max: Int, val step: Int = 1) :
     fun addChangeListener(cl: ChangeListener) = this.component.addChangeListener(cl)
 }
 
-class TextField(description: String, val columns: Int = 20) :
+open class TextField(description: String, val columns: Int = 20) :
     Input<JTextField>(JTextField(columns), description) {
 
     var changeListener: (() -> Unit)? = null
@@ -159,7 +159,7 @@ class TextField(description: String, val columns: Int = 20) :
     }
 }
 
-class TextArea(description: String, val rows: Int, val cols: Int) :
+open class TextArea(description: String, val rows: Int, val cols: Int) :
     FlowPanel(FlowLayout.LEFT, gap = 5) {
 
     val component = JTextArea(rows, cols)

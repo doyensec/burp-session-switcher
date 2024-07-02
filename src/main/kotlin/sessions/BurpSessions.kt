@@ -8,9 +8,10 @@ import kotlinx.coroutines.runBlocking
 import sessions.savestate.SavesAndLoadData
 import sessions.savestate.SavesDataToProject
 import sessions.savestate.getSaveStateKeys
+import sessions.settings.Settings
+import sessions.settings.SettingsWindow
 import sessions.ui.EditorSwitcher
 import sessions.ui.ImgButton
-import sessions.ui.SettingsWindow
 import sessions.ui.TabbedPane
 import java.awt.Component
 import javax.swing.JPanel
@@ -19,13 +20,13 @@ import javax.swing.SwingUtilities
 
 class BurpSessions : TabbedPane(), SavesAndLoadData {
 
-    private val config = Config.getInstance()
+    public val settings = Settings.getInstance()
     private val sessions = LinkedHashMap<String, Session>()
 
     init {
         Burp.Montoya.logging().raiseInfoEvent("BurpSession ${BurpExtender.version} Started")
 
-        val logLevel = config.getString("logging.level") ?: "INFO"
+        val logLevel = settings.loggingLevel.get()
         Logger.setLevel(logLevel)
 
 
