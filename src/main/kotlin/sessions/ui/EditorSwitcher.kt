@@ -83,6 +83,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
 
     // Session stuff
 
+    private val contextMenu = EditorSendRequestFromPluginHandler(this)
     private fun updateEditorFromRequest() {
         // TODO: strip unwanted headers maybe?
         this.editor.contents = httpRequest?.toByteArray() ?: ByteArray.byteArray("")
@@ -235,6 +236,10 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
         val listener = EditorChangeListener { this.editorChangeHandler() }
         val jt = this.editor.getTextAreaComponent()
         jt.document.addDocumentListener(listener)
+
+        // Add context menu handler
+        this.contextMenu.addRightClickHandler(this.editor.getTextAreaComponent())
+        this.contextMenu.addKeyboardShortcutHandler(this.editor.getTextAreaComponent())
     }
 
     override fun setRequestResponse(requestResponse: HttpRequestResponse) {
@@ -259,5 +264,11 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
 
     override fun isModified(): Boolean = this.originalRequestModified
 
-    override fun getRequest(): HttpRequest? = this._request ?: HttpRequest.httpRequest()
+    override fun getRequest(): HttpRequest = this._request ?: HttpRequest.httpRequest()
+
+    class EditorSendRequestFromPluginHandler(val editor: EditorSwitcher) : SendFromPluginHandler(editor.plugin) {
+        override fun getRequest(): HttpRequest {
+            return editor.request
+        }
+    }
 }

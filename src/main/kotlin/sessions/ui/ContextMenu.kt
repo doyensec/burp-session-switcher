@@ -27,7 +27,7 @@ open class MenuAction(val name: String, val keyStroke: KeyStroke?, val action: (
     This class is also extended below from SendToInqlHandler which instead provides the Extension Context Menu "InQL >" for
     Burp's standard context menu in other Burp tools (Scanner, Proxy, etc).
  */
-abstract class SendFromInqlHandler(val inql: BurpSessions, val includeInqlScanner: Boolean = false) : MouseAdapter() {
+abstract class SendFromPluginHandler(val plugin: BurpSessions) : MouseAdapter() {
     private val popup = JPopupMenu()
 
     // ===== Actions associated with Menu Items
@@ -45,26 +45,16 @@ abstract class SendFromInqlHandler(val inql: BurpSessions, val includeInqlScanne
         this.sendRequestToRepeater()
     }
 
-    protected val saveToFileAction = MenuAction("Save to file", null) {
-        val filechooser = JFileChooser()
-        if (filechooser.showSaveDialog(Burp.Montoya.userInterface().swingUtils().suiteFrame()) == JFileChooser.APPROVE_OPTION) {
-            val file = filechooser.selectedFile
-            file.writeText(this.getText())
-        }
-    }
-
-
     /* The following list is currently used for:
      - Enable/Disable (grey-out) context menu items when the user
         right-clicks something that is not actually a GraphQL item, e.g. a point of interest in the scanner results.
      - Provide Keyboard Shortcuts (CTRL+R, CTRL+I, etc)
      */
-    protected val sendFromInqlActions = mutableListOf<MenuAction>(
+    protected val sendFromPluginActions = mutableListOf<MenuAction>(
         sendToIntruderAction,
         sendToRepeaterAction,
     )
     abstract fun getRequest(): HttpRequest?
-    abstract fun getText(): String
     override fun mousePressed(e: MouseEvent) {
         if (e.button == MouseEvent.BUTTON3) {    // Right Click only
             this.setContextActions()
@@ -80,22 +70,6 @@ abstract class SendFromInqlHandler(val inql: BurpSessions, val includeInqlScanne
 
         this.popup.add(this.sendToIntruderAction)
         this.popup.add(this.sendToRepeaterAction)
-        this.popup.addSeparator()
-
-
-        /*
-
-
-        if (embeddedActions.isNotEmpty()) {
-            this.popup.addSeparator()
-
-            for (action in embeddedActions) {
-                this.popup.add(action)
-            }
-        }
-     */
-        this.popup.addSeparator()
-        this.popup.add(this.saveToFileAction)
     }
 
     // ===== Convenience methods for the actions
@@ -109,7 +83,7 @@ abstract class SendFromInqlHandler(val inql: BurpSessions, val includeInqlScanne
 
 
     fun setEnabled(enabled: Boolean) {
-        this.sendFromInqlActions.forEach {
+        this.sendFromPluginActions.forEach {
             it.isEnabled = enabled
         }
     }
@@ -119,7 +93,7 @@ abstract class SendFromInqlHandler(val inql: BurpSessions, val includeInqlScanne
     }
 
     fun addKeyboardShortcutHandler(c: JComponent) {
-        for (action in this.sendFromInqlActions) {
+        for (action in this.sendFromPluginActions) {
             if (action.keyStroke == null) continue
             c.inputMap.put(action.keyStroke, action.name)
             c.actionMap.put(action.name, action)
@@ -127,7 +101,7 @@ abstract class SendFromInqlHandler(val inql: BurpSessions, val includeInqlScanne
     }
 }
 
-class SendToInqlHandler(inql: BurpSessions) : SendFromInqlHandler(inql), ContextMenuItemsProvider {
+class SendToPluginHandler(inql: BurpSessions) : SendFromPluginHandler(inql), ContextMenuItemsProvider {
     class BurpMenuItem(action: MenuAction) : JMenuItem(action.name) {
         init {
             this.addActionListener {
@@ -177,9 +151,5 @@ class SendToInqlHandler(inql: BurpSessions) : SendFromInqlHandler(inql), Context
 
     override fun getRequest(): HttpRequest? {
         return this.request
-    }
-
-    override fun getText(): String {
-        return this.request.toString()
     }
 }
