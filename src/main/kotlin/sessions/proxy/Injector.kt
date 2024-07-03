@@ -10,7 +10,7 @@ import sessions.BurpSessions
 import sessions.Logger
 import sessions.Session
 import sessions.settings.Settings
-import sessions.utils.get
+import sessions.utils.getHeader
 import sessions.utils.withUpsertedHeader
 
 class Injector(private val plugin: BurpSessions): ProxyRequestHandler {
@@ -38,10 +38,10 @@ class Injector(private val plugin: BurpSessions): ProxyRequestHandler {
     // Part of ProxyRequestHandler interface, leave it alone
     override fun handleRequestToBeSent(interceptedRequest: InterceptedRequest): ProxyRequestToBeSentAction {
         // Has our proprietary `X-Burp-Session` header holding the session identifier
-        if (interceptedRequest.headers().get(INTERCEPT_HEADER) != null) {
+        if (interceptedRequest.getHeader(INTERCEPT_HEADER) != null) {
             Logger.debug("Request with Session header intercepted")
 
-            val sessionName = interceptedRequest.headers().get(INTERCEPT_HEADER)
+            val sessionName = interceptedRequest.getHeader(INTERCEPT_HEADER)
             if (sessionName.isNullOrBlank()) {
                 return ProxyRequestToBeSentAction.continueWith(interceptedRequest)
             }

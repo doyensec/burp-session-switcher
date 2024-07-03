@@ -6,6 +6,7 @@ import sessions.savestate.DeserializerFactory
 import sessions.savestate.SavesDataToProject
 import sessions.savestate.getChildObjectList
 import sessions.savestate.setChildObjectList
+import sessions.utils.headersMap
 import sessions.utils.withUpsertedHeaders
 import java.util.*
 
@@ -74,14 +75,16 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     fun loadFromRequestFiltered(r: HttpRequest) {
-        val reqHeaders = r.headers().associate { header -> header.name() to header.value() }
-        // Keep the header from the request if it's not a default one OR the value is different from the default
-        val custom = reqHeaders.filter { (rh, _) -> INCLUDED_HEADERS.any { h -> rh.lowercase().startsWith(h) }  }
+        val reqHeaders = r.headersMap()
+        val custom = reqHeaders
+            .filter { (rh, _) -> !rh.startsWith(":") } // Always exclude http2-specific headers
+            .filter { (rh, _) -> INCLUDED_HEADERS.any { h -> rh.lowercase().startsWith(h) }  } // This could be replaced with a blocklist instead
+        Logger.debug("Saving headers into session: $custom")
         this.overwrite(custom)
     }
 
     fun loadFromRequestAll(r: HttpRequest) {
-        val reqHeaders = r.headers().associate { header -> header.name() to header.value() }
+        val reqHeaders = r.headersMap().filter { (rh, _) -> !rh.startsWith(":") }
         this.overwrite(reqHeaders)
     }
 }
