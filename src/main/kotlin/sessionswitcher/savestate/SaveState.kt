@@ -1,11 +1,10 @@
-package sessions.savestate
+package sessionswitcher.savestate
 
-import burp.Burp
 import burp.api.montoya.persistence.PersistedObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import sessions.Logger
+import sessionswitcher.Logger
 
 interface LoadsDataFromProject : BurpDeserializable {
     companion object {

@@ -1,47 +1,54 @@
-package sessions
+package sessionswitcher
 
-import burp.Burp
-import burp.BurpExtender
-import burp.BurpIcons
+import burp.api.montoya.MontoyaApi
 import burp.api.montoya.persistence.PersistedObject
 import kotlinx.coroutines.runBlocking
-import sessions.savestate.SavesAndLoadData
-import sessions.savestate.SavesDataToProject
-import sessions.savestate.getSaveStateKeys
-import sessions.settings.Settings
-import sessions.settings.SettingsWindow
-import sessions.ui.EditorSwitcher
-import sessions.ui.ImgButton
-import sessions.ui.TabbedPane
+import sessionswitcher.savestate.SavesAndLoadData
+import sessionswitcher.savestate.SavesDataToProject
+import sessionswitcher.savestate.getSaveStateKeys
+import sessionswitcher.settings.BurpSettingsProvider
+import sessionswitcher.settings.Settings
+import sessionswitcher.settings.SettingsProvider
+import sessionswitcher.settings.SettingsWindow
+import sessionswitcher.ui.EditorSwitcher
+import sessionswitcher.ui.TabbedPane
 import java.awt.Component
+import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 
-class BurpSessions : TabbedPane(), SavesAndLoadData {
+public class SessionSwitcher(
+    val montoyaApi: MontoyaApi,
+    val settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
+) : TabbedPane(), SavesAndLoadData {
 
-    public val settings = Settings.getInstance()
+    public val settings = Settings(this.settingsProvider)
     private val sessions = LinkedHashMap<String, Session>()
 
+    // Windows
+    private val settingsWindow = SettingsWindow(settings)
+
     init {
-        Burp.Montoya.logging().raiseInfoEvent("BurpSession ${BurpExtender.version} Started")
+        montoyaApi.logging().raiseInfoEvent("Session Switcher v${SessionSwitcherExtension.VERSION} Started")
 
         val logLevel = settings.loggingLevel.get()
         Logger.setLevel(logLevel)
 
-
         // Register GraphQL Payload Editor
-        Burp.Montoya.userInterface().registerHttpRequestEditorProvider(EditorSwitcher.getProvider(this))
-
-
-        //this.addTab("Scanner", this.scanner)
-        //this.addSettingsTab()
+        if (settings.displayRequestEditor.get()) {
+            montoyaApi.userInterface().registerHttpRequestEditorProvider(EditorSwitcher.getProvider(this))
+        }
 
         // Register the extension main tab
-        //Burp.Montoya.userInterface().registerSuiteTab("Sessions", this)
+        if (settings.displayExtensionMainTab.get()) {
+            //Burp.Montoya.userInterface().registerSuiteTab("Sessions", this)
+        }
 
         // Register context menu handler
-        //Burp.Montoya.userInterface().registerContextMenuItemsProvider(SendToInqlHandler(this))
+        if (settings.registerContextMenu.get()) {
+            //Burp.Montoya.userInterface().registerContextMenuItemsProvider(SendToInqlHandler(this))
+        }
 
         // Reload data from the project file
         if (!this.dataPresentInProjectFile()) {
@@ -56,7 +63,6 @@ class BurpSessions : TabbedPane(), SavesAndLoadData {
             ExternalToolsService.startIfOff()
         }
         */
-
     }
 
     fun unload() = runBlocking {
@@ -104,10 +110,10 @@ class BurpSessions : TabbedPane(), SavesAndLoadData {
     }
 
     private fun addSettingsTab() {
-        val button = ImgButton("Settings", BurpIcons.CONFIG)
+        val button = JButton("Settings")
         button.background = this.background
         button.isFocusable = false
-        button.addActionListener { SwingUtilities.invokeLater { SettingsWindow.getInstance().isVisible = true } }
+        button.addActionListener { SwingUtilities.invokeLater { settingsWindow.isVisible = true } }
         val idx = this.tabbedPane.tabCount
         this.addTab("Settings", JPanel())
         this.tabbedPane.setTabComponentAt(idx, button)
@@ -125,12 +131,12 @@ class BurpSessions : TabbedPane(), SavesAndLoadData {
 
     override fun burpSerialize(): PersistedObject {
         val obj = PersistedObject.persistedObject()
-        obj.setStringList("sessions", getSaveStateKeys(this.sessions.values))
+        obj.setStringList("sessionswitcher", getSaveStateKeys(this.sessions.values))
         return obj
     }
 
     override fun burpDeserialize(obj: PersistedObject) {
-        val sessionsList = obj.getStringList("sessions")
+        val sessionsList = obj.getStringList("sessionswitcher")
         if (sessionsList != null) {
             for (sessionId in sessionsList) {
                 val p = Session.Deserializer(sessionId).get() ?: continue

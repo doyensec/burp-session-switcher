@@ -1,8 +1,8 @@
-package sessions.utils
+package sessionswitcher.utils
 
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
-import sessions.Logger
+import sessionswitcher.Logger
 
 class JsonPrettifier {
     companion object {

@@ -1,10 +1,9 @@
-package sessions.ui
+package sessionswitcher.ui
 
-import burp.Burp
 import burp.api.montoya.ui.editor.EditorOptions
 import burp.api.montoya.ui.editor.HttpRequestEditor
 import burp.api.montoya.ui.editor.HttpResponseEditor
-import sessions.Logger
+import sessionswitcher.Logger
 import java.awt.*
 import java.awt.event.ItemListener
 import java.awt.event.MouseAdapter

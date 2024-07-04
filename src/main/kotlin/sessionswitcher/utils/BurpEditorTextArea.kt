@@ -1,4 +1,4 @@
-package sessions.utils
+package sessionswitcher.utils
 
 import burp.api.montoya.ui.editor.Editor
 import java.awt.Component

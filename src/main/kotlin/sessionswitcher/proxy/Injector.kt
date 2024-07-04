@@ -1,4 +1,4 @@
-package sessions.proxy
+package sessionswitcher.proxy
 
 import burp.api.montoya.core.HighlightColor
 import burp.api.montoya.http.message.requests.HttpRequest
@@ -6,14 +6,14 @@ import burp.api.montoya.proxy.http.InterceptedRequest
 import burp.api.montoya.proxy.http.ProxyRequestHandler
 import burp.api.montoya.proxy.http.ProxyRequestReceivedAction
 import burp.api.montoya.proxy.http.ProxyRequestToBeSentAction
-import sessions.BurpSessions
-import sessions.Logger
-import sessions.Session
-import sessions.settings.Settings
-import sessions.utils.getHeader
-import sessions.utils.withUpsertedHeader
+import sessionswitcher.SessionSwitcher
+import sessionswitcher.Logger
+import sessionswitcher.Session
+import sessionswitcher.settings.BurpSettingsProvider
+import sessionswitcher.utils.getHeader
+import sessionswitcher.utils.withUpsertedHeader
 
-class Injector(private val plugin: BurpSessions): ProxyRequestHandler {
+class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
     companion object {
         const val INTERCEPT_HEADER = "X-Burp-Session"
 
@@ -27,7 +27,7 @@ class Injector(private val plugin: BurpSessions): ProxyRequestHandler {
             return newReq
         }
     }
-    private val color: HighlightColor = HighlightColor.highlightColor(Settings.getInstance().proxyHighlightInjectedColor.get())
+    private val color: HighlightColor = HighlightColor.highlightColor(BurpSettingsProvider.getInstance().proxyHighlightInjectedColor.get())
 
 
     // Part of ProxyRequestHandler interface, executed first on every request coming through Burp's Proxy tool

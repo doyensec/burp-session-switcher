@@ -1,10 +1,9 @@
-package sessions.ui
+package sessionswitcher.ui
 
-import burp.Burp
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider
-import sessions.BurpSessions
+import sessionswitcher.SessionSwitcher
 import java.awt.Component
 import java.awt.Toolkit
 import java.awt.event.ActionEvent
@@ -27,7 +26,7 @@ open class MenuAction(val name: String, val keyStroke: KeyStroke?, val action: (
     This class is also extended below from SendToInqlHandler which instead provides the Extension Context Menu "InQL >" for
     Burp's standard context menu in other Burp tools (Scanner, Proxy, etc).
  */
-abstract class SendFromPluginHandler(val plugin: BurpSessions) : MouseAdapter() {
+abstract class SendFromPluginHandler(val plugin: SessionSwitcher) : MouseAdapter() {
     private val popup = JPopupMenu()
 
     // ===== Actions associated with Menu Items
@@ -101,7 +100,7 @@ abstract class SendFromPluginHandler(val plugin: BurpSessions) : MouseAdapter() 
     }
 }
 
-class SendToPluginHandler(inql: BurpSessions) : SendFromPluginHandler(inql), ContextMenuItemsProvider {
+class SendToPluginHandler(inql: SessionSwitcher) : SendFromPluginHandler(inql), ContextMenuItemsProvider {
     class BurpMenuItem(action: MenuAction) : JMenuItem(action.name) {
         init {
             this.addActionListener {

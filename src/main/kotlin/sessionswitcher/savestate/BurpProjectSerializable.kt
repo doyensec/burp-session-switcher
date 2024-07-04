@@ -1,4 +1,4 @@
-package sessions.savestate
+package sessionswitcher.savestate
 
 import burp.api.montoya.persistence.PersistedObject
 

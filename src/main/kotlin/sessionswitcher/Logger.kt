@@ -1,4 +1,4 @@
-package sessions
+package sessionswitcher
 
 class Logger {
     companion object {

@@ -1,13 +1,13 @@
-package sessions
+package sessionswitcher
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.persistence.PersistedObject
-import sessions.savestate.DeserializerFactory
-import sessions.savestate.SavesDataToProject
-import sessions.savestate.getChildObjectList
-import sessions.savestate.setChildObjectList
-import sessions.utils.headersMap
-import sessions.utils.withUpsertedHeaders
+import sessionswitcher.savestate.DeserializerFactory
+import sessionswitcher.savestate.SavesDataToProject
+import sessionswitcher.savestate.getChildObjectList
+import sessionswitcher.savestate.setChildObjectList
+import sessionswitcher.utils.headersMap
+import sessionswitcher.utils.withUpsertedHeaders
 import java.util.*
 
 

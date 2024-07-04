@@ -1,8 +1,8 @@
-package sessions.utils
+package sessionswitcher.utils
 
 import burp.api.montoya.http.message.HttpHeader
 import burp.api.montoya.http.message.requests.HttpRequest
-import sessions.Logger
+import sessionswitcher.Logger
 
 fun cookieMapFromHeader(headerValue: String): MutableMap<String, String> {
     return headerValue

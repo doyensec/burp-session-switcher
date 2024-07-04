@@ -12,7 +12,16 @@ buildscript {
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "1.9.10"
-    id("com.palantir.git-version") version "3.0.0"
+}
+
+java {
+    sourceCompatibility = 17
+    targetCompatibility = 17
+}
+
+repositories {
+    mavenCentral()
+    maven { url "https://www.jetbrains.com/intellij-repository/releases" }
 }
 
 dependencies {
@@ -22,11 +31,7 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
     implementation 'org.apache.commons:commons-text:1.10.0'
     implementation 'commons-codec:commons-codec:1.16.0'
-}
-
-java {
-    sourceCompatibility = 17
-    targetCompatibility = 17
+    implementation 'com.jetbrains.intellij.java:java-gui-forms-rt:241.18034.62'
 }
 
 tasks.withType(KotlinCompile).configureEach {
@@ -40,37 +45,16 @@ compileKotlin {
     }
 }
 
-repositories {
-    mavenCentral()
-}
-
-def generatedVersionDir = layout.buildDirectory.dir("generated-version").get().asFile.path
-
 sourceSets {
     main {
         java {
             srcDir 'kotlin'
         }
-        output.dir(generatedVersionDir, builtBy: 'generateVersionProperties')
     }
 }
 
-tasks.register('generateVersionProperties') {
-    def propertiesFile = file "$generatedVersionDir/version.properties"
-    propertiesFile.parentFile.mkdirs()
-    def properties = new Properties()
-    def details = versionDetails()
-    version(details.lastTag)
-    println "Version from git tag: $version"
-    properties.setProperty("version", details.lastTag.toString())
-    propertiesFile.withWriter { properties.store(it, null) }
-}
-
-processResources.dependsOn generateVersionProperties
-
-
 build {
-    dependsOn(clean, processResources)
+    dependsOn(clean)
 }
 
 defaultTasks "build"
@@ -79,7 +63,7 @@ defaultTasks "build"
 jar {
     manifest {
         attributes('Class-Path': configurations.compileClasspath.collect { it.getName() }.join(' '))
-        archiveFileName = 'BurpSessions.jar'
+        archiveFileName = 'SessionSwitcher.jar'
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
     destinationDirectory = rootDir

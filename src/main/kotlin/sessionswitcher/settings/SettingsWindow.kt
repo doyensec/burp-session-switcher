@@ -1,21 +1,13 @@
-package sessions.settings
+package sessionswitcher.settings
 
-import sessions.ui.*
+import sessionswitcher.ui.*
 import javax.swing.*
 
-class SettingsWindow private constructor() : Window("InQL Settings") {
-    companion object {
-        private lateinit var instance: SettingsWindow
-        fun getInstance(): SettingsWindow {
-            if (!this::instance.isInitialized) instance = SettingsWindow()
-            return instance
-        }
-    }
-
+class SettingsWindow(val settings: Settings) : Window("InQL Settings") {
     class CheckBoxElement(val item: BooleanSetting): CheckBox(item.description, item.get(SettingsItem.Scope.EFFECTIVE_GLOBAL)) {
         init {
             this.addItemListener {
-                item.set(this.isSelected(), SettingsItem.Scope.GLOBAL)
+                item.set(this.isSelected(), SettingsItem.Store.GLOBAL)
             }
         }
     }
@@ -24,7 +16,7 @@ class SettingsWindow private constructor() : Window("InQL Settings") {
         init {
             this.setValue(item.get(SettingsItem.Scope.EFFECTIVE_GLOBAL))
             this.addChangeListener {
-                item.set(this.getValue(), SettingsItem.Scope.GLOBAL)
+                item.set(this.getValue(), SettingsItem.Store.GLOBAL)
             }
         }
     }
@@ -33,7 +25,7 @@ class SettingsWindow private constructor() : Window("InQL Settings") {
         init {
             this.setSelectedItem(item.get(SettingsItem.Scope.EFFECTIVE_GLOBAL))
             this.addItemListener {
-                item.set(this.getSelectedItem(), SettingsItem.Scope.GLOBAL)
+                item.set(this.getSelectedItem(), SettingsItem.Store.GLOBAL)
             }
         }
     }
@@ -42,7 +34,7 @@ class SettingsWindow private constructor() : Window("InQL Settings") {
         init {
             this.setText(item.get(SettingsItem.Scope.EFFECTIVE_GLOBAL))
             this.changeListener = fun() {
-                item.set(this.getText(), SettingsItem.Scope.GLOBAL)
+                item.set(this.getText(), SettingsItem.Store.GLOBAL)
             }
         }
     }
@@ -51,7 +43,7 @@ class SettingsWindow private constructor() : Window("InQL Settings") {
         init {
             this.setText(item.get(SettingsItem.Scope.EFFECTIVE_GLOBAL))
             this.changeListener = fun() {
-                item.set(this.getText(), SettingsItem.Scope.GLOBAL)
+                item.set(this.getText(), SettingsItem.Store.GLOBAL)
             }
         }
     }
@@ -84,7 +76,6 @@ class SettingsWindow private constructor() : Window("InQL Settings") {
     }
 
     init {
-        val settings = Settings.getInstance()
         // Build the different section first
         val codeGenerationSection = SettingsSection(
             "Code generation settings",

@@ -1,6 +1,5 @@
-package sessions.ui
+package sessionswitcher.ui
 
-import burp.Burp
 import burp.api.montoya.core.ByteArray
 import burp.api.montoya.http.message.HttpRequestResponse
 import burp.api.montoya.http.message.requests.HttpRequest
@@ -11,19 +10,19 @@ import burp.api.montoya.ui.editor.extension.EditorCreationContext
 import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
-import sessions.BurpSessions
-import sessions.Logger
-import sessions.Session
-import sessions.utils.getTextAreaComponent
+import sessionswitcher.SessionSwitcher
+import sessionswitcher.Logger
+import sessionswitcher.Session
+import sessionswitcher.utils.getTextAreaComponent
 import java.awt.*
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boolean) :
+class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: Boolean) :
     ExtensionProvidedHttpRequestEditor {
     companion object {
-        class Provider(private val plugin: BurpSessions) : HttpRequestEditorProvider {
+        class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
             override fun provideHttpRequestEditor(creationContext: EditorCreationContext?): ExtensionProvidedHttpRequestEditor {
                 return EditorSwitcher(
                     plugin,
@@ -33,7 +32,7 @@ class EditorSwitcher private constructor(val plugin: BurpSessions, readOnly: Boo
         }
 
         private var provider: Provider? = null
-        fun getProvider(plugin: BurpSessions): Provider {
+        fun getProvider(plugin: SessionSwitcher): Provider {
             if (provider == null) provider = Provider(plugin)
             return provider as Provider
         }
