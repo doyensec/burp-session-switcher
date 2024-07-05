@@ -4,6 +4,7 @@ import burp.api.montoya.ui.editor.EditorOptions
 import burp.api.montoya.ui.editor.HttpRequestEditor
 import burp.api.montoya.ui.editor.HttpResponseEditor
 import sessionswitcher.Logger
+import sessionswitcher.SessionSwitcher
 import java.awt.*
 import java.awt.event.ItemListener
 import java.awt.event.MouseAdapter
@@ -249,17 +250,17 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
     }
 }
 
-open class MessageEditor(val readOnly: Boolean = false) : JTabbedPane() {
+open class MessageEditor(val plugin: SessionSwitcher, val readOnly: Boolean = false) : JTabbedPane() {
     val request: HttpRequestEditor
     val response: HttpResponseEditor
 
     init {
         if (readOnly) {
-            request = Burp.Montoya.userInterface().createHttpRequestEditor(EditorOptions.READ_ONLY)
-            response = Burp.Montoya.userInterface().createHttpResponseEditor(EditorOptions.READ_ONLY)
+            request = plugin.montoyaApi.userInterface().createHttpRequestEditor(EditorOptions.READ_ONLY)
+            response = plugin.montoyaApi.userInterface().createHttpResponseEditor(EditorOptions.READ_ONLY)
         } else {
-            request = Burp.Montoya.userInterface().createHttpRequestEditor()
-            response = Burp.Montoya.userInterface().createHttpResponseEditor()
+            request = plugin.montoyaApi.userInterface().createHttpRequestEditor()
+            response = plugin.montoyaApi.userInterface().createHttpResponseEditor()
         }
         this.addTab("Request", request.uiComponent())
         this.addTab("Response", response.uiComponent())
@@ -340,7 +341,6 @@ class ImgButton(val fallback: String, displayIcon: Icon?) : JButton() {
 class ErrorDialog(val msg: String) {
     init {
         Logger.error(msg)
-        val burpWindow = Burp.Montoya.userInterface().swingUtils().suiteFrame()
-        JOptionPane.showMessageDialog(burpWindow, msg, "BurpSessions Error", JOptionPane.ERROR_MESSAGE)
+        JOptionPane.showMessageDialog(null, msg, "BurpSessions Error", JOptionPane.ERROR_MESSAGE)
     }
 }

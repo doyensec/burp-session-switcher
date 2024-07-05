@@ -10,9 +10,9 @@ import burp.api.montoya.ui.editor.extension.EditorCreationContext
 import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
-import sessionswitcher.SessionSwitcher
 import sessionswitcher.Logger
 import sessionswitcher.Session
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.utils.getTextAreaComponent
 import java.awt.*
 import javax.swing.*
@@ -155,7 +155,7 @@ class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: 
         var name: String?
         do {
             name = JOptionPane.showInputDialog(
-                Burp.Montoya.userInterface().swingUtils().suiteFrame(),
+                plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
                 "Choose a name for the new Session. Valid characters: [A-Za-z0-9._-]",
                 "New Session",
                 JOptionPane.QUESTION_MESSAGE,
@@ -204,9 +204,9 @@ class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: 
 
     init {
         if (readOnly) {
-            this.editor = Burp.Montoya.userInterface().createRawEditor(EditorOptions.READ_ONLY)
+            this.editor = plugin.montoyaApi.userInterface().createRawEditor(EditorOptions.READ_ONLY)
         } else {
-            this.editor = Burp.Montoya.userInterface().createRawEditor()
+            this.editor = plugin.montoyaApi.userInterface().createRawEditor()
         }
 
         val rootContainer = BoxPanel(BoxLayout.Y_AXIS)

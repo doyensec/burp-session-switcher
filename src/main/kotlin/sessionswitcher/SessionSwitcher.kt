@@ -18,10 +18,30 @@ import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 
-public class SessionSwitcher(
+public class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
-    val settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
+    val settingsProvider: SettingsProvider
 ) : TabbedPane(), SavesAndLoadData {
+
+    companion object {
+        private lateinit var instance: SessionSwitcher
+        public fun get(): SessionSwitcher {
+            if (!this::instance.isInitialized) {
+                throw Exception("SessionSwitcher not initialized yet.")
+            }
+            return this.instance
+        }
+        public fun init(
+            montoyaApi: MontoyaApi,
+            settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
+        ): SessionSwitcher {
+            if (this::instance.isInitialized) {
+                throw Exception("SessionSwitcher instance already initialized.")
+            }
+            this.instance = SessionSwitcher(montoyaApi, settingsProvider)
+            return this.instance
+        }
+    }
 
     public val settings = Settings(this.settingsProvider)
     private val sessions = LinkedHashMap<String, Session>()

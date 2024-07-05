@@ -73,11 +73,11 @@ abstract class SendFromPluginHandler(val plugin: SessionSwitcher) : MouseAdapter
 
     // ===== Convenience methods for the actions
     private fun sendRequestToIntruder() {
-        Burp.Montoya.intruder().sendToIntruder(this.getRequest() ?: return)
+        plugin.montoyaApi.intruder().sendToIntruder(this.getRequest() ?: return)
     }
 
     private fun sendRequestToRepeater() {
-        Burp.Montoya.repeater().sendToRepeater(this.getRequest() ?: return)
+        plugin.montoyaApi.repeater().sendToRepeater(this.getRequest() ?: return)
     }
 
 

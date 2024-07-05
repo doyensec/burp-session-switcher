@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import sessionswitcher.Logger
+import sessionswitcher.SessionSwitcher
 
 interface LoadsDataFromProject : BurpDeserializable {
     companion object {
@@ -12,17 +13,23 @@ interface LoadsDataFromProject : BurpDeserializable {
     }
 
     val saveStateKey: String
+    private val persistenceStore: PersistedObject
+        get() {
+            val persistence = SessionSwitcher.get().montoyaApi.persistence().extensionData()
+            assert(persistence != null)
+            return persistence
+        }
 
     fun dataPresentInProjectFile(): Boolean {
         val key = this.saveStateKey
-        val obj = Burp.Montoya.persistence().extensionData().getChildObject("sessions_savestate.$key")
+        val obj = persistenceStore.getChildObject("sessions_savestate.$key")
         return obj != null
     }
 
     fun loadFromProjectFile(): Boolean {
         val key = this.saveStateKey
         Logger.debug("[$key] Trying to load data from project file")
-        val obj = Burp.Montoya.persistence().extensionData().getChildObject("sessions_savestate.$key")
+        val obj = persistenceStore.getChildObject("sessions_savestate.$key")
         if (obj == null) {
             Logger.warning("[$key] No savestate with this key found in this project file")
             return false
@@ -51,6 +58,13 @@ interface SavesDataToProject : BurpSerializable {
         val coroutineScope = CoroutineScope(Dispatchers.IO)
     }
 
+    private val persistenceStore: PersistedObject
+        get() {
+            val persistence = SessionSwitcher.get().montoyaApi.persistence().extensionData()
+            assert(persistence != null)
+            return persistence
+        }
+
     val saveStateKey: String
     fun saveToProjectFile(processChildren: Boolean = true): String? {
         val key = this.saveStateKey
@@ -73,7 +87,7 @@ interface SavesDataToProject : BurpSerializable {
             return null
         }
         Logger.info("[$key] Serialization completed successfully")
-        Burp.Montoya.persistence().extensionData().setChildObject("sessions_savestate.$key", obj)
+        persistenceStore.setChildObject("sessions_savestate.$key", obj)
         return key
     }
 
@@ -106,7 +120,7 @@ interface SavesDataToProject : BurpSerializable {
 
     fun deleteFromProjectFile(deleteChildren: Boolean = true) {
         val key = this.saveStateKey
-        Burp.Montoya.persistence().extensionData().deleteChildObject("sessions_savestate.$key")
+        persistenceStore.deleteChildObject("sessions_savestate.$key")
         if (deleteChildren) {
             val children = this.getChildrenObjectsToSave() ?: return
             for (child in children) {

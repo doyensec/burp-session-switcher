@@ -21,7 +21,7 @@ class SessionSwitcherExtension : BurpExtension, ExtensionUnloadingHandler {
         System.setOut(montoyaApi.logging().output())
         System.setErr(montoyaApi.logging().error())
 
-        this.instance = SessionSwitcher(montoyaApi)
+        this.instance = SessionSwitcher.init(montoyaApi)
     }
 
     override fun extensionUnloaded() {

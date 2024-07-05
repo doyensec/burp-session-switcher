@@ -6,10 +6,9 @@ import burp.api.montoya.proxy.http.InterceptedRequest
 import burp.api.montoya.proxy.http.ProxyRequestHandler
 import burp.api.montoya.proxy.http.ProxyRequestReceivedAction
 import burp.api.montoya.proxy.http.ProxyRequestToBeSentAction
-import sessionswitcher.SessionSwitcher
 import sessionswitcher.Logger
 import sessionswitcher.Session
-import sessionswitcher.settings.BurpSettingsProvider
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.utils.getHeader
 import sessionswitcher.utils.withUpsertedHeader
 
@@ -27,7 +26,7 @@ class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
             return newReq
         }
     }
-    private val color: HighlightColor = HighlightColor.highlightColor(BurpSettingsProvider.getInstance().proxyHighlightInjectedColor.get())
+    private val color: HighlightColor = HighlightColor.highlightColor(plugin.settings.proxyHighlightInjectedColor.get())
 
 
     // Part of ProxyRequestHandler interface, executed first on every request coming through Burp's Proxy tool
