@@ -7,8 +7,8 @@ import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsProvider
 import sessionswitcher.settings.SettingsWindow
-import sessionswitcher.ui.EditorSwitcher
-import sessionswitcher.ui.TabbedPane
+import sessionswitcher.ui.RequestEditorSwitcher
+import sessionswitcher.ui.misc.TabbedPane
 import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -63,7 +63,7 @@ public class SessionSwitcher private constructor(
 
         // Register GraphQL Payload Editor
         if (settings.displayRequestEditor.get()) {
-            montoyaApi.userInterface().registerHttpRequestEditorProvider(EditorSwitcher.getProvider(this))
+            montoyaApi.userInterface().registerHttpRequestEditorProvider(RequestEditorSwitcher.getProvider(this))
         }
 
         // Register the extension main tab

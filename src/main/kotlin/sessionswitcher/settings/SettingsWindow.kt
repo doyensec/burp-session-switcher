@@ -1,6 +1,6 @@
 package sessionswitcher.settings
 
-import sessionswitcher.ui.*
+import sessionswitcher.ui.misc.*
 import javax.swing.*
 
 class SettingsWindow(val settings: Settings) : Window("InQL Settings") {

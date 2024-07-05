@@ -1,4 +1,4 @@
-package sessionswitcher.ui
+package sessionswitcher.ui.misc
 
 import java.awt.*
 import java.awt.event.*

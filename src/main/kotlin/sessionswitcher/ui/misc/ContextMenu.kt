@@ -1,4 +1,4 @@
-package sessionswitcher.ui
+package sessionswitcher.ui.misc
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent

@@ -13,18 +13,22 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
+import sessionswitcher.ui.misc.BorderPanel
+import sessionswitcher.ui.misc.BoxPanel
+import sessionswitcher.ui.misc.FlowPanel
+import sessionswitcher.ui.misc.SendFromPluginHandler
 import sessionswitcher.utils.getTextAreaComponent
 import java.awt.*
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: Boolean) :
+class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: Boolean) :
     ExtensionProvidedHttpRequestEditor {
     companion object {
         class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
             override fun provideHttpRequestEditor(creationContext: EditorCreationContext?): ExtensionProvidedHttpRequestEditor {
-                return EditorSwitcher(
+                return RequestEditorSwitcher(
                     plugin,
                     (creationContext?.editorMode() ?: EditorMode.DEFAULT) == EditorMode.READ_ONLY,
                 )
@@ -265,7 +269,7 @@ class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: 
 
     override fun getRequest(): HttpRequest = this._request ?: HttpRequest.httpRequest()
 
-    class EditorSendRequestFromPluginHandler(val editor: EditorSwitcher) : SendFromPluginHandler(editor.plugin) {
+    class EditorSendRequestFromPluginHandler(val editor: RequestEditorSwitcher) : SendFromPluginHandler(editor.plugin) {
         override fun getRequest(): HttpRequest {
             return editor.request
         }

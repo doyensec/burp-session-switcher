@@ -1,4 +1,4 @@
-package sessionswitcher.ui
+package sessionswitcher.ui.misc
 
 import burp.api.montoya.ui.editor.EditorOptions
 import burp.api.montoya.ui.editor.HttpRequestEditor
