@@ -7,8 +7,8 @@ import burp.api.montoya.proxy.http.ProxyRequestHandler
 import burp.api.montoya.proxy.http.ProxyRequestReceivedAction
 import burp.api.montoya.proxy.http.ProxyRequestToBeSentAction
 import sessionswitcher.Logger
-import sessionswitcher.Session
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getHeader
 import sessionswitcher.utils.withUpsertedHeader
 
@@ -44,7 +44,7 @@ class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
             if (sessionName.isNullOrBlank()) {
                 return ProxyRequestToBeSentAction.continueWith(interceptedRequest)
             }
-            val session = this.plugin.getSession(sessionName)
+            val session = this.plugin.sessions.getSession(sessionName)
             if (session == null) {
                 Logger.error("Requested session not found")
                 return ProxyRequestToBeSentAction.continueWith(interceptedRequest)

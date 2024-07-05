@@ -11,8 +11,8 @@ import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
-import sessionswitcher.Session
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getTextAreaComponent
 import java.awt.*
 import javax.swing.*
@@ -95,7 +95,7 @@ class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: 
         this.isUpdatingUI = true
         this.sessionsComboBox.removeAllItems()
         this.sessionsComboBox.addItem(SESSION_NONE)
-        this.plugin.getSessions().forEach { this.sessionsComboBox.addItem(it) }
+        this.plugin.sessions.getSessions().forEach { this.sessionsComboBox.addItem(it) }
         this.isUpdatingUI = false
     }
 
@@ -113,7 +113,7 @@ class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: 
 
     private fun deleteSelectedSession() {
         val isAlsoLinked = this.sessionsComboBox.selectedItem == this.selectedSession
-        this.plugin.deleteSession(this.sessionsComboBox.selectedItem as Session)
+        this.plugin.sessions.deleteSession(this.sessionsComboBox.selectedItem as Session)
         this.updateSessionsList()
         if (isAlsoLinked) {
             this.selectedSession = null
@@ -165,7 +165,7 @@ class EditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: 
             ) as String?
             if (name == null) return null
         } while (!Session.isValidName(name!!))
-        return this.plugin.createSession(name)
+        return this.plugin.sessions.createSession(name)
     }
 
     // END Session stuff

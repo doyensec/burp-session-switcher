@@ -37,7 +37,7 @@ fun PersistedObject.childObjectListKeys(): Set<String> {
     return this.childObjectKeys().filter { it.startsWith("objlst_") }.toSet()
 }
 
-fun getSaveStateKeys(c: Collection<SavesDataToProject>): PersistedList<String> {
+fun getSaveStateKeys(c: Collection<CanSaveData>): PersistedList<String> {
     val lst = PersistedList.persistedStringList()
     lst.addAll(c.map { it.saveStateKey })
     return lst

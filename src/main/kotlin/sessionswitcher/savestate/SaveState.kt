@@ -7,7 +7,7 @@ import kotlinx.coroutines.launch
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 
-interface LoadsDataFromProject : BurpDeserializable {
+interface CanLoadData : BurpDeserializable {
     companion object {
         val coroutineScope = CoroutineScope(Dispatchers.IO)
     }
@@ -15,21 +15,21 @@ interface LoadsDataFromProject : BurpDeserializable {
     val saveStateKey: String
     private val persistenceStore: PersistedObject
         get() {
-            val persistence = SessionSwitcher.get().montoyaApi.persistence().extensionData()
+            val persistence = SessionSwitcher.getApi().persistence().extensionData()
             assert(persistence != null)
             return persistence
         }
 
     fun dataPresentInProjectFile(): Boolean {
         val key = this.saveStateKey
-        val obj = persistenceStore.getChildObject("sessions_savestate.$key")
+        val obj = persistenceStore.getChildObject(key)
         return obj != null
     }
 
     fun loadFromProjectFile(): Boolean {
         val key = this.saveStateKey
         Logger.debug("[$key] Trying to load data from project file")
-        val obj = persistenceStore.getChildObject("sessions_savestate.$key")
+        val obj = persistenceStore.getChildObject(key)
         if (obj == null) {
             Logger.warning("[$key] No savestate with this key found in this project file")
             return false
@@ -48,19 +48,19 @@ interface LoadsDataFromProject : BurpDeserializable {
 
     fun loadFromProjectFileAsync() {
         coroutineScope.launch {
-            this@LoadsDataFromProject.loadFromProjectFile()
+            this@CanLoadData.loadFromProjectFile()
         }
     }
 }
 
-interface SavesDataToProject : BurpSerializable {
+interface CanSaveData : BurpSerializable {
     companion object {
         val coroutineScope = CoroutineScope(Dispatchers.IO)
     }
 
     private val persistenceStore: PersistedObject
         get() {
-            val persistence = SessionSwitcher.get().montoyaApi.persistence().extensionData()
+            val persistence = SessionSwitcher.getApi().persistence().extensionData()
             assert(persistence != null)
             return persistence
         }
@@ -87,13 +87,13 @@ interface SavesDataToProject : BurpSerializable {
             return null
         }
         Logger.info("[$key] Serialization completed successfully")
-        persistenceStore.setChildObject("sessions_savestate.$key", obj)
+        persistenceStore.setChildObject(key, obj)
         return key
     }
 
     fun saveToProjectFileAsync(processChildren: Boolean = true) {
         coroutineScope.launch {
-            this@SavesDataToProject.saveToProjectFile(processChildren)
+            this@CanSaveData.saveToProjectFile(processChildren)
         }
     }
 
@@ -104,23 +104,23 @@ interface SavesDataToProject : BurpSerializable {
         }
     }
 
-    fun getChildrenObjectsToSave(): Collection<SavesDataToProject>?
+    fun getChildrenObjectsToSave(): Collection<CanSaveData>?
 
-    fun updateChildObject(obj: SavesDataToProject) {
+    fun updateChildObject(obj: CanSaveData) {
         Logger.info("[${this.saveStateKey}] Updating child object: ${obj.saveStateKey}")
         obj.saveToProjectFile()
         this.saveToProjectFile(false)
     }
 
-    fun updateChildObjectAsync(obj: SavesDataToProject) {
+    fun updateChildObjectAsync(obj: CanSaveData) {
         coroutineScope.launch {
-            this@SavesDataToProject.updateChildObject(obj)
+            this@CanSaveData.updateChildObject(obj)
         }
     }
 
     fun deleteFromProjectFile(deleteChildren: Boolean = true) {
         val key = this.saveStateKey
-        persistenceStore.deleteChildObject("sessions_savestate.$key")
+        persistenceStore.deleteChildObject(key)
         if (deleteChildren) {
             val children = this.getChildrenObjectsToSave() ?: return
             for (child in children) {
@@ -131,27 +131,27 @@ interface SavesDataToProject : BurpSerializable {
 
     fun deleteFromProjectFileAsync(deleteChildren: Boolean = true) {
         coroutineScope.launch {
-            this@SavesDataToProject.deleteFromProjectFile(deleteChildren)
+            this@CanSaveData.deleteFromProjectFile(deleteChildren)
         }
     }
 
-    fun deleteChildObject(obj: SavesDataToProject) {
+    fun deleteChildObject(obj: CanSaveData) {
         obj.deleteFromProjectFile()
         this.saveToProjectFile(false)
     }
 
-    fun deleteChildObjectAsync(obj: SavesDataToProject) {
+    fun deleteChildObjectAsync(obj: CanSaveData) {
         coroutineScope.launch {
-            this@SavesDataToProject.deleteChildObject(obj)
+            this@CanSaveData.deleteChildObject(obj)
         }
     }
 }
 
-interface SavesAndLoadData : SavesDataToProject, LoadsDataFromProject
+interface CanSaveAndLoadData : CanSaveData, CanLoadData
 
 // This Factory-Deserializer class allows to create a Kotlin object from the deserialization
 // of data from the project file, instead of creating the object first and then loading data into it
-abstract class DeserializerFactory<T>(val key: String) : LoadsDataFromProject {
+abstract class DeserializerFactory<T>(val key: String) : CanLoadData {
     protected var deserialized: T? = null
     fun get(): T? {
         this.loadFromProjectFile()

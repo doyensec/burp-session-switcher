@@ -1,11 +1,8 @@
 package sessionswitcher
 
 import burp.api.montoya.MontoyaApi
-import burp.api.montoya.persistence.PersistedObject
 import kotlinx.coroutines.runBlocking
-import sessionswitcher.savestate.SavesAndLoadData
-import sessionswitcher.savestate.SavesDataToProject
-import sessionswitcher.savestate.getSaveStateKeys
+import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsProvider
@@ -21,16 +18,24 @@ import javax.swing.SwingUtilities
 public class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
     val settingsProvider: SettingsProvider
-) : TabbedPane(), SavesAndLoadData {
+) : TabbedPane() {
 
+    // Singleton pattern to ensure the extension is not initialized more than once
     companion object {
-        private lateinit var instance: SessionSwitcher
-        public fun get(): SessionSwitcher {
+        private lateinit var montoyaApi: MontoyaApi
+        public fun getApi(): MontoyaApi {
+            if (!this::montoyaApi.isInitialized) {
+                throw Exception("Montoya API not initialized yet.")
+            }
+            return this.montoyaApi
+        }
+        public fun getInstance(): SessionSwitcher {
             if (!this::instance.isInitialized) {
                 throw Exception("SessionSwitcher not initialized yet.")
             }
             return this.instance
         }
+        private lateinit var instance: SessionSwitcher
         public fun init(
             montoyaApi: MontoyaApi,
             settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
@@ -38,13 +43,14 @@ public class SessionSwitcher private constructor(
             if (this::instance.isInitialized) {
                 throw Exception("SessionSwitcher instance already initialized.")
             }
+            this.montoyaApi = montoyaApi
             this.instance = SessionSwitcher(montoyaApi, settingsProvider)
             return this.instance
         }
     }
 
+    final val sessions = SessionCollection()
     public val settings = Settings(this.settingsProvider)
-    private val sessions = LinkedHashMap<String, Session>()
 
     // Windows
     private val settingsWindow = SettingsWindow(settings)
@@ -71,11 +77,7 @@ public class SessionSwitcher private constructor(
         }
 
         // Reload data from the project file
-        if (!this.dataPresentInProjectFile()) {
-            this.saveToProjectFile(false) // initialize main object
-        } else {
-            this.loadFromProjectFileAsync()
-        }
+        this.sessions.loadFromProjectFile()
 
         // Initialize ExternalToolsService to make it ready to spawn the webserver and register the interceptor when they are needed
         /*
@@ -87,36 +89,6 @@ public class SessionSwitcher private constructor(
 
     fun unload() = runBlocking {
         //TODO: stop proxy interceptors
-    }
-
-    fun getSessionsId(): Collection<String> {
-        return this.sessions.keys
-    }
-
-    fun getSessions(): Collection<Session> {
-        return this.sessions.values
-    }
-
-    fun getSession(key: String): Session? {
-        return this.sessions[key]
-    }
-
-    fun deleteSession(key: String) {
-        if (this.sessions.containsKey(key)) {
-            this.sessions[key]?.deleteFromProjectFileAsync()
-            this.sessions.remove(key)
-        }
-    }
-
-    fun createSession(name: String): Session {
-        val s = Session(name)
-        this.sessions[s.id] = s
-        this.updateChildObjectAsync(s)
-        return s
-    }
-
-    fun deleteSession(p: Session) {
-        this.deleteSession(p.id)
     }
 
     fun focus() {
@@ -138,32 +110,5 @@ public class SessionSwitcher private constructor(
         this.addTab("Settings", JPanel())
         this.tabbedPane.setTabComponentAt(idx, button)
         this.tabbedPane.setEnabledAt(idx, false)
-    }
-
-    override val saveStateKey: String
-        get() = "Sessions_Main"
-
-    override fun getChildrenObjectsToSave(): Collection<SavesDataToProject> {
-        val lst: MutableList<SavesDataToProject> = this.sessions.values.toMutableList()
-        //lst.add(this.scanner)
-        return lst
-    }
-
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-        obj.setStringList("sessionswitcher", getSaveStateKeys(this.sessions.values))
-        return obj
-    }
-
-    override fun burpDeserialize(obj: PersistedObject) {
-        val sessionsList = obj.getStringList("sessionswitcher")
-        if (sessionsList != null) {
-            for (sessionId in sessionsList) {
-                val p = Session.Deserializer(sessionId).get() ?: continue
-                this.sessions[p.id] = p
-            }
-        }
-
-        //this.scanner.loadFromProjectFile()
     }
 }

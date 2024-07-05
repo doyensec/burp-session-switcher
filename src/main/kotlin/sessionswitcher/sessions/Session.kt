@@ -1,9 +1,10 @@
-package sessionswitcher
+package sessionswitcher.sessions
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.persistence.PersistedObject
+import sessionswitcher.Logger
+import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
-import sessionswitcher.savestate.SavesDataToProject
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
 import sessionswitcher.utils.headersMap
@@ -11,7 +12,7 @@ import sessionswitcher.utils.withUpsertedHeaders
 import java.util.*
 
 
-class Session(val name: String, val id: String = UUID.randomUUID().toString()) : SavesDataToProject {
+class Session(val name: String, val id: String = UUID.randomUUID().toString()) : CanSaveData {
     companion object {
         val INCLUDED_HEADERS = setOf<String>(
             // Keep these lowercase
@@ -49,7 +50,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     override val saveStateKey: String
         get() = "Session.$id"
 
-    override fun getChildrenObjectsToSave(): Collection<SavesDataToProject>? = null
+    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
 
     override fun burpSerialize(): PersistedObject {
         val obj = PersistedObject.persistedObject()
