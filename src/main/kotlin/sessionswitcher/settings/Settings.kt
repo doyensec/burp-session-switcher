@@ -2,7 +2,7 @@ package sessionswitcher.settings
 
 class Settings(val provider: SettingsProvider) {
 
-    public val loggingLevel = StringSetting(provider,"logging.level", "Logging level", "INFO")
+    public val loggingLevel = StringSetting(provider,"logging.level", "Logging level", "DEBUG")
     public val proxyHighlightInjectedColor = StringSetting(provider,"proxy.highlight_injected_color", "Highlight color of injected requests", "yellow")
 
     public val displayRequestEditor = BooleanSetting(provider,"ui.display_request_editor", "Display the request editor", true)

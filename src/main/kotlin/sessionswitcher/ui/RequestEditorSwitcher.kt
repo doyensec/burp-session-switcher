@@ -34,7 +34,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
             return provider as Provider
         }
 
-        val SESSION_NONE = Session("Current", "none")
+        val SESSION_NONE = Session("No change", "none")
     }
 
     // State-holding stuff
@@ -63,7 +63,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
             this._selectedSession = s
             this.editedLabel.text = ""
             if (s != null) {
-                Logger.info("DIFF NULL")
+                Logger.info("NOT NULL")
                 this.httpRequest = s.apply(request)
                 this.originalRequestModified = true
                 Logger.info(s.name)
@@ -84,8 +84,8 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         // TODO: strip unwanted headers maybe?
         this.editor.setText(httpRequest.toString())
         this.editedLabel.text = ""
-        this.saveSessionBtn.isEnabled = this.selectedSession == null
         this.deleteSessionBtn.isEnabled = this.selectedSession != null
+        this.editSessionBtn.isEnabled = this.selectedSession != null
     }
 
     private fun updateSessionsList() {
@@ -96,16 +96,14 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         this.isUpdatingUI = false
     }
 
-    private fun saveToSessionFromRequest() {
-        val selected = (this.sessionsComboBox.selectedItem ?: return) as Session
-        val request = this.httpRequest ?: return
-        selected.loadFromRequestFiltered(request)
-    }
-
     class EditorChangeListener(val callback: () -> Unit) : DocumentListener {
         override fun insertUpdate(e: DocumentEvent?) {}
         override fun removeUpdate(e: DocumentEvent?){}
         override fun changedUpdate(e: DocumentEvent?) = this.callback()
+    }
+
+    private fun editSelectedSession() {
+        TODO()
     }
 
     private fun deleteSelectedSession() {
@@ -120,17 +118,13 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         }
     }
 
-    private fun saveSessionHandler() {
-        if (this.selectedSession == null) {
-            // New session
-            val session = this.newSessionDialog() ?: return
-            this.updateSessionsList()
-            this.sessionsComboBox.selectedItem = session
-            this.saveToSessionFromRequest()
-        } else {
-            // Save existing
-            TODO()
-        }
+    private fun newSessionHandler() {
+        // New session
+        val session = this.newSessionDialog() ?: return
+        this.updateSessionsList()
+        this.sessionsComboBox.selectedItem = session
+        val request = this.originalRequest ?: return
+        session.loadFromRequestFiltered(request)
     }
 
     private fun selectedSessionChanged() {
@@ -179,10 +173,16 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         it.toolTipText = "Select a session"
         it.addActionListener { this.selectedSessionChanged() }
     }
-    private val saveSessionBtn = JButton("Save").also {
+    private val newSessionBtn = JButton("New").also {
         it.isEnabled = true
         it.addActionListener {
-            this.saveSessionHandler()
+            this.newSessionHandler()
+        }
+    }
+    private val editSessionBtn = JButton("Edit").also {
+        it.isEnabled = false
+        it.addActionListener {
+            this.editSelectedSession()
         }
     }
     private val deleteSessionBtn = JButton("Delete").also {
@@ -194,7 +194,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
 
     private fun editorChangeHandler() {
         this.editedLabel.text = "(Modified)"
-        this.saveSessionBtn.isEnabled = true
+        this.newSessionBtn.isEnabled = true
     }
 
     // End UI Stuff
@@ -208,7 +208,8 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         }
 
         val buttonPanel = FlowPanel(FlowLayout.LEFT).also {
-            it.add(this.saveSessionBtn)
+            it.add(this.newSessionBtn)
+            it.add(this.editSessionBtn)
             it.add(this.deleteSessionBtn)
         }
 

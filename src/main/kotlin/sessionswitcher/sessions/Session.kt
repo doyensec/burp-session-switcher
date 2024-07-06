@@ -14,11 +14,34 @@ import java.util.*
 
 class Session(val name: String, val id: String = UUID.randomUUID().toString()) : CanSaveData {
     companion object {
-        val INCLUDED_HEADERS = setOf<String>(
+        val EXCLUDED_HEADER_PREFIXES = setOf<String>(
             // Keep these lowercase
-            "authorization",
-            "cookie",
-            "x-"
+            ":", // HTTP2 headers
+            "connection",
+            "sec-",
+            "priority",
+            "accept",
+            "cache",
+            "content",
+            "host",
+            "user-agent",
+            "referer",
+            "upgrade",
+            "if-",
+            "access-",
+            "date",
+            "expect",
+            "forwarded",
+            "http2",
+            "max-forwards",
+            "pragma",
+            "proxy-",
+            "range",
+            "te",
+            "trailer",
+            "transfer-",
+            "via",
+            "warning"
         )
 
         fun isValidName(name: String): Boolean {
@@ -72,14 +95,14 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     fun apply(r: HttpRequest): HttpRequest {
+        Logger.info("session.apply: " + this.customHeaders)
         return r.withUpsertedHeaders(this.customHeaders)
     }
 
     fun loadFromRequestFiltered(r: HttpRequest) {
         val reqHeaders = r.headersMap()
         val custom = reqHeaders
-            .filter { (rh, _) -> !rh.startsWith(":") } // Always exclude http2-specific headers
-            .filter { (rh, _) -> INCLUDED_HEADERS.any { h -> rh.lowercase().startsWith(h) }  } // This could be replaced with a blocklist instead
+            .filter { (rh, _) -> !EXCLUDED_HEADER_PREFIXES.any { h -> rh.lowercase().startsWith(h) }  } // This could be replaced with a blocklist instead
         Logger.debug("Saving headers into session: $custom")
         this.overwrite(custom)
     }
