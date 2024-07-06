@@ -9,4 +9,5 @@ class Settings(val provider: SettingsProvider) {
     public val registerContextMenu = BooleanSetting(provider,"ui.register_context_menu", "Register the context menu handler", true)
     public val displayExtensionMainTab = BooleanSetting(provider,"ui.display_extension_main_tab", "Display the extension's main tab", true)
 
+    public val editorFontSize = IntSetting(provider, "editor.font_size", "Request Editor Font Size", 12)
 }

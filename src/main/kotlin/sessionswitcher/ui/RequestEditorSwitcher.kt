@@ -1,11 +1,8 @@
 package sessionswitcher.ui
 
-import burp.api.montoya.core.ByteArray
 import burp.api.montoya.http.message.HttpRequestResponse
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Selection
-import burp.api.montoya.ui.editor.EditorOptions
-import burp.api.montoya.ui.editor.RawEditor
 import burp.api.montoya.ui.editor.extension.EditorCreationContext
 import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
@@ -13,11 +10,7 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.ui.misc.BorderPanel
-import sessionswitcher.ui.misc.BoxPanel
-import sessionswitcher.ui.misc.FlowPanel
-import sessionswitcher.ui.misc.SendFromPluginHandler
-import sessionswitcher.utils.getTextAreaComponent
+import sessionswitcher.ui.misc.*
 import java.awt.*
 import javax.swing.*
 import javax.swing.event.DocumentEvent
@@ -45,7 +38,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
     }
 
     // State-holding stuff
-    private var editor: RawEditor
+    private var editor = HighlightRequestEditor()
 
     private var _request: HttpRequest? = null
     private var httpRequest: HttpRequest?
@@ -89,7 +82,9 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
     private val contextMenu = EditorSendRequestFromPluginHandler(this)
     private fun updateEditorFromRequest() {
         // TODO: strip unwanted headers maybe?
-        this.editor.contents = httpRequest?.toByteArray() ?: ByteArray.byteArray("")
+        // TODO: remove hardcoded highlight for testing
+        val fakeHighlightRange = HighlightRequestEditor.TextRange(62, 62+23)
+        this.editor.setText(httpRequest.toString(), fakeHighlightRange)
         this.editedLabel.text = ""
         this.saveSessionBtn.isEnabled = this.selectedSession == null
         this.deleteSessionBtn.isEnabled = this.selectedSession != null
@@ -207,12 +202,6 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
     // End UI Stuff
 
     init {
-        if (readOnly) {
-            this.editor = plugin.montoyaApi.userInterface().createRawEditor(EditorOptions.READ_ONLY)
-        } else {
-            this.editor = plugin.montoyaApi.userInterface().createRawEditor()
-        }
-
         val rootContainer = BoxPanel(BoxLayout.Y_AXIS)
 
         val sessionLabelPanel = FlowPanel(FlowLayout.LEFT).also {
@@ -234,15 +223,15 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         }
 
         this.component.add(BorderLayout.PAGE_START, BorderPanel(10).also { it.add(rootContainer) })
-        this.component.add(BorderLayout.CENTER, this.editor.uiComponent())
+        this.component.add(BorderLayout.CENTER, this.editor)
 
         val listener = EditorChangeListener { this.editorChangeHandler() }
-        val jt = this.editor.getTextAreaComponent()
-        jt.document.addDocumentListener(listener)
+        //val jt = this.editor.getTextAreaComponent()
+        //jt.document.addDocumentListener(listener)
 
         // Add context menu handler
-        this.contextMenu.addRightClickHandler(this.editor.getTextAreaComponent())
-        this.contextMenu.addKeyboardShortcutHandler(this.editor.getTextAreaComponent())
+        //this.contextMenu.addRightClickHandler(this.editor.getTextAreaComponent())
+        //this.contextMenu.addKeyboardShortcutHandler(this.editor.getTextAreaComponent())
     }
 
     override fun setRequestResponse(requestResponse: HttpRequestResponse) {
