@@ -31,7 +31,7 @@ interface CanLoadData : BurpDeserializable {
         Logger.debug("[$key] Trying to load data from project file")
         val obj = persistenceStore.getChildObject(key)
         if (obj == null) {
-            Logger.warning("[$key] No savestate with this key found in this project file")
+            Logger.debug("[$key] No savestate with this key found in this project file")
             return false
         }
         try {

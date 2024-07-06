@@ -1,34 +1,54 @@
 package sessionswitcher.ui.misc
 
+import burp.api.montoya.ui.Theme
 import sessionswitcher.SessionSwitcher
 import java.awt.BorderLayout
 import java.awt.Color
-import javax.swing.JPanel
-import javax.swing.JScrollPane
-import javax.swing.JTextPane
-import javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
-import javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+import java.awt.Dimension
+import java.awt.event.ComponentAdapter
+import java.awt.event.ComponentEvent
+import javax.swing.*
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 
+
 class HighlightRequestEditor: JPanel(BorderLayout()) {
+
+    private val normalTextStyle = SimpleAttributeSet()
+    private val highlightedTextStyle = SimpleAttributeSet().also {
+        if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
+            StyleConstants.setForeground(it, Color.ORANGE)
+        } else {
+            StyleConstants.setForeground(it, Color.RED)
+        }
+    }
     data class TextRange(val start: Int, val end: Int)
 
     private val textPane = JTextPane().also {
         it.isEditable = false
         it.font = SessionSwitcher.getApi().userInterface().currentEditorFont()
+        it.editorKit = WrapEditorKit()
     }
 
-    private val normalTextStyle = SimpleAttributeSet()
-    private val highlightedTextStyle = SimpleAttributeSet().also {
-        StyleConstants.setForeground(it, Color.ORANGE)
+    private val textPaneContainer = JPanel().also {
+        it.layout = BoxLayout(it, BoxLayout.PAGE_AXIS)
+        it.border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
+        it.add(textPane, BorderLayout.CENTER)
+    }
+
+    private val scrollPane = JScrollPane(textPaneContainer).also {
+        it.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
+        it.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+    }
+
+    class TextPaneComponentAdapter(val panel: JPanel, val textPane: JTextPane): ComponentAdapter() {
+        override fun componentResized(e: ComponentEvent?) {
+            this.panel.preferredSize = Dimension(e!!.component.width, textPane.height)
+        }
     }
 
     init {
-        val scrollPane = JScrollPane(textPane)
-        scrollPane.verticalScrollBar.unitIncrement = 2
-        scrollPane.horizontalScrollBarPolicy = HORIZONTAL_SCROLLBAR_NEVER
-        scrollPane.verticalScrollBarPolicy = VERTICAL_SCROLLBAR_ALWAYS
+        this.scrollPane.addComponentListener(TextPaneComponentAdapter(this.textPaneContainer, this.textPane))
         this.add(scrollPane)
         SessionSwitcher.getApi().userInterface().applyThemeToComponent(this)
     }
