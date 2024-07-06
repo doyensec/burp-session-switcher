@@ -82,9 +82,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
     private val contextMenu = EditorSendRequestFromPluginHandler(this)
     private fun updateEditorFromRequest() {
         // TODO: strip unwanted headers maybe?
-        // TODO: remove hardcoded highlight for testing
-        val fakeHighlightRange = HighlightRequestEditor.TextRange(62, 62+23)
-        this.editor.setText(httpRequest.toString(), fakeHighlightRange)
+        this.editor.setText(httpRequest.toString())
         this.editedLabel.text = ""
         this.saveSessionBtn.isEnabled = this.selectedSession == null
         this.deleteSessionBtn.isEnabled = this.selectedSession != null

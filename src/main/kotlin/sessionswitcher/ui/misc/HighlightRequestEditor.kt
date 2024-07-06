@@ -22,7 +22,7 @@ class HighlightRequestEditor: JPanel(BorderLayout()) {
             StyleConstants.setForeground(it, Color.RED)
         }
     }
-    data class TextRange(val start: Int, val end: Int)
+    data class TextRange(val start: Int, val length: Int)
 
     private val textPane = JTextPane().also {
         it.isEditable = false
@@ -53,28 +53,13 @@ class HighlightRequestEditor: JPanel(BorderLayout()) {
         SessionSwitcher.getApi().userInterface().applyThemeToComponent(this)
     }
 
-    private fun normalizeRanges(ranges: Array<out TextRange>): Collection<TextRange> {
-        // Order by start
-        val output = ranges.sortedBy { it.start }
-
-        //Make sure there are no overlaps
-        for (i in 0..<output.size-1) {
-            if (output[i].start > output[i+1].end) {
-                // Overlap detected, throw exception
-                throw Exception("Highlight ranges overlap detected")
-            }
-        }
-        return output
-    }
-
     fun setText(text: String, vararg highlightRanges: TextRange) {
         val cleanedText = text.replace("\r", "")
         val doc = this.textPane.styledDocument
-        val ranges = this.normalizeRanges(highlightRanges)
 
         this.textPane.text = cleanedText
-        for (range in ranges) {
-            doc.setCharacterAttributes(range.start, range.end-range.start, highlightedTextStyle, true)
+        for (range in highlightRanges) {
+            doc.setCharacterAttributes(range.start, range.length, highlightedTextStyle, true)
         }
         // Return caret to the top
         this.textPane.caretPosition = 0
@@ -82,9 +67,8 @@ class HighlightRequestEditor: JPanel(BorderLayout()) {
 
     fun highlightRanges(vararg highlightRanges: TextRange) {
         val doc = this.textPane.styledDocument
-        val ranges = this.normalizeRanges(highlightRanges)
-        for (range in ranges) {
-            doc.setCharacterAttributes(range.start, range.end-range.start, highlightedTextStyle, true)
+        for (range in highlightRanges) {
+            doc.setCharacterAttributes(range.start, range.length, highlightedTextStyle, true)
         }
     }
 
