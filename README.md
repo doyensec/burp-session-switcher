@@ -61,6 +61,6 @@ Current:
 This project was made with support of [Doyensec](https://doyensec.com/research.html).
 
 
-![Doyensec Research](docs/doyensec_logo.svg)   
+![Doyensec Research](https://doyensec.com/img/doyensec-logo.svg)   
 
 
