@@ -7,7 +7,7 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
-import sessionswitcher.utils.headersMap
+import sessionswitcher.utils.mergedHeaders
 import sessionswitcher.utils.withUpsertedHeaders
 import java.util.*
 
@@ -17,6 +17,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         val EXCLUDED_HEADER_PREFIXES = setOf<String>(
             // Keep these lowercase
             ":", // HTTP2 headers
+            "cookie", // Handled separately
             "connection",
             "sec-",
             "priority",
@@ -55,20 +56,15 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
             val headersLst = obj.getChildObjectList("headers")
             if (headersLst != null) {
                 for (headerObj in headersLst) {
-                    p.customHeaders[headerObj.getString("k")] = headerObj.getString("v")
+                    p.headers[headerObj.getString("k")] = headerObj.getString("v")
                 }
             }
             this.deserialized = p
         }
     }
 
-    val customHeaders: MutableMap<String, String> = LinkedHashMap<String, String>()
-
-    private fun overwrite(headers: Map<String, String>) {
-        this.customHeaders.clear()
-        this.customHeaders.putAll(headers)
-        this.saveToProjectFileAsync()
-    }
+    private val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
+    private val cookies = Cookies()
 
     override val saveStateKey: String
         get() = "Session.$id"
@@ -79,8 +75,8 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         val obj = PersistedObject.persistedObject()
         obj.setString("name", name)
         obj.setString("id", id)
-        val headersLst = ArrayList<PersistedObject>(this.customHeaders.size)
-        for ((k, v) in this.customHeaders) {
+        val headersLst = ArrayList<PersistedObject>(this.headers.size)
+        for ((k, v) in this.headers) {
             val headerObj = PersistedObject.persistedObject()
             headerObj.setString("k", k)
             headerObj.setString("v", v)
@@ -95,20 +91,25 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     fun apply(r: HttpRequest): HttpRequest {
-        Logger.info("session.apply: " + this.customHeaders)
-        return r.withUpsertedHeaders(this.customHeaders)
+        Logger.info("session.apply: " + this.headers)
+        return r.withUpsertedHeaders(this.headers)
+        // TODO: apply cookies
     }
 
-    fun loadFromRequestFiltered(r: HttpRequest) {
-        val reqHeaders = r.headersMap()
+    fun loadFromRequest(r: HttpRequest) {
+        val reqHeaders = r.mergedHeaders()
         val custom = reqHeaders
-            .filter { (rh, _) -> !EXCLUDED_HEADER_PREFIXES.any { h -> rh.lowercase().startsWith(h) }  } // This could be replaced with a blocklist instead
-        Logger.debug("Saving headers into session: $custom")
-        this.overwrite(custom)
+            .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
+        Logger.debug("Saving " +
+                "headers into session: $custom")
+        this.headers.clear()
+        this.headers.putAll(custom.map { Pair(it.name(), it.value()) })
+
+        this.cookies.update(Cookies.fromHttpRequest(r))
+        this.saveToProjectFileAsync()
     }
 
-    fun loadFromRequestAll(r: HttpRequest) {
-        val reqHeaders = r.headersMap().filter { (rh, _) -> !rh.startsWith(":") }
-        this.overwrite(reqHeaders)
+    fun sessionMatches(r: HttpRequest) {
+        // TODO: implement diff checking between Sessions
     }
 }

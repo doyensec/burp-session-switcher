@@ -3,21 +3,8 @@ package sessionswitcher.utils
 import burp.api.montoya.http.message.HttpHeader
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.Logger
+import sessionswitcher.sessions.Cookies
 
-fun cookieMapFromHeader(headerValue: String): MutableMap<String, String> {
-    return headerValue
-        .split(';')
-        .map { it.trim().split('=', limit = 2) }
-        .filter { it.size == 2 }
-        .associate { it[0] to it[1] }
-        .toMutableMap()
-}
-
-fun cookieMapToHeader(map: Map<String, String>): String {
-    return map
-        .map { "${it.key}=${it.value}" }
-        .joinToString("; ")
-}
 fun HttpRequest.withUpsertedHeader(name: String, value: String): HttpRequest {
     var updateOnly = false
     for (header in this.mergedHeaders()) {
@@ -37,11 +24,10 @@ fun HttpRequest.withUpsertedHeader(name: String, value: String): HttpRequest {
     }
 }
 fun HttpRequest.withUpsertedCookies(cookies: String): HttpRequest {
-    val existingCookieString = this.getHeader(name="cookie") ?: ""
-    val cookieMap = cookieMapFromHeader(existingCookieString)
-    val newCookiesMap = cookieMapFromHeader(cookies)
-    cookieMap.putAll(newCookiesMap)
-    val newHeaderValue = cookieMapToHeader(cookieMap)
+    val existingCookieString = this.getHeaderValue(name="cookie") ?: ""
+    val cookieMap = Cookies.fromHeaderValue(existingCookieString)
+    cookieMap.update(cookies)
+    val newHeaderValue = cookieMap.toString()
     return this.withRemovedHeader("Cookie").withAddedHeader("Cookie", newHeaderValue)
 }
 
@@ -71,18 +57,21 @@ fun HttpRequest.withUpsertedHeaders(newHeaders: Map<String, String>): HttpReques
 fun HttpRequest.mergedHeaders(): List<HttpHeader> {
     if (this.httpVersion() != "HTTP/2") return this.headers()
     val rawHeaders = this.headers()
-    val cookies = rawHeaders.filter { it.name() == "cookie" }
+    val cookies = rawHeaders.filter { it.name().lowercase() == "cookie" }
     if (cookies.size < 2) return rawHeaders
     Logger.debug("Merging multiple Cookie headers from HTTP/2 request")
     val uncompressedCookies = cookies.joinToString("; ") { it.value() }
+    val originalCookieIndex = rawHeaders.indexOfFirst { it.name().lowercase() == "cookie" }
     val newHeaders = rawHeaders.filter { it.name() != "cookie" }.toMutableList()
-    newHeaders.add(HttpHeader.httpHeader("cookie", uncompressedCookies))
+    newHeaders.add(originalCookieIndex, HttpHeader.httpHeader("cookie", uncompressedCookies))
     return newHeaders
 }
 fun HttpRequest.headersMap(): Map<String, String> {
-    return this.mergedHeaders().associate { e -> e.name() to e.value() }
+    val map = mutableMapOf<String, String>()
+    this.mergedHeaders().forEach { map.put(it.name(), it.value()) }
+    return map
 }
 
-fun HttpRequest.getHeader(name: String): String? {
+fun HttpRequest.getHeaderValue(name: String): String? {
     return this.mergedHeaders().find { it.name().equals(name, ignoreCase = true)}?.value()
 }

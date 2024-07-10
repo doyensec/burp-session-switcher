@@ -245,8 +245,7 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
         // Pack the window to fit its content
         this.pack()
 
-        // Center the window on the screen
-        this.setLocationRelativeTo(null)
+        this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
     }
 }
 
@@ -341,6 +340,6 @@ class ImgButton(val fallback: String, displayIcon: Icon?) : JButton() {
 class ErrorDialog(val msg: String) {
     init {
         Logger.error(msg)
-        JOptionPane.showMessageDialog(null, msg, "BurpSessions Error", JOptionPane.ERROR_MESSAGE)
+        JOptionPane.showMessageDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), msg, "BurpSessions Error", JOptionPane.ERROR_MESSAGE)
     }
 }

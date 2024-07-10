@@ -9,7 +9,7 @@ import burp.api.montoya.proxy.http.ProxyRequestToBeSentAction
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.utils.getHeader
+import sessionswitcher.utils.getHeaderValue
 import sessionswitcher.utils.withUpsertedHeader
 
 class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
@@ -20,7 +20,7 @@ class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
             Logger.debug("Injecting session ${session.name} in request to ${request.url()}")
 
             var newReq = request
-            for ((key, value) in session.customHeaders) {
+            for ((key, value) in session.headers) {
                 newReq = newReq.withUpsertedHeader(key, value)
             }
             return newReq
@@ -37,10 +37,10 @@ class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
     // Part of ProxyRequestHandler interface, leave it alone
     override fun handleRequestToBeSent(interceptedRequest: InterceptedRequest): ProxyRequestToBeSentAction {
         // Has our proprietary `X-Burp-Session` header holding the session identifier
-        if (interceptedRequest.getHeader(INTERCEPT_HEADER) != null) {
+        if (interceptedRequest.getHeaderValue(INTERCEPT_HEADER) != null) {
             Logger.debug("Request with Session header intercepted")
 
-            val sessionName = interceptedRequest.getHeader(INTERCEPT_HEADER)
+            val sessionName = interceptedRequest.getHeaderValue(INTERCEPT_HEADER)
             if (sessionName.isNullOrBlank()) {
                 return ProxyRequestToBeSentAction.continueWith(interceptedRequest)
             }
