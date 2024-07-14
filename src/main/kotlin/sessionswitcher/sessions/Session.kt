@@ -64,7 +64,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     private val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
-    private val cookies = Cookies()
+    private var cookies = Cookies()
 
     override val saveStateKey: String
         get() = "Session.$id"
@@ -90,22 +90,26 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         return name
     }
 
-    fun apply(r: HttpRequest): HttpRequest {
+    fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.info("session.apply: " + this.headers)
-        return r.withUpsertedHeaders(this.headers)
-        // TODO: apply cookies
+        var (output, updatedHeaders, addedHeaders) = r.withUpsertedHeaders(this.headers)
+
+        val reqCookies = Cookies.fromHttpRequest(r)
+        val (updatedCookies, addedCookies) = reqCookies.update(this.cookies)
+        output = output.withUpsertedHeaders(mapOf("Cookie" to reqCookies.toString())).first
+        return Triple(output, Pair(updatedHeaders, addedHeaders), Pair(updatedCookies, addedCookies))
     }
 
     fun loadFromRequest(r: HttpRequest) {
         val reqHeaders = r.mergedHeaders()
         val custom = reqHeaders
             .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
-        Logger.debug("Saving " +
-                "headers into session: $custom")
+        Logger.debug("Saving headers into session: $custom")
         this.headers.clear()
         this.headers.putAll(custom.map { Pair(it.name(), it.value()) })
 
-        this.cookies.update(Cookies.fromHttpRequest(r))
+        this.cookies = Cookies.fromHttpRequest(r)
+        Logger.debug("Saving cookies into session: ${this.cookies}")
         this.saveToProjectFileAsync()
     }
 

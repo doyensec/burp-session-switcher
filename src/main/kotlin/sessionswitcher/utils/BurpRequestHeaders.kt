@@ -3,50 +3,36 @@ package sessionswitcher.utils
 import burp.api.montoya.http.message.HttpHeader
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.Logger
-import sessionswitcher.sessions.Cookies
 
-fun HttpRequest.withUpsertedHeader(name: String, value: String): HttpRequest {
-    var updateOnly = false
-    for (header in this.mergedHeaders()) {
-        if (header.name().lowercase() == name.lowercase()) {
-            updateOnly = true
-            break
-        }
-    }
-    return if (updateOnly) {
-        if (name.lowercase() == "cookie") {
-            this.withUpsertedCookies(value)
-        } else {
-            this.withUpdatedHeader(name, value)
-        }
-    } else {
-        this.withAddedHeader(name, value)
-    }
-}
-fun HttpRequest.withUpsertedCookies(cookies: String): HttpRequest {
-    val existingCookieString = this.getHeaderValue(name="cookie") ?: ""
-    val cookieMap = Cookies.fromHeaderValue(existingCookieString)
-    cookieMap.update(cookies)
-    val newHeaderValue = cookieMap.toString()
-    return this.withRemovedHeader("Cookie").withAddedHeader("Cookie", newHeaderValue)
-}
+/*
+    Returns a Triple with
+    1. The new HttpRequest
+    2. The list of updated headers
+    3. The list of added headers
+ */
+fun HttpRequest.withUpsertedHeaders(newHeaders: Map<String, String>): Triple<HttpRequest, List<String>, List<String>> {
+    val updated = ArrayList<String>()
+    val added = ArrayList<String>()
 
-fun HttpRequest.withUpsertedHeaders(newHeaders: Map<String, String>): HttpRequest {
     var out = this
-    val keys = this.mergedHeaders().map { it.name().lowercase() }.toSet()
     for ((k, v) in newHeaders) {
-        Logger.debug("Adding header $k : $v")
-        out = if (keys.contains(k.lowercase())) {
-            if (k.lowercase() == "cookie") {
-                out.withUpsertedCookies(v)
+        val existingValue = this.getHeaderValue(k)
+        out = if (existingValue != null) {
+            if (existingValue == v) {
+                Logger.debug("No change for header $k : $v")
+                out
             } else {
+                Logger.debug("Updating header $k : $v")
+                updated.add(k)
                 out.withUpdatedHeader(k, v)
             }
         } else {
+            Logger.debug("Adding header $k : $v")
+            added.add(k)
             out.withAddedHeader(k, v)
         }
     }
-    return out
+    return Triple(out, updated, added)
 }
 
 /*

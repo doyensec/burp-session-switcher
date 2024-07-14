@@ -4,27 +4,25 @@ import burp.api.montoya.http.message.HttpRequestResponse
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Selection
 import burp.api.montoya.ui.editor.extension.EditorCreationContext
-import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.ui.misc.*
+import sessionswitcher.ui.editor.DiffHighlightRequestEditor
+import sessionswitcher.ui.misc.BorderPanel
+import sessionswitcher.ui.misc.BoxPanel
+import sessionswitcher.ui.misc.FlowPanel
+import sessionswitcher.ui.misc.SendFromPluginHandler
 import java.awt.*
 import javax.swing.*
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
 
-class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, readOnly: Boolean) :
+class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     ExtensionProvidedHttpRequestEditor {
     companion object {
         class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
             override fun provideHttpRequestEditor(creationContext: EditorCreationContext?): ExtensionProvidedHttpRequestEditor {
-                return RequestEditorSwitcher(
-                    plugin,
-                    (creationContext?.editorMode() ?: EditorMode.DEFAULT) == EditorMode.READ_ONLY,
-                )
+                return RequestEditorSwitcher(plugin)
             }
         }
 
@@ -38,14 +36,16 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
     }
 
     // State-holding stuff
-    private var editor = HighlightRequestEditor()
+    private var editor = DiffHighlightRequestEditor()
 
     private var _request: HttpRequest? = null
     private var httpRequest: HttpRequest?
         get() = this._request
         set(r) {
             this._request = r
-            this.updateEditorFromRequest()
+            this.editedLabel.text = ""
+            this.deleteSessionBtn.isEnabled = this.selectedSession != null
+            this.editSessionBtn.isEnabled = this.selectedSession != null
         }
 
     private var originalRequest: HttpRequest? = null
@@ -64,30 +64,23 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
             this.editedLabel.text = ""
             if (s != null) {
                 Logger.info("NOT NULL")
-                this.httpRequest = s.apply(request)
+                val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request)
+                this.httpRequest = req
+                this.editor.setRequest(req, headersDiffInfo, cookiesDiffinfo)
                 this.originalRequestModified = true
                 Logger.info(s.name)
             } else {
                 Logger.info("NULL")
                 this.httpRequest = this.originalRequest!!.withMethod(this.originalRequest!!.method())
+                this.editor.setRequest(this.httpRequest!!)
                 this.originalRequestModified = false
             }
-            this.updateEditorFromRequest()
-
         }
     // END State-holding stuff
 
     // Session stuff
 
     private val contextMenu = EditorSendRequestFromPluginHandler(this)
-    private fun updateEditorFromRequest() {
-        // TODO: strip unwanted headers maybe?
-        this.editor.setText(httpRequest.toString())
-        this.editedLabel.text = ""
-        this.deleteSessionBtn.isEnabled = this.selectedSession != null
-        this.editSessionBtn.isEnabled = this.selectedSession != null
-    }
-
     private fun updateSessionsList() {
         this.isUpdatingUI = true
         this.sessionsComboBox.removeAllItems()
@@ -96,11 +89,13 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         this.isUpdatingUI = false
     }
 
+    /*
     class EditorChangeListener(val callback: () -> Unit) : DocumentListener {
         override fun insertUpdate(e: DocumentEvent?) {}
         override fun removeUpdate(e: DocumentEvent?){}
         override fun changedUpdate(e: DocumentEvent?) = this.callback()
     }
+     */
 
     private fun editSelectedSession() {
         TODO()
@@ -124,7 +119,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         this.updateSessionsList()
         this.sessionsComboBox.selectedItem = session
         val request = this.originalRequest ?: return
-        session.loadFromRequestFiltered(request)
+        session.loadFromRequest(request)
     }
 
     private fun selectedSessionChanged() {
@@ -224,7 +219,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         this.component.add(BorderLayout.PAGE_START, BorderPanel(10).also { it.add(rootContainer) })
         this.component.add(BorderLayout.CENTER, this.editor)
 
-        val listener = EditorChangeListener { this.editorChangeHandler() }
+        // val listener = EditorChangeListener { this.editorChangeHandler() }
         //val jt = this.editor.getTextAreaComponent()
         //jt.document.addDocumentListener(listener)
 
@@ -238,7 +233,8 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher, rea
         this.originalRequest = requestResponse.request()
         this.updateSessionsList()
         this.sessionsComboBox.selectedIndex = 0
-        this.updateEditorFromRequest()
+        this.httpRequest = this.originalRequest
+        this.editor.setRequest(this.httpRequest!!)
     }
 
     override fun isEnabledFor(requestResponse: HttpRequestResponse): Boolean = true

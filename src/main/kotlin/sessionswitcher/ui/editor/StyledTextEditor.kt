@@ -1,30 +1,21 @@
-package sessionswitcher.ui.misc
+package sessionswitcher.ui.editor
 
-import burp.api.montoya.ui.Theme
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.ui.misc.WrapEditorKit
 import java.awt.BorderLayout
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import javax.swing.*
 import javax.swing.text.SimpleAttributeSet
-import javax.swing.text.StyleConstants
 
 
-class HighlightRequestEditor: JPanel(BorderLayout()) {
+open class StyledTextEditor: JPanel(BorderLayout()) {
 
-    private val normalTextStyle = SimpleAttributeSet()
-    private val highlightedTextStyle = SimpleAttributeSet().also {
-        if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
-            StyleConstants.setForeground(it, Color.ORANGE)
-        } else {
-            StyleConstants.setForeground(it, Color.RED)
-        }
-    }
+    public val normalTextStyle = SimpleAttributeSet()
     data class TextRange(val start: Int, val length: Int)
 
-    private val textPane = JTextPane().also {
+    protected val textPane = JTextPane().also {
         it.isEditable = false
         it.font = SessionSwitcher.getApi().userInterface().currentEditorFont()
         it.editorKit = WrapEditorKit()
@@ -53,30 +44,22 @@ class HighlightRequestEditor: JPanel(BorderLayout()) {
         SessionSwitcher.getApi().userInterface().applyThemeToComponent(this)
     }
 
-    fun setText(text: String, vararg highlightRanges: TextRange) {
-        val cleanedText = text.replace("\r", "")
-        val doc = this.textPane.styledDocument
-
-        this.textPane.text = cleanedText
-        for (range in highlightRanges) {
-            doc.setCharacterAttributes(range.start, range.length, highlightedTextStyle, true)
-        }
-        // Return caret to the top
-        this.textPane.caretPosition = 0
+    fun clear() {
+        this.textPane.styledDocument.remove(0, this.textPane.styledDocument.length)
     }
 
-    fun highlightRanges(vararg highlightRanges: TextRange) {
+    fun highlightRanges(vararg highlightRanges: TextRange, highlightedTextStyle: SimpleAttributeSet) {
         val doc = this.textPane.styledDocument
         for (range in highlightRanges) {
             doc.setCharacterAttributes(range.start, range.length, highlightedTextStyle, true)
         }
     }
 
-    fun appendText(text: String, highlighted: Boolean = false) {
+    fun appendText(text: String, style: SimpleAttributeSet = this.normalTextStyle) {
         val cleanedText = text.replace("\r", "")
         val doc = this.textPane.styledDocument
 
-        doc.insertString(doc.length, cleanedText, if (highlighted) this.highlightedTextStyle else this.normalTextStyle )
+        doc.insertString(doc.length, cleanedText, style)
 
         // Return caret to the top
         this.textPane.caretPosition = 0

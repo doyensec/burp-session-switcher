@@ -40,6 +40,8 @@ class Cookies() {
         return this.cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
     }
 
+    fun isEmpty(): Boolean = this.cookies.isEmpty()
+
     fun get(key: String): String? = this.cookies[key]
 
     fun getPairs(): List<Pair<String, String>> {
@@ -63,7 +65,7 @@ class Cookies() {
     Updates the current Cookies object and returns a pair composed of
     the list of the updated cookie keys and the list of added cookie keys
      */
-    fun update(other: Cookies): Pair<ArrayList<String>, ArrayList<String>> {
+    fun update(other: Cookies): Pair<List<String>, List<String>> {
         val updatedCookies = ArrayList<String>()
         val addedCookies = ArrayList<String>()
         for (pair in other.getPairs()) {
@@ -83,7 +85,7 @@ class Cookies() {
         return Pair(updatedCookies, addedCookies)
     }
 
-    fun update(otherHeaderValue: String): Pair<ArrayList<String>, ArrayList<String>> {
+    fun update(otherHeaderValue: String): Pair<List<String>, List<String>> {
         val other = Cookies.fromHeaderValue(otherHeaderValue)
         return this.update(other)
     }

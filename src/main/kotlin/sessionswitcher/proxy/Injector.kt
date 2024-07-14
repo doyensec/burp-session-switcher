@@ -10,7 +10,6 @@ import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getHeaderValue
-import sessionswitcher.utils.withUpsertedHeader
 
 class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
     companion object {
@@ -19,11 +18,7 @@ class Injector(private val plugin: SessionSwitcher): ProxyRequestHandler {
         private fun injectSessionDataInRequest(request: HttpRequest, session: Session): HttpRequest {
             Logger.debug("Injecting session ${session.name} in request to ${request.url()}")
 
-            var newReq = request
-            for ((key, value) in session.headers) {
-                newReq = newReq.withUpsertedHeader(key, value)
-            }
-            return newReq
+            return session.apply(request).first
         }
     }
     private val color: HighlightColor = HighlightColor.highlightColor(plugin.settings.proxyHighlightInjectedColor.get())
