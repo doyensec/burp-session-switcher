@@ -56,14 +56,14 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         get() = this._selectedSession
         set(s) {
             if (isUpdatingUI) return
-            Logger.info("SELECTED SESSION SET")
+            Logger.info("Selected session set")
 
             val original = this.originalRequest ?: HttpRequest.httpRequest()
             val request = original.withMethod(original.method())
             this._selectedSession = s
             this.editedLabel.text = ""
             if (s != null) {
-                Logger.info("NOT NULL")
+                Logger.info("not null")
                 val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request)
                 this.httpRequest = req
                 this.editor.setRequest(req, headersDiffInfo, cookiesDiffinfo)
@@ -81,12 +81,41 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     // Session stuff
 
     private val contextMenu = EditorSendRequestFromPluginHandler(this)
+
+    private fun tryRestoreOldSession(old: Session?): Boolean {
+        if (old == null) return false
+        val req = this.httpRequest ?: return false
+
+        // See if old session is still in the combo box
+        var found = false
+        for (i in 0..<this.sessionsComboBox.itemCount) {
+            if (this.sessionsComboBox.getItemAt(i) == old) {
+                found = true
+                break
+            }
+        }
+        if (!found) return false
+
+        // See if the old session still matches the request
+        if (!old.matchesRequest(req)) {
+            return false
+        }
+
+        // Ok, select it in the combo box
+        this.sessionsComboBox.selectedItem = old
+        return true
+    }
     private fun updateSessionsList() {
         this.isUpdatingUI = true
+        val oldSession = this.selectedSession
         this.sessionsComboBox.removeAllItems()
         this.sessionsComboBox.addItem(SESSION_NONE)
         this.plugin.sessions.getSessions().forEach { this.sessionsComboBox.addItem(it) }
+        val oldSessionRestored = this.tryRestoreOldSession(oldSession)
         this.isUpdatingUI = false
+        if (!oldSessionRestored) {
+            this.sessionsComboBox.selectedIndex = 0
+        }
     }
 
     /*
@@ -102,42 +131,35 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     }
 
     private fun deleteSelectedSession() {
-        val isAlsoLinked = this.sessionsComboBox.selectedItem == this.selectedSession
         this.plugin.sessions.deleteSession(this.sessionsComboBox.selectedItem as Session)
         this.updateSessionsList()
-        if (isAlsoLinked) {
-            this.selectedSession = null
-            this.sessionsComboBox.selectedIndex = 0
-        } else {
-            this.sessionsComboBox.selectedItem = this.selectedSession
-        }
     }
 
     private fun newSessionHandler() {
         // New session
-        val session = this.newSessionDialog() ?: return
+        val session = this.newSession() ?: return
         this.updateSessionsList()
-        this.sessionsComboBox.selectedItem = session
         val request = this.originalRequest ?: return
         session.loadFromRequest(request)
+        this.sessionsComboBox.selectedItem = session
     }
 
     private fun selectedSessionChanged() {
-        Logger.info("SELECTED SESSION CHANGED")
+        Logger.info("Selected session changed")
         val selected = (this.sessionsComboBox.selectedItem ?: return) as Session
         when (selected) {
             SESSION_NONE -> {
-                Logger.info("NONE BRANCH")
+                Logger.info("Selected session null")
                 this.selectedSession = null
             }
             else -> {
-                Logger.info("ELSE BRANCH")
+                Logger.info("Selected session NOT null")
                 this.selectedSession = selected
             }
         }
     }
 
-    private fun newSessionDialog(): Session? {
+    private fun newSession(): Session? {
         var name: String?
         do {
             name = JOptionPane.showInputDialog(
@@ -231,10 +253,9 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     override fun setRequestResponse(requestResponse: HttpRequestResponse) {
         this.originalRequestModified = false
         this.originalRequest = requestResponse.request()
-        this.updateSessionsList()
-        this.sessionsComboBox.selectedIndex = 0
         this.httpRequest = this.originalRequest
         this.editor.setRequest(this.httpRequest!!)
+        this.updateSessionsList()
     }
 
     override fun isEnabledFor(requestResponse: HttpRequestResponse): Boolean = true

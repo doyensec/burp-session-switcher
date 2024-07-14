@@ -126,6 +126,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         }
 
         // Check cookies
+        httpRequest.headers().forEach { Logger.debug(it.name() + ":" + it.value()) }
         val otherCookies = Cookies.fromHttpRequest(httpRequest)
         return otherCookies.contains(this.cookies)
     }
