@@ -89,4 +89,23 @@ class Cookies() {
         val other = Cookies.fromHeaderValue(otherHeaderValue)
         return this.update(other)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (other == null) return false
+        if (other::class.java != this::class.java) return false
+        return this.cookies == (other as Cookies).cookies
+    }
+
+    /*
+    Returns true if all the cookies stored in this Cookies object
+    are also contained the other Cookies object
+     */
+    fun contains(other: Cookies): Boolean {
+        for (cookie in other.cookies) {
+            if (this.cookies[cookie.key] != cookie.value) {
+                return false
+            }
+        }
+        return true
+    }
 }

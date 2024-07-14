@@ -7,6 +7,7 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
+import sessionswitcher.utils.headersMap
 import sessionswitcher.utils.mergedHeaders
 import sessionswitcher.utils.withUpsertedHeaders
 import java.util.*
@@ -113,7 +114,19 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         this.saveToProjectFileAsync()
     }
 
-    fun sessionMatches(r: HttpRequest) {
-        // TODO: implement diff checking between Sessions
+    /*
+    Check if all headers & cookies contained in this session are already applied to a request
+     */
+    fun matchesRequest(httpRequest: HttpRequest): Boolean {
+        // Check headers
+        for (header in this.headers) {
+            if (httpRequest.headersMap()[header.key] != header.value) {
+                return false
+            }
+        }
+
+        // Check cookies
+        val otherCookies = Cookies.fromHttpRequest(httpRequest)
+        return otherCookies.contains(this.cookies)
     }
 }
