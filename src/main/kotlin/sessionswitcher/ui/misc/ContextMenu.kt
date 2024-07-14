@@ -1,6 +1,7 @@
 package sessionswitcher.ui.misc
 
 import burp.api.montoya.http.message.requests.HttpRequest
+import burp.api.montoya.ui.contextmenu.AuditIssueContextMenuEvent
 import burp.api.montoya.ui.contextmenu.ContextMenuEvent
 import burp.api.montoya.ui.contextmenu.ContextMenuItemsProvider
 import sessionswitcher.SessionSwitcher
@@ -126,13 +127,7 @@ class SendToPluginHandler(inql: SessionSwitcher) : SendFromPluginHandler(inql), 
 
     private fun requestFromContext(event: ContextMenuEvent): HttpRequest? {
         val invocationType = event.invocationType()
-        if (invocationType.containsScanIssues()) {
-            val issues = event.selectedIssues()
-            if (issues.size != 1) return null
-            val requestResponses = issues[0].requestResponses()
-            if (requestResponses.isEmpty()) return null
-            return requestResponses[0].request()
-        } else if (invocationType.containsHttpRequestResponses()) {
+        if (invocationType.containsHttpRequestResponses()) {
             val requestResponses = event.selectedRequestResponses()
             if (requestResponses.size != 1) return null
             return requestResponses[0].request()
@@ -145,6 +140,15 @@ class SendToPluginHandler(inql: SessionSwitcher) : SendFromPluginHandler(inql), 
 
     override fun provideMenuItems(event: ContextMenuEvent): MutableList<JMenuItem>? {
         this.request = this.requestFromContext(event) ?: return null
+        return this.sendToInqlComponents()
+    }
+
+    override fun provideMenuItems(event: AuditIssueContextMenuEvent): MutableList<JMenuItem>? {
+        val issues = event.selectedIssues()
+        if (issues.size != 1) return null
+        val requestResponses = issues[0].requestResponses()
+        if (requestResponses.isEmpty()) return null
+        this.request = requestResponses[0].request()
         return this.sendToInqlComponents()
     }
 
