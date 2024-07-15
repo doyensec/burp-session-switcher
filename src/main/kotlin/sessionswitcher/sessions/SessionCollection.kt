@@ -8,8 +8,12 @@ import sessionswitcher.savestate.getSaveStateKeys
 class SessionCollection: CanSaveAndLoadData {
     private val sessions = LinkedHashMap<String, Session>()
 
-    fun getSessionsId(): Collection<String> {
+    fun getSessionNames(): Collection<String> {
         return this.sessions.keys
+    }
+
+    fun hasSession(key: String): Boolean {
+        return this.sessions.containsKey(key)
     }
 
     fun getSessions(suffix: String = ""): Collection<Session> {
@@ -28,14 +32,17 @@ class SessionCollection: CanSaveAndLoadData {
     }
 
     fun createSession(name: String): Session {
+        if (this.sessions.containsKey(name)) {
+            throw Exception("Trying to create a session with a name that is already present in the collection: $name")
+        }
         val s = Session(name)
-        this.sessions[s.id] = s
+        this.sessions[s.name] = s
         this.updateChildObjectAsync(s)
         return s
     }
 
     fun deleteSession(p: Session) {
-        this.deleteSession(p.id)
+        this.deleteSession(p.name)
     }
 
     override val saveStateKey: String
@@ -56,7 +63,7 @@ class SessionCollection: CanSaveAndLoadData {
 
         for (sessionId in sessionsList) {
             val p = Session.Deserializer(sessionId).get() ?: continue
-            this.sessions[p.id] = p
+            this.sessions[p.name] = p
         }
     }
 }

@@ -17,6 +17,7 @@ import sessionswitcher.ui.misc.SendFromPluginHandler
 import sessionswitcher.utils.host
 import java.awt.*
 import javax.swing.*
+import javax.swing.JOptionPane.WARNING_MESSAGE
 
 class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     ExtensionProvidedHttpRequestEditor {
@@ -171,10 +172,11 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
 
     private fun newSession(): Session? {
         var name: String?
+        var ok = false
         do {
             name = JOptionPane.showInputDialog(
                 plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
-                "Choose a name for the new Session. Valid characters: [A-Za-z0-9._-]",
+                "Choose a name for the new Session",
                 "New Session",
                 JOptionPane.QUESTION_MESSAGE,
                 null,
@@ -182,8 +184,27 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
                 "",
             ) as String?
             if (name == null) return null
-        } while (!Session.isValidName(name!!))
-        return this.plugin.sessions.createSession(name)
+            if (!Session.isValidName(name)) {
+                JOptionPane.showMessageDialog(
+                    plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    "The chosen name contains invalid characters. Allowed characters: [A-Za-z0-9._-]",
+                    "Invalid characters in name",
+                    WARNING_MESSAGE
+                )
+                continue
+            }
+            if (this.plugin.sessions.hasSession(name)) {
+                JOptionPane.showMessageDialog(
+                    plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    "A session with this name already exists in this project, please choose a different name",
+                    "Name already in use",
+                    WARNING_MESSAGE
+                )
+                continue
+            }
+            ok = true
+        } while (!ok)
+        return this.plugin.sessions.createSession(name!!)
     }
 
     // END Session stuff
