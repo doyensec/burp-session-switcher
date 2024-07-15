@@ -118,14 +118,6 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         }
     }
 
-    /*
-    class EditorChangeListener(val callback: () -> Unit) : DocumentListener {
-        override fun insertUpdate(e: DocumentEvent?) {}
-        override fun removeUpdate(e: DocumentEvent?){}
-        override fun changedUpdate(e: DocumentEvent?) = this.callback()
-    }
-     */
-
     private fun editSelectedSession() {
         TODO()
     }
@@ -240,10 +232,6 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
 
         this.component.add(BorderLayout.PAGE_START, BorderPanel(10).also { it.add(rootContainer) })
         this.component.add(BorderLayout.CENTER, this.editor)
-
-        // val listener = EditorChangeListener { this.editorChangeHandler() }
-        //val jt = this.editor.getTextAreaComponent()
-        //jt.document.addDocumentListener(listener)
 
         // Add context menu handler
         //this.contextMenu.addRightClickHandler(this.editor.getTextAreaComponent())
