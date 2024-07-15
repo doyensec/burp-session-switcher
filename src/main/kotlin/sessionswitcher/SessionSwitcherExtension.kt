@@ -12,6 +12,7 @@ class SessionSwitcherExtension : BurpExtension, ExtensionUnloadingHandler {
     lateinit var instance: SessionSwitcher
 
     // Montoya API gets instantiated second
+    @Suppress("DEPRECATION")
     override fun initialize(montoyaApi: MontoyaApi) {
         // Set the name of the extension
         montoyaApi.extension().setName("Session Switcher v$VERSION")
