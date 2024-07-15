@@ -117,4 +117,8 @@ class Cookies() {
         }
         return true
     }
+
+    override fun hashCode(): Int {
+        return cookies.hashCode()
+    }
 }

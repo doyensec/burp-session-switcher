@@ -56,6 +56,8 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     class Deserializer(key: String) : DeserializerFactory<Session>(key) {
         override fun burpDeserialize(obj: PersistedObject) {
             val p = Session(obj.getString("name"), obj.getString("id"))
+            p.host = obj.getString("host")
+            p.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
             val headersLst = obj.getChildObjectList("headers")
             if (headersLst != null) {
                 for (headerObj in headersLst) {
@@ -79,6 +81,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         val obj = PersistedObject.persistedObject()
         obj.setString("name", name)
         obj.setString("id", id)
+        obj.setString("host", host)
         val headersLst = ArrayList<PersistedObject>(this.headers.size)
         for ((k, v) in this.headers) {
             val headerObj = PersistedObject.persistedObject()
@@ -87,6 +90,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
             headersLst.add(headerObj)
         }
         obj.setChildObjectList("headers", headersLst)
+        obj.setString("cookies", this.cookies.toString())
         return obj
     }
 
