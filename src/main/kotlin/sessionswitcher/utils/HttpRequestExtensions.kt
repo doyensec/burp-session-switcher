@@ -3,6 +3,7 @@ package sessionswitcher.utils
 import burp.api.montoya.http.message.HttpHeader
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.Logger
+import java.net.URI
 
 /*
     Returns a Triple with
@@ -60,4 +61,9 @@ fun HttpRequest.headersMap(): Map<String, String> {
 
 fun HttpRequest.getHeaderValue(name: String): String? {
     return this.mergedHeaders().find { it.name().equals(name, ignoreCase = true)}?.value()
+}
+
+fun HttpRequest.host(): String {
+    val uri = URI(this.url())
+    return uri.host
 }

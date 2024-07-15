@@ -9,6 +9,7 @@ import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
 import sessionswitcher.utils.headersMap
+import sessionswitcher.utils.host
 import sessionswitcher.utils.mergedHeaders
 import sessionswitcher.utils.withUpsertedHeaders
 import java.util.*
@@ -65,6 +66,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         }
     }
 
+    private var host: String = ""
     private val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
     private var cookies = Cookies()
 
@@ -92,6 +94,10 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         return name
     }
 
+    fun getHost(): String {
+        return this.host
+    }
+
     fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.info("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withUpsertedHeaders(this.headers)
@@ -111,6 +117,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     fun loadFromRequest(r: HttpRequest) {
+        this.host = r.host()
         val reqHeaders = r.mergedHeaders()
         val custom = reqHeaders
             .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }

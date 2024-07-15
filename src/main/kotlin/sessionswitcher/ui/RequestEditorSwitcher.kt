@@ -14,6 +14,7 @@ import sessionswitcher.ui.misc.BorderPanel
 import sessionswitcher.ui.misc.BoxPanel
 import sessionswitcher.ui.misc.FlowPanel
 import sessionswitcher.ui.misc.SendFromPluginHandler
+import sessionswitcher.utils.host
 import java.awt.*
 import javax.swing.*
 
@@ -110,7 +111,24 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         val oldSession = this.selectedSession
         this.sessionsComboBox.removeAllItems()
         this.sessionsComboBox.addItem(SESSION_NONE)
-        this.plugin.sessions.getSessions().forEach { this.sessionsComboBox.addItem(it) }
+
+        val settings = SessionSwitcher.getInstance().settings
+        val request = this.originalRequest
+        val hostFilter: String = if (request == null) {
+            // If request is null, do not filter
+            ""
+        } else if (settings.filterSessionBySubdomain.get()) {
+            // Filter by subdomain (entire host)
+            request.host()
+        } else if (settings.filterSessionByDomain.get()) {
+            // Filter by main domain
+            request.host().split('.').takeLast(2).joinToString(".")
+        } else {
+            // No filter
+            ""
+        }
+
+        this.plugin.sessions.getSessions(hostFilter).forEach { this.sessionsComboBox.addItem(it) }
         val oldSessionRestored = this.tryRestoreOldSession(oldSession)
         this.isUpdatingUI = false
         if (!oldSessionRestored) {
