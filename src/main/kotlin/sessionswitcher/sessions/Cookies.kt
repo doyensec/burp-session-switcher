@@ -85,6 +85,15 @@ class Cookies() {
         return Pair(updatedCookies, addedCookies)
     }
 
+    fun replace(other: Cookies): Pair<List<String>, List<String>> {
+        val keysBefore = this.cookies.keys
+        val diff = this.update(other)
+        val updatedKeys = diff.first
+        // Remove other keys
+        keysBefore.filter { !updatedKeys.contains(it) }.forEach { this.cookies.remove(it) }
+        return diff
+    }
+
     fun update(otherHeaderValue: String): Pair<List<String>, List<String>> {
         val other = Cookies.fromHeaderValue(otherHeaderValue)
         return this.update(other)

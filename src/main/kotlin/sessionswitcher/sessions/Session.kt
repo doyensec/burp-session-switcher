@@ -3,6 +3,7 @@ package sessionswitcher.sessions
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
@@ -95,9 +96,17 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         Logger.info("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withUpsertedHeaders(this.headers)
 
+        val settings = SessionSwitcher.getInstance().settings
+
         val reqCookies = Cookies.fromHttpRequest(r)
-        val (updatedCookies, addedCookies) = reqCookies.update(this.cookies)
+
+        val (updatedCookies, addedCookies) = if (settings.keepOtherCookies.get()) {
+            reqCookies.update(this.cookies)
+        } else {
+            reqCookies.replace(this.cookies)
+        }
         output = output.withUpsertedHeaders(mapOf("Cookie" to reqCookies.toString())).first
+
         return Triple(output, Pair(updatedHeaders, addedHeaders), Pair(updatedCookies, addedCookies))
     }
 

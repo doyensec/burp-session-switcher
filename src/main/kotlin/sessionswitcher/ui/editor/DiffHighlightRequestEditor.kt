@@ -9,6 +9,20 @@ import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 
 class DiffHighlightRequestEditor: StyledTextEditor() {
+    val COMMON_HEADER_PREFIXES = setOf<String>(
+        "connection",
+        "sec-",
+        "user-agent",
+        "priority",
+        "accept",
+        "cache",
+        "referer",
+        "date",
+        "http2",
+        "via",
+        "warning"
+    )
+
     private val modifiedElementStyle = SimpleAttributeSet().also {
         if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
             StyleConstants.setForeground(it, Color.ORANGE)
@@ -64,6 +78,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         // Preparation
         val modifiedHeaders = headersDiffInfo.first.map { it.lowercase() }.toSet()
         val addedHeaders = headersDiffInfo.second.map { it.lowercase() }.toSet()
+        val settings = SessionSwitcher.getInstance().settings
 
         // Clear text pane
         this.clear()
@@ -83,7 +98,10 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             } else if (addedHeaders.contains(header.name().lowercase())) {
                 this.appendText("${header.name()}: ${header.value()}", addedElementStyle)
                 Logger.debug("Header added: " + header.name())
-            } else {
+            } else if (
+                    !settings.editorShowChangesOnly.get() &&
+                    !(settings.editorHideCommonHeaders.get() && COMMON_HEADER_PREFIXES.any { header.name().lowercase().startsWith(it) } )
+                ) {
                 this.appendText("${header.name()}: ${header.value()}")
                 Logger.debug("Header noop: " + header.name())
             }
@@ -92,8 +110,9 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
 
         // Add body
         this.appendText("\n")
-        this.appendText(httpRequest.bodyToString())
-
+        if (settings.editorShowRequestBody.get()) {
+            this.appendText(httpRequest.bodyToString())
+        }
 
         // Return caret to the top
         this.textPane.caretPosition = 0
