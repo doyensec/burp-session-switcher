@@ -39,6 +39,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
 
     // State-holding stuff
     private var editor = DiffHighlightRequestEditor()
+    private val settings = SessionSwitcher.getInstance().settings
 
     private var _request: HttpRequest? = null
     private var httpRequest: HttpRequest?
@@ -66,7 +67,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
             this.editedLabel.text = ""
             if (s != null) {
                 Logger.info("not null")
-                val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request)
+                val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request, settings.keepOtherCookies.get())
                 this.httpRequest = req
                 this.editor.setRequest(req, headersDiffInfo, cookiesDiffinfo)
                 this.originalRequestModified = true
@@ -113,7 +114,6 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         this.sessionsComboBox.removeAllItems()
         this.sessionsComboBox.addItem(SESSION_NONE)
 
-        val settings = SessionSwitcher.getInstance().settings
         val request = this.originalRequest
         val hostFilter: String = if (request == null) {
             // If request is null, do not filter
@@ -149,9 +149,9 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     private fun newSessionHandler() {
         // New session
         val session = this.newSession() ?: return
-        this.updateSessionsList()
         val request = this.originalRequest ?: return
         session.loadFromRequest(request)
+        this.updateSessionsList()
         this.sessionsComboBox.selectedItem = session
     }
 

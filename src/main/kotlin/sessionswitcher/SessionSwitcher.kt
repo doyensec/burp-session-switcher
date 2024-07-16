@@ -2,6 +2,8 @@ package sessionswitcher
 
 import burp.api.montoya.MontoyaApi
 import kotlinx.coroutines.runBlocking
+import sessionswitcher.handlers.SessionInjectorHandler
+import sessionswitcher.handlers.SessionUpdaterHandler
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
@@ -74,6 +76,14 @@ public class SessionSwitcher private constructor(
         // Register context menu handler
         if (settings.registerContextMenu.get()) {
             //Burp.Montoya.userInterface().registerContextMenuItemsProvider(SendToInqlHandler(this))
+        }
+
+        // Register session handlers
+        if (settings.registerUpdaterHandler.get()) {
+            montoyaApi.http().registerSessionHandlingAction(SessionUpdaterHandler(this))
+        }
+        if (settings.registerInjectorHandler.get()) {
+            montoyaApi.http().registerSessionHandlingAction(SessionInjectorHandler(this))
         }
 
         // Reload data from the project file

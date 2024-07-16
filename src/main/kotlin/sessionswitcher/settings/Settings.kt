@@ -16,4 +16,10 @@ class Settings(val provider: SettingsProvider) {
     public val filterSessionByDomain = BooleanSetting(provider, "session.filter_by_domain", "Do not show sessions from different domains", true)
     public val filterSessionBySubdomain = BooleanSetting(provider, "session.filter_by_subdomain", "Do not show sessions from different subdomains", true)
     public val keepOtherCookies = BooleanSetting(provider, "session.keep_other_cookies", "Keep unchanged cookies in request", true)
+
+    public val updateOnlyExistingHeaders = BooleanSetting(provider, "updater.only_update_existing_headers", "Only update existing headers", true)
+    public val updateOnlyExistingCookies = BooleanSetting(provider, "updater.only_update_existing_cookies", "Only update existing cookies", true)
+
+    public val registerUpdaterHandler = BooleanSetting(provider, "handler.register_updater", "Register updater handler", true)
+    public val registerInjectorHandler = BooleanSetting(provider, "handler.register_injector", "Register injector handler", true)
 }

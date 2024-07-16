@@ -3,7 +3,6 @@ package sessionswitcher.sessions
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
-import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
@@ -102,15 +101,12 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         return this.host
     }
 
-    fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
+    fun apply(r: HttpRequest, keepOtherCookies: Boolean = true): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.info("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withUpsertedHeaders(this.headers)
-
-        val settings = SessionSwitcher.getInstance().settings
-
         val reqCookies = Cookies.fromHttpRequest(r)
 
-        val (updatedCookies, addedCookies) = if (settings.keepOtherCookies.get()) {
+        val (updatedCookies, addedCookies) = if (keepOtherCookies) {
             reqCookies.update(this.cookies)
         } else {
             reqCookies.replace(this.cookies)
@@ -131,6 +127,28 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
 
         this.cookies = Cookies.fromHttpRequest(r)
         Logger.debug("Saving cookies into session: ${this.cookies}")
+        this.saveToProjectFileAsync()
+    }
+
+    fun updateFromRequest(r: HttpRequest, onlyUpdateExistingHeaders: Boolean = true, onlyUpdateExistingCookies: Boolean = true) {
+        // Update headers
+        for (header in r.mergedHeaders()) {
+            if (this.headers.containsKey(header.name())) {
+                if (this.headers[header.name()] != header.value()) {
+                    // Update existing header if value is different
+                    Logger.debug("Updating header in session ${this.name}: ${header.name()}: ${this.headers[header.name()]} -> ${header.value()}")
+                    this.headers[header.name()] = header.value()
+                }
+            } else if (!onlyUpdateExistingHeaders && !EXCLUDED_HEADER_PREFIXES.any { h -> header.name().lowercase().startsWith(h) }) {
+                // If new header, filter out common headers
+                Logger.debug("Adding new header to session ${this.name}: ${header.name()}: ${header.value()}")
+                this.headers[header.name()] = header.value()
+            }
+        }
+
+        // Update cookies
+        val newCookies = Cookies.fromHttpRequest(r)
+        this.cookies.update(newCookies, onlyUpdateExistingCookies)
         this.saveToProjectFileAsync()
     }
 

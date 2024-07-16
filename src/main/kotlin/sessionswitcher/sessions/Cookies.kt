@@ -65,20 +65,21 @@ class Cookies() {
     Updates the current Cookies object and returns a pair composed of
     the list of the updated cookie keys and the list of added cookie keys
      */
-    fun update(other: Cookies): Pair<List<String>, List<String>> {
+    fun update(other: Cookies, onlyUpdateExisting: Boolean = false): Pair<List<String>, List<String>> {
         val updatedCookies = ArrayList<String>()
         val addedCookies = ArrayList<String>()
         for (pair in other.getPairs()) {
-            if (this.get(pair.first) == pair.second) {
+            val existingValue = this.get(pair.first)
+            if (existingValue == pair.second) {
                 // Cookie is already there, do nothing
                 continue
-            }
-
-            if (this.set(pair.first, pair.second)) {
-                // If true, the key was there but the value was different
+            } else if (existingValue != null) {
+                // Cookie is there but value is different, update
+                this.set(pair.first, pair.second)
                 updatedCookies.add(pair.first)
-            } else {
-                // If false, the key did not originally exist
+            } else if (!onlyUpdateExisting) {
+                // New cookie
+                this.set(pair.first, pair.second)
                 addedCookies.add(pair.first)
             }
         }
