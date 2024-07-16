@@ -104,14 +104,22 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     fun apply(r: HttpRequest, keepOtherCookies: Boolean = true): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.info("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withUpsertedHeaders(this.headers)
-        val reqCookies = Cookies.fromHttpRequest(r)
 
-        val (updatedCookies, addedCookies) = if (keepOtherCookies) {
-            reqCookies.update(this.cookies)
-        } else {
-            reqCookies.replace(this.cookies)
+        var updatedCookies = listOf<String>()
+        var addedCookies = listOf<String>()
+        if (!this.cookies.isEmpty()) {
+            val reqCookies = Cookies.fromHttpRequest(r)
+
+            val cookieDiffPair = if (keepOtherCookies) {
+                reqCookies.update(this.cookies)
+            } else {
+                reqCookies.replace(this.cookies)
+            }
+
+            updatedCookies = cookieDiffPair.first
+            addedCookies = cookieDiffPair.second
+            output = output.withUpsertedHeaders(mapOf("Cookie" to reqCookies.toString())).first
         }
-        output = output.withUpsertedHeaders(mapOf("Cookie" to reqCookies.toString())).first
 
         return Triple(output, Pair(updatedHeaders, addedHeaders), Pair(updatedCookies, addedCookies))
     }
