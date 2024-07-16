@@ -19,14 +19,15 @@ class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher): Sess
     }
 
     override fun performAction(actionData: SessionHandlingActionData): ActionResult {
-        val request = actionData.request()
-        val sessionName = request.getHeaderValue(SessionUpdaterHandler.HEADER_NAME)
+        var request = actionData.request()
+        val sessionName = request.getHeaderValue(HEADER_NAME)
 
         if (sessionName == null) {
-            Logger.debug("Session injector header ${SessionUpdaterHandler.HEADER_NAME} not found in request")
+            Logger.debug("Session injector header ${HEADER_NAME} not found in request")
             return ActionResult.actionResult(request)
         }
 
+        request = request.withRemovedHeader(HEADER_NAME)
         val session = this.sessionSwitcher.sessions.getSession(sessionName.trim())
 
         if (session == null) {

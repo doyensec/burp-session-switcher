@@ -18,26 +18,26 @@ class SessionUpdaterHandler(private val sessionSwitcher: SessionSwitcher):  Sess
     }
 
     override fun performAction(actionData: SessionHandlingActionData): ActionResult {
-        val request = actionData.request()
-        val output = ActionResult.actionResult(request)
+        var request = actionData.request()
         val sessionName = request.getHeaderValue(HEADER_NAME)
 
         if (sessionName == null) {
             Logger.debug("Session update header $HEADER_NAME not found in request")
-            return output
+            return ActionResult.actionResult(request)
         }
 
+        request = request.withRemovedHeader(HEADER_NAME)
         val session = this.sessionSwitcher.sessions.getSession(sessionName.trim())
 
         if (session == null) {
             Logger.debug("Session with specified name not found: $sessionName")
-            return output
+            return ActionResult.actionResult(request)
         }
 
         Logger.debug("Updating session $sessionName")
         this.updateSession(session, request)
 
-        return output
+        return ActionResult.actionResult(request)
     }
 
     private fun updateSession(session: Session, httpRequest: HttpRequest) {
