@@ -2,6 +2,7 @@ package sessionswitcher.utils
 
 import burp.api.montoya.http.message.HttpHeader
 import burp.api.montoya.http.message.requests.HttpRequest
+import com.google.common.net.InternetDomainName
 import sessionswitcher.Logger
 import java.net.URI
 
@@ -66,4 +67,9 @@ fun HttpRequest.getHeaderValue(name: String): String? {
 fun HttpRequest.host(): String {
     val uri = URI(this.url())
     return uri.host
+}
+
+fun HttpRequest.topDomain(): String {
+    val uri = URI(this.url())
+    return InternetDomainName.from(uri.host).topPrivateDomain().toString()
 }
