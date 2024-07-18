@@ -15,11 +15,12 @@ import sessionswitcher.ui.misc.BoxPanel
 import sessionswitcher.ui.misc.FlowPanel
 import sessionswitcher.ui.misc.SendFromPluginHandler
 import sessionswitcher.utils.host
+import sessionswitcher.utils.topDomain
 import java.awt.*
 import javax.swing.*
 import javax.swing.JOptionPane.WARNING_MESSAGE
 
-class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
+class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwitcher) :
     ExtensionProvidedHttpRequestEditor {
     companion object {
         class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
@@ -45,10 +46,12 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     private var httpRequest: HttpRequest?
         get() = this._request
         set(r) {
+            val selectedSession = this.selectedSession
             this._request = r
             this.editedLabel.text = ""
-            this.deleteSessionBtn.isEnabled = this.selectedSession != null
-            this.editSessionBtn.isEnabled = this.selectedSession != null
+            this.deleteSessionBtn.isEnabled = selectedSession != null
+            this.editSessionBtn.isEnabled = selectedSession != null
+            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Overwrite"
         }
 
     private var originalRequest: HttpRequest? = null
@@ -108,6 +111,12 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         this.sessionsComboBox.selectedItem = old
         return true
     }
+
+    /*
+    Updates the sessions listed in the combo box selector.
+    Tries to restore the old selection if the old selected session still exists
+    and it still matches the current request
+     */
     private fun updateSessionsList() {
         this.isUpdatingUI = true
         val oldSession = this.selectedSession
@@ -123,13 +132,13 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
             request.host()
         } else if (settings.filterSessionByDomain.get()) {
             // Filter by main domain
-            request.host().split('.').takeLast(2).joinToString(".")
+            request.topDomain()
         } else {
             // No filter
             ""
         }
 
-        this.plugin.sessions.getSessions(hostFilter).forEach { this.sessionsComboBox.addItem(it) }
+        this.sessionSwitcher.sessions.getSessions(hostFilter).forEach { this.sessionsComboBox.addItem(it) }
         val oldSessionRestored = this.tryRestoreOldSession(oldSession)
         this.isUpdatingUI = false
         if (!oldSessionRestored) {
@@ -142,8 +151,36 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
     }
 
     private fun deleteSelectedSession() {
-        this.plugin.sessions.deleteSession(this.sessionsComboBox.selectedItem as Session)
+        this.sessionSwitcher.sessions.deleteSession(this.sessionsComboBox.selectedItem as Session)
         this.updateSessionsList()
+    }
+
+    private fun newOrUpdateBtnHandler() {
+        val session = this.selectedSession
+        if (session == null) {
+            // "New" mode
+            this.newSessionHandler()
+        } else {
+            // "Update from original" mode
+            this.updateSessionFromOriginalRequest()
+        }
+    }
+
+    private fun updateSessionFromOriginalRequest() {
+        val req = this.originalRequest ?: return
+        val session = this.selectedSession ?: return
+
+        val settings = this.sessionSwitcher.settings
+        session.updateFromRequest(
+            req,
+            settings.updateOnlyExistingHeaders.get(),
+            settings.updateOnlyExistingCookies.get()
+        )
+
+        // Apply the new session and refresh the list for good measure
+        this.selectedSession = session
+        this.updateSessionsList()
+        // TODO: trigger global session list update?
     }
 
     private fun newSessionHandler() {
@@ -175,7 +212,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         var ok = false
         do {
             name = JOptionPane.showInputDialog(
-                plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
                 "Choose a name for the new Session",
                 "New Session",
                 JOptionPane.QUESTION_MESSAGE,
@@ -186,16 +223,16 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
             if (name == null) return null
             if (!Session.isValidName(name)) {
                 JOptionPane.showMessageDialog(
-                    plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
                     "The chosen name contains invalid characters. Allowed characters: [A-Za-z0-9._-]",
                     "Invalid characters in name",
                     WARNING_MESSAGE
                 )
                 continue
             }
-            if (this.plugin.sessions.hasSession(name)) {
+            if (this.sessionSwitcher.sessions.hasSession(name)) {
                 JOptionPane.showMessageDialog(
-                    plugin.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
                     "A session with this name already exists in this project, please choose a different name",
                     "Name already in use",
                     WARNING_MESSAGE
@@ -204,7 +241,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
             }
             ok = true
         } while (!ok)
-        return this.plugin.sessions.createSession(name!!)
+        return this.sessionSwitcher.sessions.createSession(name!!)
     }
 
     // END Session stuff
@@ -221,10 +258,10 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         it.toolTipText = "Select a session"
         it.addActionListener { this.selectedSessionChanged() }
     }
-    private val newSessionBtn = JButton("New").also {
+    private val newOrOverwriteBtn = JButton("New").also {
         it.isEnabled = true
         it.addActionListener {
-            this.newSessionHandler()
+            this.newOrUpdateBtnHandler()
         }
     }
     private val editSessionBtn = JButton("Edit").also {
@@ -242,7 +279,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
 
     private fun editorChangeHandler() {
         this.editedLabel.text = "(Modified)"
-        this.newSessionBtn.isEnabled = true
+        this.newOrOverwriteBtn.isEnabled = true
     }
 
     // End UI Stuff
@@ -256,7 +293,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
         }
 
         val buttonPanel = FlowPanel(FlowLayout.LEFT).also {
-            it.add(this.newSessionBtn)
+            it.add(this.newOrOverwriteBtn)
             it.add(this.editSessionBtn)
             it.add(this.deleteSessionBtn)
         }
@@ -301,7 +338,7 @@ class RequestEditorSwitcher private constructor(val plugin: SessionSwitcher) :
 
     override fun getRequest(): HttpRequest = this._request ?: HttpRequest.httpRequest()
 
-    class EditorSendRequestFromPluginHandler(val editor: RequestEditorSwitcher) : SendFromPluginHandler(editor.plugin) {
+    class EditorSendRequestFromPluginHandler(val editor: RequestEditorSwitcher) : SendFromPluginHandler(editor.sessionSwitcher) {
         override fun getRequest(): HttpRequest {
             return editor.request
         }
