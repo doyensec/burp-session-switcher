@@ -88,22 +88,32 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
 
         // Add headers and cookies
         for (header in httpRequest.headers()) {
-            if (header.name().lowercase() == "cookie") {
-                this.appendCookieHeader(header.value(), cookiesDiffInfo)
+            val headerName = header.name().split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } } // Train-Case
+            val headerValue = header.value()
+
+            if (headerName == ":authority") {
+                // Turn HTTP/2 ":authority" header in "Host"
+                this.appendText("Host: $headerValue")
+            }
+            else if (headerName.startsWith(":")) {
+                // Never show other HTTP/2 headers
+                continue
+            } else if (headerName.lowercase() == "cookie") {
+                this.appendCookieHeader(headerValue, cookiesDiffInfo)
                 Logger.debug("Cookie header detected")
-            } else if (modifiedHeaders.contains(header.name().lowercase())) {
-                this.appendText("${header.name()}: ")
-                this.appendText(header.value(), modifiedElementStyle)
-                Logger.debug("Header modified: " + header.name())
-            } else if (addedHeaders.contains(header.name().lowercase())) {
-                this.appendText("${header.name()}: ${header.value()}", addedElementStyle)
-                Logger.debug("Header added: " + header.name())
+            } else if (modifiedHeaders.contains(headerName.lowercase())) {
+                this.appendText("$headerName: ")
+                this.appendText(headerValue, modifiedElementStyle)
+                Logger.debug("Header modified: $headerName")
+            } else if (addedHeaders.contains(headerName.lowercase())) {
+                this.appendText("$headerName: $headerValue", addedElementStyle)
+                Logger.debug("Header added: $headerName")
             } else if (
                     !settings.editorShowChangesOnly.get() &&
-                    !(settings.editorHideCommonHeaders.get() && COMMON_HEADER_PREFIXES.any { header.name().lowercase().startsWith(it) } )
+                    !(settings.editorHideCommonHeaders.get() && COMMON_HEADER_PREFIXES.any { headerName.lowercase().startsWith(it) } )
                 ) {
-                this.appendText("${header.name()}: ${header.value()}")
-                Logger.debug("Header noop: " + header.name())
+                this.appendText("$headerName: $headerValue")
+                Logger.debug("Header noop: $headerName")
             }
             this.appendText("\n")
         }
