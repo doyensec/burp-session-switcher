@@ -1,5 +1,7 @@
 package sessionswitcher.settings
 
+import burp.api.montoya.core.HighlightColor
+
 class Settings(val provider: SettingsProvider) {
 
     public val loggingLevel = StringSetting(provider,"logging.level", "Logging level", "DEBUG")
@@ -22,4 +24,7 @@ class Settings(val provider: SettingsProvider) {
 
     public val registerUpdaterHandler = BooleanSetting(provider, "handler.register_updater", "Register updater handler", true)
     public val registerInjectorHandler = BooleanSetting(provider, "handler.register_injector", "Register injector handler", true)
+
+    public val injectorHighlightColor = StringSetting(provider, "injector.highlight_color", "Highlight injected requests", HighlightColor.ORANGE.displayName())
+    public val injectorAnnotateRequest = BooleanSetting(provider, "injector.annotate_request", "Annotate injected request with session name", true)
 }
