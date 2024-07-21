@@ -4,6 +4,7 @@ import burp.api.montoya.http.message.HttpRequestResponse
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Selection
 import burp.api.montoya.ui.editor.extension.EditorCreationContext
+import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
@@ -16,17 +17,14 @@ import sessionswitcher.ui.SaveSessionDialog
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
 import java.awt.*
-import java.awt.event.MouseAdapter
 import javax.swing.*
 
-class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher) :
-    ExtensionProvidedHttpRequestEditor,
-    MouseAdapter()
-    {
+class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, val readOnly: Boolean) :
+    ExtensionProvidedHttpRequestEditor {
     companion object {
         class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
-            override fun provideHttpRequestEditor(creationContext: EditorCreationContext?): ExtensionProvidedHttpRequestEditor {
-                return RequestEditor(plugin)
+            override fun provideHttpRequestEditor(creationContext: EditorCreationContext): ExtensionProvidedHttpRequestEditor {
+                return RequestEditor(plugin, creationContext.editorMode() == EditorMode.READ_ONLY)
             }
         }
 
@@ -70,7 +68,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher) :
             this._selectedSession = s
             this.editedLabel.text = ""
             if (s != null) {
-                Logger.info("not null")
+                Logger.info("Not null")
                 val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request, settings.keepOtherCookies.get())
                 this.httpRequest = req
                 this.editor.setRequest(req, headersDiffInfo, cookiesDiffinfo)
@@ -269,7 +267,6 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher) :
 
         // Add context menu handler
         this.contextMenu.addRightClickHandler(this.editor.textPane)
-        //this.contextMenu.addKeyboardShortcutHandler(this.editor)
     }
 
     override fun setRequestResponse(requestResponse: HttpRequestResponse) {
@@ -292,7 +289,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher) :
         return null
     }
 
-    override fun isModified(): Boolean = this.originalRequestModified
+    override fun isModified(): Boolean = this.originalRequestModified && !this.readOnly
 
     override fun getRequest(): HttpRequest = this.httpRequest!!
 }
