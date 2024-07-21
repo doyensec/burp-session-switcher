@@ -56,7 +56,7 @@ fun HttpRequest.mergedHeaders(): List<HttpHeader> {
 }
 fun HttpRequest.headersMap(): Map<String, String> {
     val map = mutableMapOf<String, String>()
-    this.mergedHeaders().forEach { map.put(it.name(), it.value()) }
+    this.mergedHeaders().forEach { map.put(it.name().lowercase(), it.value()) }
     return map
 }
 

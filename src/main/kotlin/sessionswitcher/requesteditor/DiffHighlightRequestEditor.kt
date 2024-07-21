@@ -9,6 +9,11 @@ import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 
 class DiffHighlightRequestEditor: StyledTextEditor() {
+    companion object {
+        fun normalizeHeaderName(name: String): String {
+            return name.split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } }
+        }
+    }
     val COMMON_HEADER_PREFIXES = setOf<String>(
         "connection",
         "sec-",
@@ -93,7 +98,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
 
         // Add headers and cookies
         for (header in httpRequest.headers()) {
-            val headerName = header.name().split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } } // Train-Case
+            val headerName = normalizeHeaderName(header.name()) // Train-Case
             val headerValue = header.value()
 
             if (headerName == ":authority") {

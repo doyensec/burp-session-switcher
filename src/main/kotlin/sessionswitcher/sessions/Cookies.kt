@@ -21,10 +21,9 @@ class Cookies() {
         }
 
         fun fromHttpRequest(httpRequest: HttpRequest): Cookies {
-            if (httpRequest.headersMap()["Cookie"] != null) {
-                return fromHeaderValue(httpRequest.headersMap()["Cookie"]!!)
-            } else if (httpRequest.headersMap()["cookie"] != null) {
-                return fromHeaderValue(httpRequest.headersMap()["cookie"]!!)
+            val cookieHeader = httpRequest.headersMap()["cookie"]
+            if (cookieHeader != null) {
+                return fromHeaderValue(cookieHeader)
             }
             return Cookies()
         }

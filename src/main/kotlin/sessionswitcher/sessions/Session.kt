@@ -68,6 +68,10 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     private var host: String = ""
+
+    /* Note: this map always hold lowercase header names to prevent issues
+        with HTTP/2 requests. Burp should automatically fix the capitalization.
+     */
     private val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
     private var cookies = Cookies()
 
@@ -118,7 +122,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
 
             updatedCookies = cookieDiffPair.first
             addedCookies = cookieDiffPair.second
-            output = output.withUpsertedHeaders(mapOf("Cookie" to reqCookies.toString())).first
+            output = output.withUpsertedHeaders(mapOf("cookie" to reqCookies.toString())).first
         }
 
         return Triple(output, Pair(updatedHeaders, addedHeaders), Pair(updatedCookies, addedCookies))
@@ -131,7 +135,7 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
             .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
         Logger.debug("Saving headers into session: $custom")
         this.headers.clear()
-        this.headers.putAll(custom.map { Pair(it.name(), it.value()) })
+        this.headers.putAll(custom.map { Pair(it.name().lowercase(), it.value()) })
 
         this.cookies = Cookies.fromHttpRequest(r)
         Logger.debug("Saving cookies into session: ${this.cookies}")
@@ -142,17 +146,18 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         Logger.debug("Updating session from request")
         // Update headers
         for (header in r.mergedHeaders()) {
-            Logger.debug("Processing header ${header.name()}")
-            if (this.headers.containsKey(header.name())) {
-                if (this.headers[header.name()] != header.value()) {
+            val headerName = header.name().lowercase()
+            Logger.debug("Processing header $headerName")
+            if (this.headers.containsKey(headerName)) {
+                if (this.headers[headerName] != header.value()) {
                     // Update existing header if value is different
-                    Logger.debug("Updating header in session ${this.name}: ${header.name()}: ${this.headers[header.name()]} -> ${header.value()}")
-                    this.headers[header.name()] = header.value()
+                    Logger.debug("Updating header in session ${this.name}: $headerName: ${this.headers[headerName]} -> ${header.value()}")
+                    this.headers[headerName] = header.value()
                 }
-            } else if (!onlyUpdateExistingHeaders && !EXCLUDED_HEADER_PREFIXES.any { h -> header.name().lowercase().startsWith(h) }) {
+            } else if (!onlyUpdateExistingHeaders && !EXCLUDED_HEADER_PREFIXES.any { h -> headerName.startsWith(h) }) {
                 // If new header, filter out common headers
-                Logger.debug("Adding new header to session ${this.name}: ${header.name()}: ${header.value()}")
-                this.headers[header.name()] = header.value()
+                Logger.debug("Adding new header to session ${this.name}: $headerName: ${header.value()}")
+                this.headers[headerName] = header.value()
             }
         }
 
@@ -174,7 +179,6 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
         }
 
         // Check cookies
-        httpRequest.headers().forEach { Logger.debug(it.name() + ":" + it.value()) }
         val otherCookies = Cookies.fromHttpRequest(httpRequest)
         return otherCookies.contains(this.cookies)
     }
