@@ -15,7 +15,7 @@ class SessionSwitcherExtension : BurpExtension, ExtensionUnloadingHandler {
     @Suppress("DEPRECATION")
     override fun initialize(montoyaApi: MontoyaApi) {
         // Set the name of the extension
-        montoyaApi.extension().setName("Session Switcher v$VERSION")
+        montoyaApi.extension().setName("Session Switcher")
         montoyaApi.extension().registerUnloadingHandler(this)
 
         // Redirect stdout and stderr
@@ -23,6 +23,7 @@ class SessionSwitcherExtension : BurpExtension, ExtensionUnloadingHandler {
         System.setErr(montoyaApi.logging().error())
 
         this.instance = SessionSwitcher.init(montoyaApi)
+        Logger.info("Session Switcher v$VERSION Loaded Successfully")
     }
 
     override fun extensionUnloaded() {
