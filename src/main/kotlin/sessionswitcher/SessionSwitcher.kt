@@ -4,13 +4,14 @@ import burp.api.montoya.MontoyaApi
 import kotlinx.coroutines.runBlocking
 import sessionswitcher.handlers.SessionInjectorHandler
 import sessionswitcher.handlers.SessionUpdaterHandler
+import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsProvider
 import sessionswitcher.settings.SettingsWindow
-import sessionswitcher.ui.RequestEditorSwitcher
-import sessionswitcher.ui.misc.TabbedPane
+import sessionswitcher.ui.ContextMenuProvider
+import sessionswitcher.ui.TabbedPane
 import java.awt.Component
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -65,7 +66,7 @@ public class SessionSwitcher private constructor(
 
         // Register GraphQL Payload Editor
         if (settings.displayRequestEditor.get()) {
-            montoyaApi.userInterface().registerHttpRequestEditorProvider(RequestEditorSwitcher.getProvider(this))
+            montoyaApi.userInterface().registerHttpRequestEditorProvider(RequestEditor.getProvider(this))
         }
 
         // Register the extension main tab
@@ -75,7 +76,7 @@ public class SessionSwitcher private constructor(
 
         // Register context menu handler
         if (settings.registerContextMenu.get()) {
-            //Burp.Montoya.userInterface().registerContextMenuItemsProvider(SendToInqlHandler(this))
+            montoyaApi.userInterface().registerContextMenuItemsProvider(ContextMenuProvider(this))
         }
 
         // Register session handlers
@@ -88,13 +89,6 @@ public class SessionSwitcher private constructor(
 
         // Reload data from the project file
         this.sessions.loadFromProjectFile()
-
-        // Initialize ExternalToolsService to make it ready to spawn the webserver and register the interceptor when they are needed
-        /*
-        if (this.config.getBoolean("integrations.webserver.lazy") == false) {
-            ExternalToolsService.startIfOff()
-        }
-        */
     }
 
     fun unload() = runBlocking {

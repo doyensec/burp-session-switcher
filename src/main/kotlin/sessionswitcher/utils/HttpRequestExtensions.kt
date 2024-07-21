@@ -24,7 +24,7 @@ fun HttpRequest.withUpsertedHeaders(newHeaders: Map<String, String>): Triple<Htt
                 Logger.debug("No change for header $k : $v")
                 out
             } else {
-                Logger.debug("Updating header $k : $v")
+                Logger.debug("Updating header $k : $existingValue --> $v")
                 updated.add(k)
                 out.withUpdatedHeader(k, v)
             }

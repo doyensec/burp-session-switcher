@@ -1,4 +1,4 @@
-package sessionswitcher.ui
+package sessionswitcher.requesteditor
 
 import burp.api.montoya.http.message.HttpRequestResponse
 import burp.api.montoya.http.message.requests.HttpRequest
@@ -9,23 +9,24 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.ui.editor.DiffHighlightRequestEditor
-import sessionswitcher.ui.misc.BorderPanel
-import sessionswitcher.ui.misc.BoxPanel
-import sessionswitcher.ui.misc.FlowPanel
-import sessionswitcher.ui.misc.SendFromPluginHandler
+import sessionswitcher.ui.BorderPanel
+import sessionswitcher.ui.BoxPanel
+import sessionswitcher.ui.FlowPanel
+import sessionswitcher.ui.SaveSessionDialog
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
 import java.awt.*
+import java.awt.event.MouseAdapter
 import javax.swing.*
-import javax.swing.JOptionPane.WARNING_MESSAGE
 
-class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwitcher) :
-    ExtensionProvidedHttpRequestEditor {
+class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher) :
+    ExtensionProvidedHttpRequestEditor,
+    MouseAdapter()
+    {
     companion object {
         class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
             override fun provideHttpRequestEditor(creationContext: EditorCreationContext?): ExtensionProvidedHttpRequestEditor {
-                return RequestEditorSwitcher(plugin)
+                return RequestEditor(plugin)
             }
         }
 
@@ -86,7 +87,7 @@ class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwit
 
     // Session stuff
 
-    private val contextMenu = EditorSendRequestFromPluginHandler(this)
+    private val contextMenu = ContextMenu(this)
 
     private fun tryRestoreOldSession(old: Session?): Boolean {
         if (old == null) return false
@@ -185,9 +186,8 @@ class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwit
 
     private fun newSessionHandler() {
         // New session
-        val session = this.newSession() ?: return
         val request = this.originalRequest ?: return
-        session.loadFromRequest(request)
+        val session = SaveSessionDialog(this.sessionSwitcher).newSessionDialog(request) ?: return
         this.updateSessionsList()
         this.sessionsComboBox.selectedItem = session
     }
@@ -205,43 +205,6 @@ class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwit
                 this.selectedSession = selected
             }
         }
-    }
-
-    private fun newSession(): Session? {
-        var name: String?
-        var ok = false
-        do {
-            name = JOptionPane.showInputDialog(
-                sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
-                "Choose a name for the new Session",
-                "New Session",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                null,
-                "",
-            ) as String?
-            if (name == null) return null
-            if (!Session.isValidName(name)) {
-                JOptionPane.showMessageDialog(
-                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
-                    "The chosen name contains invalid characters. Allowed characters: [A-Za-z0-9._-]",
-                    "Invalid characters in name",
-                    WARNING_MESSAGE
-                )
-                continue
-            }
-            if (this.sessionSwitcher.sessions.hasSession(name)) {
-                JOptionPane.showMessageDialog(
-                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
-                    "A session with this name already exists in this project, please choose a different name",
-                    "Name already in use",
-                    WARNING_MESSAGE
-                )
-                continue
-            }
-            ok = true
-        } while (!ok)
-        return this.sessionSwitcher.sessions.createSession(name!!)
     }
 
     // END Session stuff
@@ -277,11 +240,6 @@ class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwit
         }
     }
 
-    private fun editorChangeHandler() {
-        this.editedLabel.text = "(Modified)"
-        this.newOrOverwriteBtn.isEnabled = true
-    }
-
     // End UI Stuff
 
     init {
@@ -310,8 +268,8 @@ class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwit
         this.component.add(BorderLayout.CENTER, this.editor)
 
         // Add context menu handler
-        //this.contextMenu.addRightClickHandler(this.editor.getTextAreaComponent())
-        //this.contextMenu.addKeyboardShortcutHandler(this.editor.getTextAreaComponent())
+        this.contextMenu.addRightClickHandler(this.editor.textPane)
+        //this.contextMenu.addKeyboardShortcutHandler(this.editor)
     }
 
     override fun setRequestResponse(requestResponse: HttpRequestResponse) {
@@ -336,11 +294,5 @@ class RequestEditorSwitcher private constructor(val sessionSwitcher: SessionSwit
 
     override fun isModified(): Boolean = this.originalRequestModified
 
-    override fun getRequest(): HttpRequest = this._request ?: HttpRequest.httpRequest()
-
-    class EditorSendRequestFromPluginHandler(val editor: RequestEditorSwitcher) : SendFromPluginHandler(editor.sessionSwitcher) {
-        override fun getRequest(): HttpRequest {
-            return editor.request
-        }
-    }
+    override fun getRequest(): HttpRequest = this.httpRequest!!
 }

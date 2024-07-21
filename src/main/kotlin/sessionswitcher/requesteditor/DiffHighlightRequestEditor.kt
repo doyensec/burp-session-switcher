@@ -1,4 +1,4 @@
-package sessionswitcher.ui.editor
+package sessionswitcher.requesteditor
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Theme
@@ -40,13 +40,14 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
 
     public fun setRequest(httpRequest: HttpRequest) {
         Logger.debug("setRequest, no style")
-        this.textPane.text = httpRequest.toString().replace("\r", "")
+        this.clear()
+        this.appendText(httpRequest.toString().replace("\r", ""))
     }
 
     private fun appendCookieHeader(value: String, cookiesDiffInfo: Pair<List<String>, List<String>>) {
         // Preparation
-        val modifiedCookies = cookiesDiffInfo.first.map { it.lowercase() }.toSet()
-        val addedCookies = cookiesDiffInfo.second.map { it.lowercase() }.toSet()
+        val modifiedCookies = cookiesDiffInfo.first.toSet()
+        val addedCookies = cookiesDiffInfo.second.toSet()
 
         val cookies = value.split(";").map { it.trim().split("=") }.filter { it.size == 2 }
         if (cookies.isEmpty()) {
@@ -86,6 +87,10 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         // Add first line of request as normal text
         this.appendText(requestLines[0] + "\n")
 
+        val showChangesOnly = settings.editorShowChangesOnly.get()
+        val hideCommonHeaders = settings.editorHideCommonHeaders.get()
+        val showRequestBody = settings.editorShowRequestBody.get()
+
         // Add headers and cookies
         for (header in httpRequest.headers()) {
             val headerName = header.name().split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } } // Train-Case
@@ -109,8 +114,8 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
                 this.appendText("$headerName: $headerValue", addedElementStyle)
                 Logger.debug("Header added: $headerName")
             } else if (
-                    !settings.editorShowChangesOnly.get() &&
-                    !(settings.editorHideCommonHeaders.get() && COMMON_HEADER_PREFIXES.any { headerName.lowercase().startsWith(it) } )
+                    !showChangesOnly &&
+                    !(hideCommonHeaders && COMMON_HEADER_PREFIXES.any { headerName.lowercase().startsWith(it) } )
                 ) {
                 this.appendText("$headerName: $headerValue")
                 Logger.debug("Header noop: $headerName")
@@ -120,7 +125,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
 
         // Add body
         this.appendText("\n")
-        if (settings.editorShowRequestBody.get()) {
+        if (showRequestBody) {
             this.appendText(httpRequest.bodyToString())
         }
 

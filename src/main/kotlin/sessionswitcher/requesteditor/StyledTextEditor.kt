@@ -1,7 +1,7 @@
-package sessionswitcher.ui.editor
+package sessionswitcher.requesteditor
 
 import sessionswitcher.SessionSwitcher
-import sessionswitcher.ui.misc.WrapEditorKit
+import sessionswitcher.ui.WrapEditorKit
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ComponentAdapter
@@ -15,19 +15,19 @@ open class StyledTextEditor: JPanel(BorderLayout()) {
     public val normalTextStyle = SimpleAttributeSet()
     data class TextRange(val start: Int, val length: Int)
 
-    protected val textPane = JTextPane().also {
+    val textPane = JTextPane().also {
         it.isEditable = false
         it.font = SessionSwitcher.getApi().userInterface().currentEditorFont()
         it.editorKit = WrapEditorKit()
     }
 
-    private val textPaneContainer = JPanel().also {
+    val textPaneContainer = JPanel().also {
         it.layout = BoxLayout(it, BoxLayout.PAGE_AXIS)
         it.border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
         it.add(textPane, BorderLayout.CENTER)
     }
 
-    private val scrollPane = JScrollPane(textPaneContainer).also {
+    val scrollPane = JScrollPane(textPaneContainer).also {
         it.horizontalScrollBarPolicy = ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER
         it.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
     }

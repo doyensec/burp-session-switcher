@@ -139,8 +139,10 @@ class Session(val name: String, val id: String = UUID.randomUUID().toString()) :
     }
 
     fun updateFromRequest(r: HttpRequest, onlyUpdateExistingHeaders: Boolean = true, onlyUpdateExistingCookies: Boolean = true) {
+        Logger.debug("Updating session from request")
         // Update headers
         for (header in r.mergedHeaders()) {
+            Logger.debug("Processing header ${header.name()}")
             if (this.headers.containsKey(header.name())) {
                 if (this.headers[header.name()] != header.value()) {
                     // Update existing header if value is different

@@ -1,4 +1,4 @@
-package sessionswitcher.ui.misc
+package sessionswitcher.ui
 
 import javax.swing.text.*
 
