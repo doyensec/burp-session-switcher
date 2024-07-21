@@ -1,9 +1,11 @@
 package sessionswitcher.requesteditor
 
+import burp.api.montoya.http.message.ContentType
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Theme
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.utils.JsonPrettifier
 import java.awt.Color
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
@@ -42,14 +44,6 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             StyleConstants.setForeground(it, Color.GREEN)
         }
     }
-
-    public fun setRequest(httpRequest: HttpRequest) {
-        Logger.debug("setRequest, no style")
-        this.clear()
-        this.appendText(httpRequest.toString().replace("\r", ""))
-        this.appendText("\n")
-    }
-
     private fun appendCookieHeader(value: String, cookiesDiffInfo: Pair<List<String>, List<String>>) {
         // Preparation
         val modifiedCookies = cookiesDiffInfo.first.toSet()
@@ -78,7 +72,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         }
     }
 
-    public fun setRequest(httpRequest: HttpRequest, headersDiffInfo: Pair<List<String>, List<String>>, cookiesDiffInfo: Pair<List<String>, List<String>>) {
+    fun setRequest(httpRequest: HttpRequest, headersDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList()), cookiesDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList())) {
         Logger.debug("setRequest, styled")
         val requestLines = httpRequest.toString().split("\r\n")
 
@@ -132,7 +126,11 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         // Add body
         this.appendText("\n")
         if (showRequestBody) {
-            this.appendText(httpRequest.bodyToString())
+            if (httpRequest.contentType() == ContentType.JSON) {
+                this.appendText(JsonPrettifier.prettify(httpRequest.bodyToString()))
+            } else {
+                this.appendText(httpRequest.bodyToString())
+            }
         }
 
         // Leave some extra padding space
