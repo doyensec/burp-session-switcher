@@ -18,7 +18,7 @@ import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 
-public class SessionSwitcher private constructor(
+class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
     val settingsProvider: SettingsProvider
 ) : TabbedPane() {
@@ -26,20 +26,20 @@ public class SessionSwitcher private constructor(
     // Singleton pattern to ensure the extension is not initialized more than once
     companion object {
         private lateinit var montoyaApi: MontoyaApi
-        public fun getApi(): MontoyaApi {
+        fun getApi(): MontoyaApi {
             if (!this::montoyaApi.isInitialized) {
                 throw Exception("Montoya API not initialized yet.")
             }
             return this.montoyaApi
         }
-        public fun getInstance(): SessionSwitcher {
+        fun getInstance(): SessionSwitcher {
             if (!this::instance.isInitialized) {
                 throw Exception("SessionSwitcher not initialized yet.")
             }
             return this.instance
         }
         private lateinit var instance: SessionSwitcher
-        public fun init(
+        fun init(
             montoyaApi: MontoyaApi,
             settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
         ): SessionSwitcher {
@@ -52,8 +52,8 @@ public class SessionSwitcher private constructor(
         }
     }
 
-    final val sessions = SessionCollection()
-    public val settings = Settings(this.settingsProvider)
+    val sessions = SessionCollection()
+    val settings = Settings(this.settingsProvider)
 
     // Windows
     private val settingsWindow = SettingsWindow(settings)

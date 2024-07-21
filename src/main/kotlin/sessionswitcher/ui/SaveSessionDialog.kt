@@ -6,7 +6,7 @@ import sessionswitcher.sessions.Session
 import javax.swing.JOptionPane
 
 class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
-    public fun newSessionDialog(httpRequest: HttpRequest): Session? {
+    fun newSessionDialog(httpRequest: HttpRequest): Session? {
         var name: String?
         var ok = false
         do {
@@ -45,7 +45,7 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
         return session
     }
 
-    public fun updateSessionDialog(httpRequest: HttpRequest): Session? {
+    fun updateSessionDialog(httpRequest: HttpRequest): Session? {
         val sessions = this.sessionSwitcher.sessions.getSessions().toTypedArray()
 
         if (sessions.isEmpty()) {

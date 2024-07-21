@@ -1,4 +1,4 @@
-package sessionswitcher.ui
+package sessionswitcher.requesteditor
 
 import javax.swing.text.*
 

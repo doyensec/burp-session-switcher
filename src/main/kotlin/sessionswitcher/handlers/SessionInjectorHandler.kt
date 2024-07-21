@@ -13,7 +13,7 @@ import sessionswitcher.utils.getHeaderValue
 
 class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher): SessionHandlingAction {
     companion object {
-        final val HEADER_NAME = "X-SessionSwitcher-Inject"
+        const val HEADER_NAME = "X-SessionSwitcher-Inject"
     }
     override fun name(): String {
         return "Inject SessionSwitcher Session"

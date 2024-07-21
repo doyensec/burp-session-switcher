@@ -1,7 +1,6 @@
 package sessionswitcher.requesteditor
 
 import sessionswitcher.SessionSwitcher
-import sessionswitcher.ui.WrapEditorKit
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ComponentAdapter
@@ -12,7 +11,7 @@ import javax.swing.text.SimpleAttributeSet
 
 open class StyledTextEditor: JPanel(BorderLayout()) {
 
-    public val normalTextStyle = SimpleAttributeSet()
+    val normalTextStyle = SimpleAttributeSet()
     data class TextRange(val start: Int, val length: Int)
 
     val textPane = JTextPane().also {
@@ -50,13 +49,6 @@ open class StyledTextEditor: JPanel(BorderLayout()) {
 
     fun clear() {
         this.textPane.styledDocument.remove(0, this.textPane.styledDocument.length)
-    }
-
-    fun highlightRanges(vararg highlightRanges: TextRange, highlightedTextStyle: SimpleAttributeSet) {
-        val doc = this.textPane.styledDocument
-        for (range in highlightRanges) {
-            doc.setCharacterAttributes(range.start, range.length, highlightedTextStyle, true)
-        }
     }
 
     fun appendText(text: String, style: SimpleAttributeSet = this.normalTextStyle) {
