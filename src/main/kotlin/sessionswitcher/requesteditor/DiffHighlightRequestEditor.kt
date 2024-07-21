@@ -47,6 +47,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         Logger.debug("setRequest, no style")
         this.clear()
         this.appendText(httpRequest.toString().replace("\r", ""))
+        this.appendText("\n")
     }
 
     private fun appendCookieHeader(value: String, cookiesDiffInfo: Pair<List<String>, List<String>>) {
@@ -134,7 +135,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             this.appendText(httpRequest.bodyToString())
         }
 
-        // Return caret to the top
-        this.textPane.caretPosition = 0
+        // Leave some extra padding space
+        this.appendText("\n")
     }
 }

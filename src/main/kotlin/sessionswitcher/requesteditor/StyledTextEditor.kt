@@ -32,14 +32,18 @@ open class StyledTextEditor: JPanel(BorderLayout()) {
         it.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
     }
 
-    class TextPaneComponentAdapter(val panel: JPanel, val textPane: JTextPane): ComponentAdapter() {
+    class TextPaneComponentAdapter(val callback: ()->Unit): ComponentAdapter() {
         override fun componentResized(e: ComponentEvent?) {
-            this.panel.preferredSize = Dimension(e!!.component.width, textPane.height)
+           callback()
         }
     }
 
+    private fun updateComponentSize() {
+        this.textPaneContainer.preferredSize = Dimension(this.scrollPane.width, textPane.preferredSize.height)
+    }
+
     init {
-        this.scrollPane.addComponentListener(TextPaneComponentAdapter(this.textPaneContainer, this.textPane))
+        this.scrollPane.addComponentListener(TextPaneComponentAdapter { this.updateComponentSize() })
         this.add(scrollPane)
         SessionSwitcher.getApi().userInterface().applyThemeToComponent(this)
     }
@@ -63,5 +67,6 @@ open class StyledTextEditor: JPanel(BorderLayout()) {
 
         // Return caret to the top
         this.textPane.caretPosition = 0
+        this.updateComponentSize()
     }
 }
