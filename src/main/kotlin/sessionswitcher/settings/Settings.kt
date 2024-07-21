@@ -5,7 +5,6 @@ import burp.api.montoya.core.HighlightColor
 class Settings(val provider: SettingsProvider) {
 
     public val loggingLevel = StringSetting(provider,"logging.level", "Logging level", "DEBUG")
-    public val proxyHighlightInjectedColor = StringSetting(provider,"proxy.highlight_injected_color", "Highlight color of injected requests", "yellow")
 
     public val displayRequestEditor = BooleanSetting(provider,"ui.display_request_editor", "Display the request editor", true)
     public val registerContextMenu = BooleanSetting(provider,"ui.register_context_menu", "Register the context menu handler", true)
