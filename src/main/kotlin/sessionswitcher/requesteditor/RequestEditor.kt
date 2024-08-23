@@ -10,10 +10,8 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.ui.BorderPanel
-import sessionswitcher.ui.BoxPanel
-import sessionswitcher.ui.FlowPanel
-import sessionswitcher.ui.SaveSessionDialog
+import sessionswitcher.settings.SettingsItem
+import sessionswitcher.ui.*
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
 import java.awt.*
@@ -160,6 +158,18 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             // "New" mode
             this.newSessionHandler()
         } else {
+            // Ask confirmation dialog if needed
+            val doNotAskOverwrite = this.sessionSwitcher.settings.editorDoNotAskOverwriteConfirmation
+            if (!doNotAskOverwrite.get()) {
+                val dialog = ConfirmationDialog(sessionSwitcher, "Do you want to overwrite the selected session with the data from the original request?", "Confirm Overwrite", true)
+                dialog.show()
+                if (!dialog.getAnswer()) {
+                    // User canceled
+                    return
+                } else if (dialog.shouldSavePreference()) {
+                    doNotAskOverwrite.set(true, SettingsItem.Store.GLOBAL)
+                }
+            }
             // "Update from original" mode
             this.updateSessionFromOriginalRequest()
         }

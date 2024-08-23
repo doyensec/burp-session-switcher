@@ -26,4 +26,6 @@ class Settings(val provider: SettingsProvider) {
 
     val injectorHighlightColor = StringSetting(provider, "injector.highlight_color", "Highlight injected requests", HighlightColor.ORANGE.displayName())
     val injectorAnnotateRequest = BooleanSetting(provider, "injector.annotate_request", "Annotate injected request with session name", true)
+
+    val editorDoNotAskOverwriteConfirmation = BooleanSetting(provider, "editor.no_confirm_overwrite", "Do not ask confirmation when overwriting a Session", false)
 }
