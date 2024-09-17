@@ -3,12 +3,11 @@ package sessionswitcher.maintab
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.ui.UISection
 import java.awt.BorderLayout
-import javax.swing.JButton
-import javax.swing.JPanel
+import javax.swing.*
 
 class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
     private val component: JPanel
-    private val table = SessionsListComponent()
+    private val table = SessionsTable()
 
     private val newSessionButton = JButton("New")
     private val editSessionButton = JButton("Edit").also { it.isEnabled = false }
@@ -31,19 +30,7 @@ class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
         table.update(sessionSwitcher.sessions.getSessions().toList())
     }
     init {
-        // Sessions Table Section
-        // |- Table
         this.refreshTable()
-        // |- Buttons
-
-        val innerSessionTableButtonsPanel = JPanel().also {
-            it.add(newSessionButton)
-            it.add(editSessionButton)
-            it.add(deleteSessionButton)
-            it.add(duplicateSessionButton)
-            it.add(refreshSessionsButton)
-        }
-        val sessionTableButtonPanel = JPanel(BorderLayout()).also { it.add(innerSessionTableButtonsPanel, BorderLayout.LINE_START) }
         table.addRowSelectionListener { index: Int->
             if (index == -1) {
                 editSessionButton.isEnabled = false
@@ -56,8 +43,31 @@ class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
             }
         }
 
+        // Button Panel
+        val buttonsPanel = JPanel().also { it ->
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
+            it.add(JPanel(BorderLayout()).also{p-> p.add(newSessionButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(5))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(editSessionButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(5))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(deleteSessionButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(5))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateSessionButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(5))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(refreshSessionsButton, BorderLayout.PAGE_START)})
+        }
+
+        val leftPanel = JPanel(BorderLayout()).also {
+            it.add(buttonsPanel, BorderLayout.PAGE_START)
+        }
+        val outerPanel = JPanel(BorderLayout()).also {
+            it.add(leftPanel, BorderLayout.LINE_START)
+            it.add(table, BorderLayout.CENTER)
+        }
+
         // Add to session
-        this.component = UISection("Saved Sessions", null, table, sessionTableButtonPanel)
+        this.component = UISection("Saved Sessions", null, outerPanel)
     }
 
     private fun deleteButtonCallback() {

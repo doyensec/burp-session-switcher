@@ -1,3 +1,5 @@
+package sessionswitcher.ui
+
 import java.awt.Component
 import java.awt.event.MouseWheelEvent
 import java.awt.event.MouseWheelListener

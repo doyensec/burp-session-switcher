@@ -1,13 +1,12 @@
 package sessionswitcher.maintab
 
-import PDControlScrollPane
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.Label
+import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
 import java.awt.BorderLayout
-import java.awt.Dimension
 import javax.swing.*
 
 class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
@@ -21,7 +20,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         // Title section
         // |- Title
         val topPanel = JPanel(BorderLayout()).also { it.border = BorderFactory.createEmptyBorder(5,5, 5, 5) }
-        val title = Label("Session Switcher", bold = true, relativeSize = 8.0)
+        val title = Label("Session Switcher", bold = true, relativeSize = 12.0)
         topPanel.add(title, BorderLayout.LINE_START)
         // |- Settings button
         val settingsButton = JButton("Settings")
@@ -54,9 +53,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
     }
 
     private fun makeAutoRefreshRulesSection(): JPanel {
-        val table = JTable(emptyArray(), arrayOf("Ruleset", "Session"))
-        val rulesTable = PDControlScrollPane(table)
-        rulesTable.preferredSize = Dimension(rulesTable.preferredSize.width, table.rowHeight*15)
+        val table = Table(arrayOf("Rulesets", "Session"))
 
         // |- Buttons
         val newButton = JButton("New")
@@ -66,13 +63,13 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
 
         val buttonsPanel = JPanel().also { it ->
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.border = BorderFactory.createEmptyBorder(0, 0, 0, 10)
+            it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
             it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(10))
+            it.add(Box.createVerticalStrut(5))
             it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(10))
+            it.add(Box.createVerticalStrut(5))
             it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(10))
+            it.add(Box.createVerticalStrut(5))
             it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
         }
 
@@ -81,16 +78,14 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         }
         val outerPanel = JPanel(BorderLayout()).also {
             it.add(middlePanel, BorderLayout.LINE_START)
-            it.add(rulesTable, BorderLayout.CENTER)
+            it.add(table.withScrollPane(), BorderLayout.CENTER)
         }
 
         return UISection("Auto-Refresh Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, outerPanel)
     }
     private fun makeAutoInjectRulesSection(): JPanel {
-        val table = JTable(emptyArray(), arrayOf("Ruleset", "Session"))
-        val rulesTable = PDControlScrollPane(table)
-        rulesTable.preferredSize = Dimension(rulesTable.preferredSize.width, table.rowHeight*15)
-        return UISection("Auto-Inject Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, rulesTable)
+        val table = Table(arrayOf("Rulesets", "Session"))
+        return UISection("Auto-Inject Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, table.withScrollPane())
     }
 
     fun focus() {

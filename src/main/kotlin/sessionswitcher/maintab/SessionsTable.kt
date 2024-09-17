@@ -1,27 +1,17 @@
 package sessionswitcher.maintab
 
-import PDControlScrollPane
 import sessionswitcher.sessions.Session
+import sessionswitcher.ui.Table
 import java.awt.BorderLayout
-import java.awt.Dimension
 import javax.swing.JPanel
-import javax.swing.JTable
-import javax.swing.ListSelectionModel
 import javax.swing.table.DefaultTableModel
 
-class SessionsListComponent(): JPanel(BorderLayout()) {
+class SessionsTable(): JPanel(BorderLayout()) {
     private var sessions: List<Session> = emptyList()
-    private val table = JTable(DefaultTableModel(emptyArray(), arrayOf("Name", "Host")))
+    private val table = Table(arrayOf("Name", "Host"))
 
     init {
-        table.autoCreateRowSorter = true
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
-
-        val scrollPane = PDControlScrollPane(table)
-        val tableHeight = table.rowHeight * 15 // 15 rows high
-        scrollPane.preferredSize = Dimension(scrollPane.preferredSize.width, tableHeight)
-        table.fillsViewportHeight = true
-        this.add(scrollPane)
+        this.add(table.withScrollPane())
     }
     public fun update(sessions: List<Session>) {
         this.sessions = sessions

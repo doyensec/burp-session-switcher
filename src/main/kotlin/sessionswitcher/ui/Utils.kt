@@ -10,6 +10,8 @@ import javax.swing.*
 import javax.swing.event.ChangeListener
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.DefaultTableModel
 import kotlin.math.min
 
 class Label(text: String, bold: Boolean = false, big: Boolean = false, relativeSize: Double = 0.0) : JLabel(text) {
@@ -362,5 +364,29 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
         outerBox.add(JPanel(BorderLayout()).also{it.add(innerBox)})
         outerBox.add(Box.createVerticalStrut(GAP))
         this.add(outerBox)
+    }
+}
+
+class Table(columns: Array<String>, editable: Boolean = false): JTable() {
+    class TableModel(columns: Array<String>, val editable: Boolean = false): DefaultTableModel(emptyArray(), columns) {
+        override fun isCellEditable(row: Int, column: Int): Boolean {
+            return editable
+        }
+    }
+    init {
+        this.model = TableModel(columns, editable)
+        this.autoCreateRowSorter = true
+        this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
+        val headerRenderer = this.tableHeader.defaultRenderer as DefaultTableCellRenderer
+        headerRenderer.horizontalAlignment = JLabel.LEFT
+    }
+
+    public fun withScrollPane(): JScrollPane {
+        val scrollPane = PDControlScrollPane(this)
+        val tableHeight = this.rowHeight * 15 // 15 rows high
+        scrollPane.preferredSize = Dimension(scrollPane.preferredSize.width, tableHeight)
+        this.fillsViewportHeight = true
+
+        return scrollPane
     }
 }
