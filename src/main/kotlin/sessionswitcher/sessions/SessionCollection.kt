@@ -41,6 +41,23 @@ class SessionCollection: CanSaveAndLoadData {
         return s
     }
 
+    fun duplicateSession(name: String): Session {
+        // Find unused name
+        val oldSession = this.getSession(name)
+            ?: throw Exception("Session to duplicate not found: $name")
+        val newNameBase = oldSession.name + " Copy"
+        var newName = newNameBase
+        var copyNr = 1
+        while (this.hasSession(newName)) {
+            copyNr++
+            newName = "$newNameBase $copyNr"
+        }
+        val newSession = Session(newName, oldSession)
+        this.sessions[newName] = newSession
+        this.updateChildObjectAsync(newSession)
+        return newSession
+    }
+
     fun deleteSession(p: Session) {
         this.deleteSession(p.name)
     }

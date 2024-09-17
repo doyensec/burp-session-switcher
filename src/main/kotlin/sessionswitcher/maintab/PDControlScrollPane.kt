@@ -51,12 +51,12 @@ class PDControlScrollPane(view: Component?) : JScrollPane(view) {
         }
 
         private val max: Int
-            private get() = bar.maximum - bar.visibleAmount
+            get() = bar.maximum - bar.visibleAmount
 
         private fun cloneEvent(e: MouseWheelEvent): MouseWheelEvent {
             return MouseWheelEvent(
                 parentScrollPane, e.id, e
-                    .getWhen(), e.modifiers, 1, 1, e
+                    .getWhen(), e.modifiersEx, 1, 1, e
                     .clickCount, false, e.scrollType, e
                     .scrollAmount, e.wheelRotation
             )

@@ -52,6 +52,13 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         }
     }
 
+    // Duplication constructor
+    constructor(name: String, old: Session) : this(name) {
+        this.host = old.host
+        this.headers.putAll(old.headers)
+        this.cookies = Cookies.duplicate(old.cookies)
+    }
+
     class Deserializer(key: String) : DeserializerFactory<Session>(key) {
         override fun burpDeserialize(obj: PersistedObject) {
             val p = Session(obj.getString("name"), obj.getString("id"))

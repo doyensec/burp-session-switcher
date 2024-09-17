@@ -28,14 +28,17 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         settingsButton.addActionListener { SwingUtilities.invokeLater { settingsWindow.isVisible = true } }
         topPanel.add(settingsButton, BorderLayout.LINE_END)
         mainPanel.add(topPanel)
+        mainPanel.add(JSeparator())
 
         // Sessions Table Section
-        val savedSessionsSection = makeSavedSessionsSection()
-        mainPanel.add(savedSessionsSection)
+        val savedSessionsSection = SavedSessionsSection(sessionSwitcher)
+        mainPanel.add(savedSessionsSection.getComponent())
+        mainPanel.add(JSeparator())
 
         // AutoRefresh Rules Section
         val autoRefreshRulesSection = makeAutoRefreshRulesSection()
         mainPanel.add(autoRefreshRulesSection)
+        mainPanel.add(JSeparator())
 
         // AutoInject Rules Section
         val autoInjectRulesSection = makeAutoInjectRulesSection()
@@ -50,46 +53,38 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         this.add(JLabel("Made with ❤ by Doyensec"), BorderLayout.PAGE_END)
     }
 
-    private fun makeSavedSessionsSection(): JPanel {
-        // Sessions Table Section
-        // |- Table
-        val table = SessionsListComponent()
-        table.update(sessionSwitcher.sessions.getSessions().toList())
-        // |- Buttons
-        val newSessionButton = JButton("New")
-        val editSessionButton = JButton("Edit").also { it.isEnabled = false }
-        val deleteSessionButton = JButton("Delete").also { it.isEnabled = false }
-        val duplicateSessionButton = JButton("Duplicate").also { it.isEnabled = false }
-        val refreshSessionsButton = JButton("Refresh").also {
-            it.addActionListener { table.update(sessionSwitcher.sessions.getSessions().toList()) }
-        }
-        val innerSessionTableButtonsPanel = JPanel().also {
-            it.add(newSessionButton)
-            it.add(editSessionButton)
-            it.add(deleteSessionButton)
-            it.add(duplicateSessionButton)
-            it.add(refreshSessionsButton)
-        }
-        val sessionTableButtonPanel = JPanel(BorderLayout()).also { it.add(innerSessionTableButtonsPanel, BorderLayout.LINE_START) }
-        table.addRowSelectionListener { index: Int->
-            if (index == -1) {
-                editSessionButton.isEnabled = false
-                deleteSessionButton.isEnabled = false
-            } else {
-                editSessionButton.isEnabled = true
-                deleteSessionButton.isEnabled = true
-            }
-        }
-
-        // Add to session
-        return UISection("Saved Sessions", null, table, sessionTableButtonPanel)
-    }
-
     private fun makeAutoRefreshRulesSection(): JPanel {
         val table = JTable(emptyArray(), arrayOf("Ruleset", "Session"))
         val rulesTable = PDControlScrollPane(table)
         rulesTable.preferredSize = Dimension(rulesTable.preferredSize.width, table.rowHeight*15)
-        return UISection("Auto-Refresh Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, rulesTable)
+
+        // |- Buttons
+        val newButton = JButton("New")
+        val editButton = JButton("Edit").also { it.isEnabled = false }
+        val deleteButton = JButton("Delete").also { it.isEnabled = false }
+        val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
+
+        val buttonsPanel = JPanel().also { it ->
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            it.border = BorderFactory.createEmptyBorder(0, 0, 0, 10)
+            it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(10))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(10))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
+            it.add(Box.createVerticalStrut(10))
+            it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
+        }
+
+        val middlePanel = JPanel(BorderLayout()).also {
+            it.add(buttonsPanel, BorderLayout.PAGE_START)
+        }
+        val outerPanel = JPanel(BorderLayout()).also {
+            it.add(middlePanel, BorderLayout.LINE_START)
+            it.add(rulesTable, BorderLayout.CENTER)
+        }
+
+        return UISection("Auto-Refresh Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, outerPanel)
     }
     private fun makeAutoInjectRulesSection(): JPanel {
         val table = JTable(emptyArray(), arrayOf("Ruleset", "Session"))
