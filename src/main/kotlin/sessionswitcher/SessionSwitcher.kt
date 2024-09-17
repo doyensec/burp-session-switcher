@@ -4,24 +4,18 @@ import burp.api.montoya.MontoyaApi
 import kotlinx.coroutines.runBlocking
 import sessionswitcher.handlers.SessionInjectorHandler
 import sessionswitcher.handlers.SessionUpdaterHandler
+import sessionswitcher.maintab.MainSuiteTab
 import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsProvider
-import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.ContextMenuProvider
-import sessionswitcher.ui.TabbedPane
-import java.awt.Component
-import javax.swing.JButton
-import javax.swing.JPanel
-import javax.swing.JTabbedPane
-import javax.swing.SwingUtilities
 
 class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
     val settingsProvider: SettingsProvider
-) : TabbedPane() {
+) {
 
     // Singleton pattern to ensure the extension is not initialized more than once
     companion object {
@@ -54,9 +48,7 @@ class SessionSwitcher private constructor(
 
     val sessions = SessionCollection()
     val settings = Settings(this.settingsProvider)
-
-    // Windows
-    private val settingsWindow = SettingsWindow(settings)
+    var mainSuiteTab: MainSuiteTab? = null
 
     init {
         montoyaApi.logging().raiseInfoEvent("Session Switcher v${SessionSwitcherExtension.VERSION} Started")
@@ -67,11 +59,6 @@ class SessionSwitcher private constructor(
         // Register GraphQL Payload Editor
         if (settings.displayRequestEditor.get()) {
             montoyaApi.userInterface().registerHttpRequestEditorProvider(RequestEditor.getProvider(this))
-        }
-
-        // Register the extension main tab
-        if (settings.displayExtensionMainTab.get()) {
-            //Burp.Montoya.userInterface().registerSuiteTab("Sessions", this)
         }
 
         // Register context menu handler
@@ -89,6 +76,12 @@ class SessionSwitcher private constructor(
 
         // Reload data from the project file
         this.sessions.loadFromProjectFile()
+
+        // Register the extension main tab
+        if (settings.displayExtensionMainTab.get()) {
+            this.mainSuiteTab = MainSuiteTab(this)
+            montoyaApi.userInterface().registerSuiteTab("Sessions", mainSuiteTab)
+        }
     }
 
     fun unload() = runBlocking {
@@ -96,23 +89,6 @@ class SessionSwitcher private constructor(
     }
 
     fun focus() {
-        Logger.debug("Focusing BurpSessions")
-        (this.parent as JTabbedPane).selectedComponent = this
-    }
-
-    fun focusTab(tab: Component) {
-        (this.parent as JTabbedPane).selectedComponent = this
-        this.tabbedPane.selectedComponent = tab
-    }
-
-    private fun addSettingsTab() {
-        val button = JButton("Settings")
-        button.background = this.background
-        button.isFocusable = false
-        button.addActionListener { SwingUtilities.invokeLater { settingsWindow.isVisible = true } }
-        val idx = this.tabbedPane.tabCount
-        this.addTab("Settings", JPanel())
-        this.tabbedPane.setTabComponentAt(idx, button)
-        this.tabbedPane.setEnabledAt(idx, false)
+        this.mainSuiteTab?.focus()
     }
 }

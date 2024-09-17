@@ -1,8 +1,5 @@
 package sessionswitcher.ui
 
-import burp.api.montoya.ui.editor.EditorOptions
-import burp.api.montoya.ui.editor.HttpRequestEditor
-import burp.api.montoya.ui.editor.HttpResponseEditor
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import java.awt.*
@@ -15,7 +12,7 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import kotlin.math.min
 
-class Label(text: String, bold: Boolean = false, big: Boolean = false) : JLabel(text) {
+class Label(text: String, bold: Boolean = false, big: Boolean = false, relativeSize: Double = 0.0) : JLabel(text) {
     init {
         isOpaque = false
         if (big) {
@@ -23,10 +20,17 @@ class Label(text: String, bold: Boolean = false, big: Boolean = false) : JLabel(
         } else if (bold) {
             this.font = this.font.deriveFont(Font.BOLD)
         }
+
+        if (relativeSize != 0.0) {
+            this.font = this.font.deriveFont(this.font.size + relativeSize.toFloat())
+        }
     }
 
     fun withPanel(border: Int = 0): JPanel {
-        return BorderPanel(border).also { it.add(this) }
+        return JPanel(BorderLayout()).also {
+            it.border = BorderFactory.createEmptyBorder(border, border, border, border);
+            it.add(this)
+        }
     }
 }
 
@@ -68,9 +72,7 @@ class BoxPanel(val axis: Int, val gap: Int = 5, vararg components: Component) : 
                 if (axis == BoxLayout.X_AXIS) {
                     Box.createHorizontalStrut(gap)
                 } else {
-                    Box.createVerticalStrut(
-                        gap,
-                    )
+                    Box.createVerticalStrut(gap)
                 },
             )
         }
@@ -249,23 +251,6 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
     }
 }
 
-open class MessageEditor(val plugin: SessionSwitcher, val readOnly: Boolean = false) : JTabbedPane() {
-    val request: HttpRequestEditor
-    val response: HttpResponseEditor
-
-    init {
-        if (readOnly) {
-            request = plugin.montoyaApi.userInterface().createHttpRequestEditor(EditorOptions.READ_ONLY)
-            response = plugin.montoyaApi.userInterface().createHttpResponseEditor(EditorOptions.READ_ONLY)
-        } else {
-            request = plugin.montoyaApi.userInterface().createHttpRequestEditor()
-            response = plugin.montoyaApi.userInterface().createHttpResponseEditor()
-        }
-        this.addTab("Request", request.uiComponent())
-        this.addTab("Response", response.uiComponent())
-    }
-}
-
 class Icon(val normal: Image, val hover: Image?, val selected: Image?)
 
 class ImgButton(val fallback: String, displayIcon: Icon?) : JButton() {
@@ -341,5 +326,41 @@ class ErrorDialog(val msg: String) {
     init {
         Logger.error(msg)
         JOptionPane.showMessageDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), msg, "BurpSessions Error", JOptionPane.ERROR_MESSAGE)
+    }
+}
+
+class UISection(val sectionTitle: String, val description: String?, vararg elements: JComponent?): JPanel() {
+    private val GAP = 10
+    init {
+        val innerBox = JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+        }
+
+        for (e in elements) {
+            if (e != null) {
+                innerBox.add(JPanel(BorderLayout()).also{it.add(e)})
+            } else {
+                innerBox.add(Box.createVerticalStrut(GAP))
+            }
+        }
+
+        // Set layout
+        val outerBox = JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+        }
+
+        this.layout = BorderLayout()
+        this.border = BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP)
+
+        // Add components
+        outerBox.add(JPanel(BorderLayout()).also { it.add(Label(sectionTitle, big = true)) })
+        outerBox.add(Box.createVerticalStrut(GAP))
+        if (!description.isNullOrEmpty()) {
+            outerBox.add(JPanel(BorderLayout()).also { it.add(Label(description)) })
+            outerBox.add(Box.createVerticalStrut(GAP))
+        }
+        outerBox.add(JPanel(BorderLayout()).also{it.add(innerBox)})
+        outerBox.add(Box.createVerticalStrut(GAP))
+        this.add(outerBox)
     }
 }

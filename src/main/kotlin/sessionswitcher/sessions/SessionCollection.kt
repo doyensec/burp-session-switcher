@@ -26,8 +26,8 @@ class SessionCollection: CanSaveAndLoadData {
 
     fun deleteSession(key: String) {
         if (this.sessions.containsKey(key)) {
-            this.sessions[key]?.deleteFromProjectFileAsync()
             this.sessions.remove(key)
+            this.sessions[key]?.deleteFromProjectFileAsync()
         }
     }
 

@@ -14,7 +14,7 @@ import sessionswitcher.utils.withUpsertedHeaders
 import java.util.*
 
 
-class Session(val name: String, val id: String = UUID.randomUUID().toString()) : CanSaveData {
+class Session(val name: String, private val id: String = UUID.randomUUID().toString()) : CanSaveData {
     companion object {
         val EXCLUDED_HEADER_PREFIXES = setOf<String>(
             // Keep these lowercase
