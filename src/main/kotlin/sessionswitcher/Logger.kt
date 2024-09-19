@@ -22,7 +22,7 @@ class Logger {
         INFO,
         WARNING,
         ERROR,
-        CRITICAL,
+        CRITICAL
     }
 
     private var level = Level.DEBUG
@@ -36,6 +36,10 @@ class Logger {
                 "DEBUG" -> Level.DEBUG
                 "INFO" -> Level.INFO
                 "WARN" -> Level.WARNING
+                "WARNING" -> Level.WARNING
+                "ERR" -> Level.ERROR
+                "ERROR" -> Level.ERROR
+                "CRITICAL" -> Level.ERROR
                 else -> Level.DEBUG
             },
         )

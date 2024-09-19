@@ -10,6 +10,7 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
+import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsItem
 import sessionswitcher.ui.*
 import sessionswitcher.utils.host
@@ -67,7 +68,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             this.editedLabel.text = ""
             if (s != null) {
                 Logger.info("Not null")
-                val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request, settings.keepOtherCookies.get())
+                val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request, !settings.removeOtherCookies.get())
                 this.httpRequest = req
                 this.editor.setRequest(req, headersDiffInfo, cookiesDiffinfo)
                 this.originalRequestModified = true
@@ -124,10 +125,10 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         val hostFilter: String = if (request == null) {
             // If request is null, do not filter
             ""
-        } else if (settings.filterSessionBySubdomain.get()) {
+        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
             // Filter by subdomain (entire host)
             request.host()
-        } else if (settings.filterSessionByDomain.get()) {
+        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
             // Filter by main domain
             request.topDomain()
         } else {

@@ -5,6 +5,7 @@ import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Theme
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.settings.Settings
 import sessionswitcher.utils.JsonPrettifier
 import java.awt.Color
 import javax.swing.text.SimpleAttributeSet
@@ -87,14 +88,14 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         // Add first line of request as normal text
         this.appendText(requestLines[0] + "\n")
 
-        val showChangesOnly = settings.editorShowChangesOnly.get()
-        val hideCommonHeaders = settings.editorHideCommonHeaders.get()
+        val hideHeadersMode = settings.editorShowHeadersMode.get()
         val showRequestBody = settings.editorShowRequestBody.get()
 
         // Add headers and cookies
         for (header in httpRequest.headers()) {
             val headerName = normalizeHeaderName(header.name()) // Train-Case
             val headerValue = header.value()
+            val isCommonHeader = COMMON_HEADER_PREFIXES.any { headerName.lowercase().startsWith(it) }
 
             if (headerName == ":authority") {
                 // Turn HTTP/2 ":authority" header in "Host"
@@ -114,9 +115,9 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
                 this.appendText("$headerName: $headerValue", addedElementStyle)
                 Logger.debug("Header added: $headerName")
             } else if (
-                    !showChangesOnly &&
-                    !(hideCommonHeaders && COMMON_HEADER_PREFIXES.any { headerName.lowercase().startsWith(it) } )
-                ) {
+                    hideHeadersMode == Settings.HideHeadersMode.SHOW_ALL ||
+                    (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && isCommonHeader)
+                    ) {
                 this.appendText("$headerName: $headerValue")
                 Logger.debug("Header noop: $headerName")
             }

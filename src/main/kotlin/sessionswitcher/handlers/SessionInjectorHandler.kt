@@ -1,7 +1,6 @@
 package sessionswitcher.handlers
 
 import burp.api.montoya.core.Annotations
-import burp.api.montoya.core.HighlightColor
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.sessions.ActionResult
 import burp.api.montoya.http.sessions.SessionHandlingAction
@@ -38,7 +37,7 @@ class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher): Sess
 
         // Prepare annotations
         val settings = this.sessionSwitcher.settings
-        val highlightColor = HighlightColor.highlightColor(settings.injectorHighlightColor.get()) ?: HighlightColor.NONE
+        val highlightColor = settings.injectorHighlightColor.get()
         var annotations = Annotations.annotations(highlightColor)
         if (settings.injectorAnnotateRequest.get()) {
            annotations = annotations.withNotes("SessionSwitcher: injected session $sessionName")

@@ -235,6 +235,9 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
     }
 
     fun autoSize() {
+        // Pack the window to fit its content
+        this.pack()
+
         val preferredSize = this.preferredSize
         val screenHeight = Toolkit.getDefaultToolkit().screenSize.height
         val reasonableHeight = min(preferredSize.height, screenHeight - 50)
@@ -245,9 +248,6 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
 
         // Set the minimum size to something reasonable as well
         this.minimumSize = Dimension(preferredSize.width, 400)
-
-        // Pack the window to fit its content
-        this.pack()
 
         this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
     }
@@ -331,7 +331,7 @@ class ErrorDialog(val msg: String) {
     }
 }
 
-class UISection(val sectionTitle: String, val description: String?, vararg elements: JComponent?): JPanel() {
+class UISection(val sectionTitle: String, val description: String?, vararg elements: Component?): JPanel() {
     private val GAP = 10
     init {
         val innerBox = JPanel().also {
@@ -356,11 +356,11 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
 
         // Add components
         outerBox.add(JPanel(BorderLayout()).also { it.add(Label(sectionTitle, big = true)) })
-        outerBox.add(Box.createVerticalStrut(GAP))
         if (!description.isNullOrEmpty()) {
+            outerBox.add(Box.createVerticalStrut(4))
             outerBox.add(JPanel(BorderLayout()).also { it.add(Label(description)) })
-            outerBox.add(Box.createVerticalStrut(GAP))
         }
+        outerBox.add(Box.createVerticalStrut(GAP))
         outerBox.add(JPanel(BorderLayout()).also{it.add(innerBox)})
         outerBox.add(Box.createVerticalStrut(GAP))
         this.add(outerBox)

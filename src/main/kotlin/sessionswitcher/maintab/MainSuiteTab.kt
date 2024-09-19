@@ -92,17 +92,4 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         Logger.debug("Focusing BurpSessions Main Tab")
         (this.parent as JTabbedPane).selectedComponent = this
     }
-
-    /*
-        private fun addSettingsTab() {
-        val button = JButton("Settings")
-        button.background = this.background
-        button.isFocusable = false
-        button.addActionListener { SwingUtilities.invokeLater { settingsWindow.isVisible = true } }
-        val idx = this.tabbedPane.tabCount
-        this.addTab("Settings", JPanel())
-        this.tabbedPane.setTabComponentAt(idx, button)
-        this.tabbedPane.setEnabledAt(idx, false)
-    }
-     */
 }
