@@ -67,14 +67,13 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             this._selectedSession = s
             this.editedLabel.text = ""
             if (s != null) {
-                Logger.info("Not null")
-                val (req, headersDiffInfo, cookiesDiffinfo) = s.apply(request, !settings.removeOtherCookies.get())
+                Logger.info("Session is ${s.name}")
+                val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, !settings.removeOtherCookies.get())
                 this.httpRequest = req
-                this.editor.setRequest(req, headersDiffInfo, cookiesDiffinfo)
+                this.editor.setRequest(req, headersDiffInfo, cookiesDiffInfo)
                 this.originalRequestModified = true
-                Logger.info(s.name)
             } else {
-                Logger.info("NULL")
+                Logger.debug("Session is NULL")
                 this.httpRequest = this.originalRequest!!.withMethod(this.originalRequest!!.method())
                 this.editor.setRequest(this.httpRequest!!)
                 this.originalRequestModified = false

@@ -5,6 +5,7 @@ import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.ui.Theme
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.sessions.Cookies
 import sessionswitcher.settings.Settings
 import sessionswitcher.utils.JsonPrettifier
 import java.awt.Color
@@ -91,6 +92,8 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         val hideHeadersMode = settings.editorShowHeadersMode.get()
         val showRequestBody = settings.editorShowRequestBody.get()
 
+        var cookiesProcessed = false
+
         // Add headers and cookies
         for (header in httpRequest.headers()) {
             val headerName = normalizeHeaderName(header.name()) // Train-Case
@@ -100,26 +103,36 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             if (headerName == ":authority") {
                 // Turn HTTP/2 ":authority" header in "Host"
                 this.appendText("Host: $headerValue")
-            }
-            else if (headerName.startsWith(":")) {
+            } else if (headerName.startsWith(":")) {
                 // Never show other HTTP/2 headers
                 continue
             } else if (headerName.lowercase() == "cookie") {
-                this.appendCookieHeader(headerValue, cookiesDiffInfo)
-                Logger.debug("Cookie header detected")
+                if (!cookiesProcessed) {
+                    Logger.debug("Cookie header detected")
+                    cookiesProcessed = true
+                    // Ignore the specific header value and normalize cookies
+                    val cookies = Cookies.fromHttpRequest(httpRequest)
+                    this.appendCookieHeader(cookies.toString(), cookiesDiffInfo)
+                } else {
+                    Logger.debug("Additional cookie header, ignoring...")
+                    continue
+                }
             } else if (modifiedHeaders.contains(headerName.lowercase())) {
+                Logger.debug("Header modified: $headerName")
                 this.appendText("$headerName: ")
                 this.appendText(headerValue, modifiedElementStyle)
-                Logger.debug("Header modified: $headerName")
             } else if (addedHeaders.contains(headerName.lowercase())) {
-                this.appendText("$headerName: $headerValue", addedElementStyle)
                 Logger.debug("Header added: $headerName")
+                this.appendText("$headerName: $headerValue", addedElementStyle)
             } else if (
                     hideHeadersMode == Settings.HideHeadersMode.SHOW_ALL ||
                     (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && isCommonHeader)
                     ) {
                 this.appendText("$headerName: $headerValue")
                 Logger.debug("Header noop: $headerName")
+            } else {
+                // If we got here, no text was appended, so let's continue to prevent a newline getting appended
+                continue
             }
             this.appendText("\n")
         }

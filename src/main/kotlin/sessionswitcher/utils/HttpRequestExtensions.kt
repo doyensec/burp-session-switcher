@@ -4,6 +4,7 @@ import burp.api.montoya.http.message.HttpHeader
 import burp.api.montoya.http.message.requests.HttpRequest
 import com.google.common.net.InternetDomainName
 import sessionswitcher.Logger
+import sessionswitcher.sessions.Cookies
 import java.net.URI
 
 /*
@@ -12,7 +13,7 @@ import java.net.URI
     2. The list of updated headers
     3. The list of added headers
  */
-fun HttpRequest.withUpsertedHeaders(newHeaders: Map<String, String>): Triple<HttpRequest, List<String>, List<String>> {
+fun HttpRequest.withHeaders(newHeaders: Map<String, String>): Triple<HttpRequest, List<String>, List<String>> {
     val updated = ArrayList<String>()
     val added = ArrayList<String>()
 
@@ -35,6 +36,28 @@ fun HttpRequest.withUpsertedHeaders(newHeaders: Map<String, String>): Triple<Htt
         }
     }
     return Triple(out, updated, added)
+}
+
+/*
+    Replaces Cookies in HTTP Request
+ */
+fun HttpRequest.withCookies(cookies: Cookies): HttpRequest {
+    val headerName = if (this.httpVersion() == "HTTP/2") "cookie" else "Cookie"
+    val insertIndex = this.headers().indexOfFirst { it.name() == headerName }
+    if (insertIndex == -1) {
+        return this.withAddedHeader(headerName, cookies.toString())
+    } else {
+        var outputReq = this.withRemovedHeader(headerName)
+        val headersList = outputReq.headers().toMutableList()
+        headersList.add(insertIndex, HttpHeader.httpHeader(headerName, cookies.toString()))
+        for (header in headersList) {
+            outputReq = outputReq.withRemovedHeader(header.name())
+        }
+        for (header in headersList) {
+            outputReq = outputReq.withAddedHeader(header)
+        }
+        return outputReq
+    }
 }
 
 /*

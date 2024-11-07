@@ -12,7 +12,6 @@ import javax.swing.text.SimpleAttributeSet
 open class StyledTextEditor: JPanel(BorderLayout()) {
 
     val normalTextStyle = SimpleAttributeSet()
-    data class TextRange(val start: Int, val length: Int)
 
     val textPane = JTextPane().also {
         it.isEditable = false

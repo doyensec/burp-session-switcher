@@ -7,10 +7,7 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
-import sessionswitcher.utils.headersMap
-import sessionswitcher.utils.host
-import sessionswitcher.utils.mergedHeaders
-import sessionswitcher.utils.withUpsertedHeaders
+import sessionswitcher.utils.*
 import java.util.*
 
 
@@ -113,13 +110,15 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
     }
 
     fun apply(r: HttpRequest, keepOtherCookies: Boolean = true): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
-        Logger.info("session.apply: " + this.headers)
-        var (output, updatedHeaders, addedHeaders) = r.withUpsertedHeaders(this.headers)
+        Logger.debug("session.apply: " + this.headers)
+        var (output, updatedHeaders, addedHeaders) = r.withHeaders(this.headers)
 
         var updatedCookies = listOf<String>()
         var addedCookies = listOf<String>()
+        Logger.debug("Cookies in this Session: " + this.cookies)
         if (!this.cookies.isEmpty()) {
             val reqCookies = Cookies.fromHttpRequest(r)
+            Logger.debug("Cookies in the Request: $reqCookies")
 
             val cookieDiffPair = if (keepOtherCookies) {
                 reqCookies.update(this.cookies)
@@ -129,7 +128,7 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
 
             updatedCookies = cookieDiffPair.first
             addedCookies = cookieDiffPair.second
-            output = output.withUpsertedHeaders(mapOf("cookie" to reqCookies.toString())).first
+            output = output.withCookies(reqCookies)
         }
 
         return Triple(output, Pair(updatedHeaders, addedHeaders), Pair(updatedCookies, addedCookies))
