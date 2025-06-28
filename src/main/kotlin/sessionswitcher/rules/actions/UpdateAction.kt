@@ -1,7 +1,8 @@
-package sessionswitcher.automode
+package sessionswitcher.rules.actions
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
+import sessionswitcher.rules.MatchInfo
 import sessionswitcher.sessions.Session
 import java.util.*
 

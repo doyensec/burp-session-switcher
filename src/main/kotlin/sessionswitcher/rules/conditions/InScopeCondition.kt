@@ -1,11 +1,11 @@
-package sessionswitcher.automode.rules
+package sessionswitcher.rules.conditions
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
-import sessionswitcher.automode.MatchInfo
-import sessionswitcher.automode.Rule
+import sessionswitcher.rules.Condition
+import sessionswitcher.rules.MatchInfo
 
-class InScopeRule(public val negative: Boolean): Rule() {
+class InScopeCondition(public val negative: Boolean): Condition() {
     override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
         return request.isInScope xor negative
     }

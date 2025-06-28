@@ -1,11 +1,11 @@
-package sessionswitcher.automode.rules
+package sessionswitcher.rules.conditions
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
-import sessionswitcher.automode.MatchInfo
+import sessionswitcher.rules.MatchInfo
 
-class ResponseBodyRule(pattern: String, operator: OPERATORS, negative: Boolean = false) :
-    StringMatchRule(pattern, operator, negative) {
+class ResponseBodyCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :
+    StringCondition(pattern, operator, negative) {
     override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
         if (response == null) return false
         val body = response.bodyToString()

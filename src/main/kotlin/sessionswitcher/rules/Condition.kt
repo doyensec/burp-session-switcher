@@ -1,13 +1,9 @@
-package sessionswitcher.automode
+package sessionswitcher.rules
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
 
-data class RuleConfig(
-    val isNegativeMatch: Boolean,
-)
-
-abstract class Rule {
+abstract class Condition {
     // Main function called during evaluation
     abstract fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean
 

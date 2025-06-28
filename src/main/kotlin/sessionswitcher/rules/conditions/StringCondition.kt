@@ -1,8 +1,8 @@
-package sessionswitcher.automode.rules
+package sessionswitcher.rules.conditions
 
-import sessionswitcher.automode.Rule
+import sessionswitcher.rules.Condition
 
-abstract class StringMatchRule(val pattern: String, val operator: OPERATORS, val negative: Boolean = false): Rule() {
+abstract class StringCondition(val pattern: String, val operator: OPERATORS, val negative: Boolean = false): Condition() {
     public enum class OPERATORS(val description: String) {
         EXACT_MATCH("Matches exactly"),
         CONTAINS("Contains"),
