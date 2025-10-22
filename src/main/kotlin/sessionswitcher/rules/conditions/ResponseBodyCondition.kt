@@ -5,7 +5,7 @@ import burp.api.montoya.http.message.responses.HttpResponse
 import sessionswitcher.rules.MatchInfo
 
 class ResponseBodyCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :
-    StringCondition(pattern, operator, negative) {
+    StringCondition(matchOn = "Response Body", needsResponse = true, pattern, operator, negative) {
     override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
         if (response == null) return false
         val body = response.bodyToString()
@@ -14,8 +14,4 @@ class ResponseBodyCondition(pattern: String, operator: OPERATORS, negative: Bool
         }
         return this.stringMatches(body)
     }
-
-    override fun matchOn(): String = "Response Body"
-
-    override fun needsResponse(): Boolean = true
 }

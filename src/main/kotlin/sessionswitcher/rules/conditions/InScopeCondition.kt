@@ -5,27 +5,12 @@ import burp.api.montoya.http.message.responses.HttpResponse
 import sessionswitcher.rules.Condition
 import sessionswitcher.rules.MatchInfo
 
-class InScopeCondition(public val negative: Boolean): Condition() {
+class InScopeCondition(public val negative: Boolean): Condition(
+    Properties(matchOn = "Scope", needsResponse = false, availableOperations = listOf("Request is in scope"), canSetPattern = false),
+    Configuration(operation = "Request is in scope", negativeMatch = negative)
+) {
     override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
         return request.isInScope xor negative
-    }
-
-    override fun isNegativeMatch(): Boolean {
-        return negative
-    }
-
-    override fun matchOn(): String = "Scope"
-
-    override fun needsResponse(): Boolean = false
-
-    override fun getAvailableOperations(): List<String> = listOf("Request is in scope")
-
-    override fun matchOperation(): String = "Request is in scope"
-
-    override fun canSetPattern(): Boolean = false
-
-    override fun matchPattern(): String {
-        throw UnsupportedOperationException()
     }
 
     override fun validateConfiguration(): Pair<Boolean, String> = Pair(true, "")

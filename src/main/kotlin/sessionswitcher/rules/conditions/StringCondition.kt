@@ -1,8 +1,13 @@
 package sessionswitcher.rules.conditions
 
 import sessionswitcher.rules.Condition
+import java.util.*
 
-abstract class StringCondition(val pattern: String, val operator: OPERATORS, val negative: Boolean = false): Condition() {
+abstract class StringCondition(matchOn: String, needsResponse: Boolean, pattern: String, val operator: OPERATORS, negative: Boolean = false):
+    Condition(
+        Properties(matchOn = matchOn, needsResponse = needsResponse, availableOperations = OPERATORS.entries.map { it.description }, canSetPattern = true),
+        Configuration(operation = operator.description, negativeMatch = negative, pattern = Optional.of(pattern))
+    ) {
     public enum class OPERATORS(val description: String) {
         EXACT_MATCH("Matches exactly"),
         CONTAINS("Contains"),
@@ -12,47 +17,37 @@ abstract class StringCondition(val pattern: String, val operator: OPERATORS, val
     }
 
     protected fun stringMatches(value: String): Boolean {
-       return _stringMatches(value) xor negative
+       return _stringMatches(value) xor configuration.negativeMatch
     }
 
     protected fun _stringMatches(value: String): Boolean {
         when (operator) {
             OPERATORS.STARTS_WITH -> {
-                return value.lowercase().startsWith(pattern.lowercase())
+                return value.lowercase().startsWith(configuration.pattern.get().lowercase())
             }
             OPERATORS.CONTAINS -> {
-                return value.lowercase().contains(pattern.lowercase())
+                return value.lowercase().contains(configuration.pattern.get().lowercase())
             }
             OPERATORS.ENDS_WITH -> {
-                return value.lowercase().endsWith(pattern.lowercase())
+                return value.lowercase().endsWith(configuration.pattern.get().lowercase())
             }
             OPERATORS.EXACT_MATCH -> {
-                return value.lowercase() == pattern.lowercase()
+                return value.lowercase() == configuration.pattern.get().lowercase()
             }
             OPERATORS.REGEX_MATCH -> {
-                return value.matches(pattern.toRegex())
+                return value.matches(configuration.pattern.get().toRegex())
             }
         }
     }
 
-    override fun getAvailableOperations(): List<String> = OPERATORS.entries.map { it.description }
-
-    override fun matchOperation(): String = operator.description
-
-    override fun canSetPattern(): Boolean = true
-
-    override fun matchPattern(): String = pattern
-
     override fun validateConfiguration(): Pair<Boolean, String> {
-        if (pattern.isEmpty()) {
+        if (!configuration.pattern.isPresent || configuration.pattern.get().isBlank()) {
             return Pair(false, "Cannot leave pattern empty")
         }
         return Pair(true, "")
     }
 
-    override fun isNegativeMatch(): Boolean = negative
-
     override fun describe(): String {
-        return "Rule: ${this.matchOn()} ${this.operator.description} \"${this.pattern}\""
+        return "Rule: ${this.properties.matchOn} ${this.operator.description} \"${this.configuration.pattern.get()}\""
     }
 }
