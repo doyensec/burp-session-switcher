@@ -20,7 +20,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         // Title section
         // |- Title
         val topPanel = JPanel(BorderLayout()).also { it.border = BorderFactory.createEmptyBorder(5,5, 5, 5) }
-        val title = Label("Session Switcher", bold = true, relativeSize = 12.0)
+        val title = Label("Sessions", bold = true, relativeSize = 12.0)
         topPanel.add(title, BorderLayout.LINE_START)
         // |- Settings button
         val settingsButton = JButton("Settings")
