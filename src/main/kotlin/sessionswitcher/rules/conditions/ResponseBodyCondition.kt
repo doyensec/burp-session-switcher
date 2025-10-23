@@ -1,7 +1,6 @@
 package sessionswitcher.rules.conditions
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.MatchInfo
 
 class ResponseBodyCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :
     StringCondition(matchOn = "Response Body", needsResponse = true, pattern, operator, negative) {

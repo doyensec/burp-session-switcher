@@ -9,7 +9,7 @@ import java.awt.Component
 
 /*
     This class provides the Context Menu that is opened when the user Right-Clicks inside the request editor
-    The actions have associated Keyboard Shortcuts so that standard Burp shortcuts can be used from the editor
+    The refresher have associated Keyboard Shortcuts so that standard Burp shortcuts can be used from the editor
  */
 class ContextMenuProvider(protected val sessionSwitcher: SessionSwitcher) : ContextMenuItemsProvider {
 

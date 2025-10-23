@@ -1,4 +1,4 @@
-package sessionswitcher.rules
+package sessionswitcher.rules.conditions
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import java.util.*

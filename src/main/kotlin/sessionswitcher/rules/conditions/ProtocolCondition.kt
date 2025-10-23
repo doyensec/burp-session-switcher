@@ -1,8 +1,6 @@
 package sessionswitcher.rules.conditions
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.Condition
-import sessionswitcher.rules.MatchInfo
 
 class ProtocolCondition(public val operation: String, public val negative: Boolean): Condition(
     Properties(matchOn = "Protocol", needsResponse = false, availableOperations = listOf("HTTP", "HTTPS"), canSetPattern = false),

@@ -1,6 +1,5 @@
 package sessionswitcher.rules.conditions
 
-import sessionswitcher.rules.Condition
 import java.util.*
 
 abstract class StringCondition(matchOn: String, needsResponse: Boolean, pattern: String, val operator: OPERATORS, negative: Boolean = false):

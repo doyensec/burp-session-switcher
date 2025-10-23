@@ -1,7 +1,6 @@
 package sessionswitcher.rules.conditions
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.MatchInfo
 import sessionswitcher.utils.host
 
 class DomainNameCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :

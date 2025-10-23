@@ -1,8 +1,6 @@
 package sessionswitcher.rules.conditions
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.Condition
-import sessionswitcher.rules.MatchInfo
 
 class InScopeCondition(public val negative: Boolean): Condition(
     Properties(matchOn = "Scope", needsResponse = false, availableOperations = listOf("Request is in scope"), canSetPattern = false),

@@ -46,14 +46,14 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         // Wrap everything in a cozy scrollPane
         val padded = JPanel(BorderLayout())
         padded.add(mainPanel, BorderLayout.PAGE_START)
+        padded.add(JLabel("Made with ❤ by Doyensec"), BorderLayout.PAGE_END)
         val scrollPane = JScrollPane(padded)
         scrollPane.border = BorderFactory.createEmptyBorder()
         this.add(scrollPane)
-        this.add(JLabel("Made with ❤ by Doyensec"), BorderLayout.PAGE_END)
     }
 
     private fun makeAutoRefreshRulesSection(): JPanel {
-        val table = Table(arrayOf("Rulesets", "Session"))
+        val table = Table(arrayOf("Rules", "Refresh Session"))
 
         // |- Buttons
         val newButton = JButton("New")
@@ -81,11 +81,11 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
             it.add(table.withScrollPane(), BorderLayout.CENTER)
         }
 
-        return UISection("Auto-Refresh Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, outerPanel)
+        return UISection("AutoRefresh Rules", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, outerPanel)
     }
     private fun makeAutoInjectRulesSection(): JPanel {
-        val table = Table(arrayOf("Rulesets", "Session"))
-        return UISection("Auto-Inject Rulesets", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, table.withScrollPane())
+        val table = Table(arrayOf("Rules", "Inject Session"))
+        return UISection("AutoInject Rules", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, table.withScrollPane())
     }
 
     fun focus() {

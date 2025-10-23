@@ -1,7 +1,6 @@
 package sessionswitcher.rules.conditions
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.MatchInfo
 
 class QueryStringParamCondition(pattern: String, operator: OPERATORS, val negative: Boolean = false) :
     StringCondition(matchOn = "Request Parameter", needsResponse = false, pattern, operator, false) {
