@@ -1,7 +1,6 @@
 package sessionswitcher.rules
 
-import burp.api.montoya.http.message.requests.HttpRequest
-import burp.api.montoya.http.message.responses.HttpResponse
+import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import java.util.*
 
 abstract class Condition(public val properties: Properties, public val configuration: Configuration) {
@@ -19,7 +18,7 @@ abstract class Condition(public val properties: Properties, public val configura
     }
 
     // Main function called during evaluation
-    abstract fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean
+    abstract fun matches(requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean
 
     // Function called during rule creation to check if fields are ok
     abstract fun validateConfiguration(): Pair<Boolean, String>

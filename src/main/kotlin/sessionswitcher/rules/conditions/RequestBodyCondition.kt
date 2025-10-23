@@ -1,13 +1,12 @@
 package sessionswitcher.rules.conditions
 
-import burp.api.montoya.http.message.requests.HttpRequest
-import burp.api.montoya.http.message.responses.HttpResponse
+import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import sessionswitcher.rules.MatchInfo
 
 class RequestBodyCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :
     StringCondition(matchOn = "Request Body", needsResponse = false, pattern, operator, negative) {
-    override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
-        val body = request.bodyToString()
+    override fun matches(requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
+        val body = requestResponse.request().bodyToString()
         if (body.isNullOrBlank()) {
             return false
         }

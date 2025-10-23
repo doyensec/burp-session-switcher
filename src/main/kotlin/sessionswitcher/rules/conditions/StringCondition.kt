@@ -32,7 +32,7 @@ abstract class StringCondition(matchOn: String, needsResponse: Boolean, pattern:
                 return value.lowercase().endsWith(configuration.pattern.get().lowercase())
             }
             OPERATORS.EXACT_MATCH -> {
-                return value.lowercase() == configuration.pattern.get().lowercase()
+                return value.equals(configuration.pattern.get(), ignoreCase = true)
             }
             OPERATORS.REGEX_MATCH -> {
                 return value.matches(configuration.pattern.get().toRegex())

@@ -1,13 +1,12 @@
 package sessionswitcher.rules.conditions
 
-import burp.api.montoya.http.message.requests.HttpRequest
-import burp.api.montoya.http.message.responses.HttpResponse
+import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import sessionswitcher.rules.MatchInfo
 
 class UrlCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :
     StringCondition(matchOn = "URL", needsResponse = false, pattern, operator, negative) {
-    override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
-        val url = request.url()
+    override fun matches(requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
+        val url = requestResponse.request().url()
         return this.stringMatches(url)
     }
 }

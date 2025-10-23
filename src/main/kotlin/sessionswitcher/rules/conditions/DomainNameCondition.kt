@@ -1,14 +1,13 @@
 package sessionswitcher.rules.conditions
 
-import burp.api.montoya.http.message.requests.HttpRequest
-import burp.api.montoya.http.message.responses.HttpResponse
+import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import sessionswitcher.rules.MatchInfo
 import sessionswitcher.utils.host
 
 class DomainNameCondition(pattern: String, operator: OPERATORS, negative: Boolean = false) :
     StringCondition(matchOn = "Domain Name", needsResponse = false, pattern, operator, negative) {
-    override fun matches(request: HttpRequest, response: HttpResponse?, matchInfo: MatchInfo): Boolean {
-        val domainName = request.host()
+    override fun matches(requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
+        val domainName = requestResponse.request().host()
         return this.stringMatches(domainName)
     }
 }
