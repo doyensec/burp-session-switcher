@@ -4,7 +4,7 @@ import burp.api.montoya.MontoyaApi
 import kotlinx.coroutines.runBlocking
 import sessionswitcher.handlers.SessionInjectorHandler
 import sessionswitcher.handlers.SessionUpdaterHandler
-import sessionswitcher.maintab.MainSuiteTab
+import sessionswitcher.ui.maintab.MainSuiteTab
 import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider

@@ -1,4 +1,4 @@
-package sessionswitcher.maintab
+package sessionswitcher.ui.maintab
 
 import sessionswitcher.sessions.Session
 import sessionswitcher.ui.Table

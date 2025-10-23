@@ -1,4 +1,4 @@
-package sessionswitcher.maintab
+package sessionswitcher.ui.maintab
 
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
