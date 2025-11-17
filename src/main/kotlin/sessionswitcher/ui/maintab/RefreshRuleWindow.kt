@@ -2,11 +2,13 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
+import sessionswitcher.rules.refresher.RefreshConfig
 import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.ComboBox
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
+import sessionswitcher.ui.maintab.tables.ConditionsTableModel
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ItemEvent
@@ -14,13 +16,21 @@ import java.util.*
 import javax.swing.*
 import kotlin.math.min
 
-class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
-    JDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), if (refreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule", true) {
+class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
+    JDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), if (initialRefreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule", true) {
 
+    // Flags
+    var cancelPressed = false
+
+    // Conditions
+    val conditions = ArrayList<Condition>()
+    val tableModel = ConditionsTableModel(conditions)
+
+    // UI elements
     val saveButton = ButtonPrimary("Save")
     val cancelButton = JButton("Cancel")
 
-    val conditionsTable = Table(arrayOf("Match Type", "Relationship", "Condition"))
+    val conditionsTable = Table(emptyArray()).also { it.model = tableModel }
 
     val sessionSelector = ComboBox("Session to refresh")
 
@@ -49,6 +59,39 @@ class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
         // Pack the window to fit its content
         this.pack()
         this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
+    }
+
+    fun newCondition() {
+        val newCondition = ConditionEditWindow(this, Optional.empty<Condition>()).showDialog()
+        if (!newCondition.isPresent) {
+            return
+        }
+        this.conditions.add(newCondition.get())
+        this.refreshConditionsTable()
+    }
+
+    fun refreshConditionsTable() {
+        tableModel.fireTableDataChanged()
+    }
+
+    fun makeRule(): RefreshRule {
+        val sessionName = this.sessionSelector.getSelectedItem()
+        if (sessionName == "(No sessions)") {
+            throw IllegalStateException("No sessions selected")
+        }
+        val session = SessionSwitcher.getInstance().sessions.getSession(sessionName)
+            ?: throw IllegalStateException("Session with name $sessionName not found")
+
+        return RefreshRule(this.conditions.toTypedArray(), session, RefreshConfig()) // TODO: Add refresh config
+    }
+
+    public fun showDialog(): Optional<RefreshRule> {
+        this.isVisible = true
+        return if (this.cancelPressed) {
+            Optional.empty()
+        } else {
+            Optional.of(makeRule())
+        }
     }
 
     init {
@@ -112,7 +155,14 @@ class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
         }
 
         // Set button listeners
-        cancelButton.addActionListener { this.dispose() }
+        saveButton.addActionListener {
+            this.cancelPressed = false
+            this.dispose()
+        }
+        cancelButton.addActionListener {
+            this.cancelPressed = true
+            this.dispose()
+        }
 
         val scrollable = JScrollPane(panel)
         scrollable.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
@@ -131,7 +181,7 @@ class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
         val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
 
         // Set button listeners
-        newButton.addActionListener { ConditionEditWindow(this, Optional.empty<Condition>()).isVisible = true }
+        newButton.addActionListener { newCondition() }
 
         val buttonsPanel = JPanel().also { it ->
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)

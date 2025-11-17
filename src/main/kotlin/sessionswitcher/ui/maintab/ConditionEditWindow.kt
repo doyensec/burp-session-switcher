@@ -2,53 +2,86 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
+import sessionswitcher.rules.conditions.ConditionConfiguration
+import sessionswitcher.rules.conditions.ConditionType
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
 import java.awt.*
 import java.util.*
 import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 
-class ConditionEditWindow(owner: Dialog, private val condition: Optional<Condition>) :
-    JDialog(owner, if (condition.isEmpty) "New Condition" else "Edit Condition", true) {
+class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<Condition>) :
+    JDialog(owner, if (initialCondition.isEmpty) "New Condition" else "Edit Condition", true) {
 
+    // Flags
+    var cancelPressed = false
+
+    // Buttons
     val saveButton = ButtonPrimary("OK")
     val cancelButton = JButton("Cancel")
 
+    // Condition selection
+    val conditionTypesSelector = JComboBox<ConditionType>(Condition.AVAILABLE_TYPES)
+    val operationSelector = JComboBox<String>()
+    val patternTextBox =  JTextField().also {
+        it.isEnabled = false
+        it.font = SessionSwitcher.getApi().userInterface().currentEditorFont()
+    }
+    val negativeMatchCheckBox = JCheckBox("Negative match")
+    val validationMessageLabel = JLabel("")
+
+    val selectedConditionType: ConditionType get() {
+        return conditionTypesSelector.selectedItem as ConditionType
+    }
+
+    val configuration: ConditionConfiguration get() {
+        val operation = operationSelector.selectedItem as String
+        val pattern = if (patternTextBox.isEnabled) Optional.of(patternTextBox.text) else Optional.empty<String>()
+        val negativeMatch = this.negativeMatchCheckBox.isSelected
+        return ConditionConfiguration(operation, pattern, negativeMatch)
+    }
+
     fun autoSize() {
         // Pack the window to fit its content
-        this.preferredSize = Dimension(500, 280)
+        this.minimumSize = Dimension(500, 310)
+        this.preferredSize = this.minimumSize
         this.pack()
         this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
     }
 
+    public fun showDialog(): Optional<Condition> {
+        this.isVisible = true
+        return if (this.cancelPressed) {
+            Optional.empty()
+        } else {
+            Optional.of(Condition.make(this.selectedConditionType, this.configuration))
+        }
+    }
+
     init {
-        // Set window properties
+        // Set UI properties
         this.isResizable = true
         this.isAutoRequestFocus = true
         this.modalityType = Dialog.ModalityType.APPLICATION_MODAL
 
         saveButton.isEnabled = false
 
-        val combo1 = JComboBox(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
-        val combo2 = JComboBox(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
-        val combo3 = JComboBox(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
-        val combo4 = JComboBox(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
-
         val controls = arrayOf(
-            Pair("Operator", combo1),
-            Pair("Match type", combo2),
-            Pair("Match relationship", combo3),
-            Pair("Match condition", combo4)
+            Pair("Type", conditionTypesSelector),
+            Pair("Operation", operationSelector),
+            Pair("Pattern", patternTextBox),
+            Pair("Negative match", negativeMatchCheckBox),
+            Pair("Validation", validationMessageLabel)
             )
 
         val panel = JPanel(GridBagLayout())
         val c = GridBagConstraints()
         c.insets = Insets(5, 5, 5, 5)
 
-        //c.anchor = GridBagConstraints.LINE_START
-
         var index = 0
-        for ((text, combo) in controls) {
+        for ((text, control) in controls) {
             c.gridy = index
             // Add label first
             c.anchor = GridBagConstraints.LINE_START
@@ -68,7 +101,7 @@ class ConditionEditWindow(owner: Dialog, private val condition: Optional<Conditi
             c.ipadx = 100
             c.weightx = 1.0
             c.gridwidth = 2
-            panel.add(combo, c)
+            panel.add(control, c)
 
             // Next row
             index++
@@ -89,18 +122,49 @@ class ConditionEditWindow(owner: Dialog, private val condition: Optional<Conditi
         }
         panel.add(buttonPanel, c)
 
-        // Set button listeners
-        cancelButton.addActionListener { this.dispose() }
-
         val section = UISection("Condition Details", "Specify the match condition", panel)
 
         this.add(section)
         this.autoSize()
-        this.checkEnableSaveButton()
+
+        // Setup action listeners
+        saveButton.addActionListener {
+            this.cancelPressed = false
+            this.dispose()
+        }
+        cancelButton.addActionListener {
+            this.cancelPressed = true
+            this.dispose()
+        }
+        conditionTypesSelector.addActionListener {
+            // Populate operations
+            this.operationSelector.removeAllItems()
+            this.selectedConditionType.availableOperations.forEach { this.operationSelector.addItem(it) }
+            this.operationSelector.selectedIndex = 0
+
+            // Reset pattern
+            this.patternTextBox.isEnabled = this.selectedConditionType.canSetPattern
+            this.patternTextBox.text = ""
+
+            // Validate configuration
+            this.validateConfiguration()
+        }
+        this.operationSelector.addActionListener { this.validateConfiguration() }
+        this.patternTextBox.document.addDocumentListener(object : DocumentListener {
+            override fun insertUpdate(e: DocumentEvent) = validateConfiguration()
+            override fun removeUpdate(e: DocumentEvent) = validateConfiguration()
+            override fun changedUpdate(e: DocumentEvent) = validateConfiguration()
+        })
+
+        // Populate operations for the first condition type
+        this.selectedConditionType.availableOperations.forEach { this.operationSelector.addItem(it) }
     }
 
-    fun checkEnableSaveButton() {
-        //val enable = conditionsTable.model.rowCount > 0 && sessionSelector.getSelectedItem() != "(No sessions)" && sessionSelector.getSelectedItem() != ""
-        saveButton.isEnabled = false
+    fun validateConfiguration() {
+        SwingUtilities.invokeLater {
+            val configurationValidation = this.selectedConditionType.validateConfiguration(this.configuration)
+            this.validationMessageLabel.text = configurationValidation.second.ifBlank { "OK" }
+            saveButton.isEnabled = configurationValidation.first
+        }
     }
 }

@@ -7,6 +7,8 @@ import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.Label
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
+import sessionswitcher.ui.maintab.tables.RefreshRuleTableModel
+import sessionswitcher.ui.maintab.tables.SessionsTableModel
 import java.awt.BorderLayout
 import java.util.*
 import javax.swing.*
@@ -18,6 +20,11 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
         it.border = BorderFactory.createEmptyBorder(5, 5, 0, 5)
     }
+
+    // Table models
+    val sessionsTableModel = SessionsTableModel(sessionSwitcher.sessions)
+    val refreshRuleTableModel = RefreshRuleTableModel(sessionSwitcher.refreshRules)
+
     init {
         // Title section
         // |- Title
@@ -54,8 +61,16 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         this.add(scrollPane)
     }
 
+    // Refresh Rules
+    fun newRefreshRule() {
+        val ruleOptional = RefreshRuleWindow(Optional.empty<RefreshRule>()).showDialog()
+        if (ruleOptional.isEmpty) return
+        sessionSwitcher.refreshRules.add(ruleOptional.get())
+        refreshRuleTableModel.fireTableDataChanged()
+    }
+
     private fun makeAutoRefreshRulesSection(): JPanel {
-        val table = Table(arrayOf("Rules", "Refresh Session"))
+        val table = Table(emptyArray()).also { it.model = refreshRuleTableModel }
 
         // |- Buttons
         val newButton = JButton("New")
@@ -63,7 +78,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         val deleteButton = JButton("Delete").also { it.isEnabled = false }
         val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
 
-        newButton.addActionListener { SwingUtilities.invokeLater { RefreshRuleWindow(Optional.empty<RefreshRule>()).isVisible = true } }
+        newButton.addActionListener { newRefreshRule() }
 
         val buttonsPanel = JPanel().also { it ->
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)

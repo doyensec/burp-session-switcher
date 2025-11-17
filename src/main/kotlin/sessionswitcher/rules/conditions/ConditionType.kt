@@ -11,4 +11,6 @@ abstract class ConditionType(val matchOn: String, val needsResponse: Boolean, va
 
     // Prints the Rule in text human-readable format
     abstract fun describe(configuration: ConditionConfiguration): String
+
+    override fun toString(): String = this.matchOn
 }

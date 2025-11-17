@@ -2,10 +2,9 @@ package sessionswitcher.rules.refresher
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import sessionswitcher.rules.conditions.MatchInfo
-import sessionswitcher.sessions.Session
 import java.util.*
 
-abstract class RefreshAction(protected var session: Session) {
+class RefreshConfig() {
     enum class REFRESH_SOURCE {
         REQUEST,
         RESPONSE

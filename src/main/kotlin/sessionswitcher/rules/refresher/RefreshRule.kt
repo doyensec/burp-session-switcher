@@ -1,8 +1,8 @@
 package sessionswitcher.rules.refresher
 
 import sessionswitcher.rules.conditions.Condition
+import sessionswitcher.sessions.Session
 
-class RefreshRule {
-    private val conditions = ArrayList<Condition>()
-    private lateinit var actions: RefreshAction
+class RefreshRule(val conditions: Array<Condition>, val session: Session, val config: RefreshConfig) {
+
 }

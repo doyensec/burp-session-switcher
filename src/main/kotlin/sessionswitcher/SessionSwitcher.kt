@@ -4,13 +4,14 @@ import burp.api.montoya.MontoyaApi
 import kotlinx.coroutines.runBlocking
 import sessionswitcher.handlers.SessionInjectorHandler
 import sessionswitcher.handlers.SessionUpdaterHandler
-import sessionswitcher.ui.maintab.MainSuiteTab
 import sessionswitcher.requesteditor.RequestEditor
+import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsProvider
 import sessionswitcher.ui.ContextMenuProvider
+import sessionswitcher.ui.maintab.MainSuiteTab
 
 class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
@@ -46,7 +47,11 @@ class SessionSwitcher private constructor(
         }
     }
 
+    // Core Data
     val sessions = SessionCollection()
+    val refreshRules = ArrayList<RefreshRule>()
+
+    // UI stuff
     val settings = Settings(this.settingsProvider)
     var mainSuiteTab: MainSuiteTab? = null
 

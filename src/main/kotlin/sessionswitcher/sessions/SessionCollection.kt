@@ -17,7 +17,10 @@ class SessionCollection: CanSaveAndLoadData {
     }
 
     fun getSessions(suffix: String = ""): Collection<Session> {
-        return this.sessions.values.filter { it.getHost().endsWith(suffix) }
+        if (suffix.isNotBlank()) {
+            return this.sessions.values.filter { it.getHost().endsWith(suffix) }
+        }
+        return this.sessions.values
     }
 
     fun getSession(key: String): Session? {
