@@ -4,24 +4,17 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
-import sessionswitcher.ui.Window
-import java.awt.Dimension
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
-import java.awt.Insets
+import java.awt.*
 import java.util.*
-import javax.swing.JButton
-import javax.swing.JComboBox
-import javax.swing.JLabel
-import javax.swing.JPanel
+import javax.swing.*
 
-class ConditionEditWindow(private val condition: Optional<Condition>) :
-    Window(if (condition.isEmpty) "New Condition" else "Edit Condition") {
+class ConditionEditWindow(owner: Dialog, private val condition: Optional<Condition>) :
+    JDialog(owner, if (condition.isEmpty) "New Condition" else "Edit Condition", true) {
 
     val saveButton = ButtonPrimary("OK")
     val cancelButton = JButton("Cancel")
 
-    override fun autoSize() {
+    fun autoSize() {
         // Pack the window to fit its content
         this.preferredSize = Dimension(500, 280)
         this.pack()
@@ -32,9 +25,9 @@ class ConditionEditWindow(private val condition: Optional<Condition>) :
         // Set window properties
         this.isResizable = true
         this.isAutoRequestFocus = true
+        this.modalityType = Dialog.ModalityType.APPLICATION_MODAL
 
         saveButton.isEnabled = false
-
 
         val combo1 = JComboBox(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))
         val combo2 = JComboBox(arrayOf("1", "2", "3", "4", "5", "6", "7", "8", "9", "10"))

@@ -3,7 +3,10 @@ package sessionswitcher.ui.maintab
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.rules.refresher.RefreshRule
-import sessionswitcher.ui.*
+import sessionswitcher.ui.ButtonPrimary
+import sessionswitcher.ui.ComboBox
+import sessionswitcher.ui.Table
+import sessionswitcher.ui.UISection
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ItemEvent
@@ -12,7 +15,7 @@ import javax.swing.*
 import kotlin.math.min
 
 class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
-    Window(if (refreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule") {
+    JDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), if (refreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule", true) {
 
     val saveButton = ButtonPrimary("Save")
     val cancelButton = JButton("Cancel")
@@ -27,7 +30,7 @@ class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
     val cookieRefreshMode = ComboBox("Cookie refresh mode", *REQUEST_COOKIES_REFRESH_OPTIONS)
     val headerRefreshMode = ComboBox("Header refresh mode", "Refresh Existing", "Don't refresh")
 
-    override fun autoSize() {
+    fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
         val screenSize = SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame().graphicsConfiguration.device.displayMode
 
@@ -128,7 +131,7 @@ class RefreshRuleWindow(private val refreshRule: Optional<RefreshRule>) :
         val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
 
         // Set button listeners
-        newButton.addActionListener { ConditionEditWindow(Optional.empty<Condition>()).isVisible = true }
+        newButton.addActionListener { ConditionEditWindow(this, Optional.empty<Condition>()).isVisible = true }
 
         val buttonsPanel = JPanel().also { it ->
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
