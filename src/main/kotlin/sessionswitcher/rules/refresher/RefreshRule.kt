@@ -2,7 +2,7 @@ package sessionswitcher.rules.refresher
 
 import sessionswitcher.rules.conditions.Condition
 
-class RefresherRule {
+class RefreshRule {
     private val conditions = ArrayList<Condition>()
-    private val actions = ArrayList<RefreshAction>()
+    private lateinit var actions: RefreshAction
 }

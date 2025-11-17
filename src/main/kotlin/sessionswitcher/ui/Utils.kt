@@ -1,5 +1,6 @@
 package sessionswitcher.ui
 
+import burp.api.montoya.ui.Theme
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import java.awt.*
@@ -234,7 +235,7 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
         this.layout = BorderLayout()
     }
 
-    fun autoSize() {
+    open fun autoSize() {
         // Pack the window to fit its content
         this.pack()
 
@@ -254,6 +255,23 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
 }
 
 class Icon(val normal: Image, val hover: Image?, val selected: Image?)
+
+class ButtonPrimary(label: String): JButton(label) {
+    init {
+        this.foreground = Color.WHITE
+        this.background = getAccentColor()
+        this.font = this.font.deriveFont(Font.BOLD)
+        this.isBorderPainted = false
+    }
+
+    private fun getAccentColor(): Color {
+        return if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
+            Color(201, 110, 59)
+        } else {
+            Color(236, 98, 43)
+        }
+    }
+}
 
 class ImgButton(val fallback: String, displayIcon: Icon?) : JButton() {
     private var normalIcon: ImageIcon? = null

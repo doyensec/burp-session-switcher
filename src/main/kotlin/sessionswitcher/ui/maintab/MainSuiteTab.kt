@@ -2,11 +2,13 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.Label
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
 import java.awt.BorderLayout
+import java.util.*
 import javax.swing.*
 
 class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
@@ -61,6 +63,8 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         val deleteButton = JButton("Delete").also { it.isEnabled = false }
         val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
 
+        newButton.addActionListener { SwingUtilities.invokeLater { RefreshRuleWindow(Optional.empty<RefreshRule>()).isVisible = true } }
+
         val buttonsPanel = JPanel().also { it ->
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
@@ -81,7 +85,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
             it.add(table.withScrollPane(), BorderLayout.CENTER)
         }
 
-        return UISection("AutoRefresh Rules", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, outerPanel)
+        return UISection("AutoRefresh Rules", null, outerPanel)
     }
     private fun makeAutoInjectRulesSection(): JPanel {
         val table = Table(arrayOf("Rules", "Inject Session"))
@@ -89,7 +93,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
     }
 
     fun focus() {
-        Logger.debug("Focusing BurpSessions Main Tab")
+        Logger.debug("Focusing Sessions Main Tab")
         (this.parent as JTabbedPane).selectedComponent = this
     }
 }

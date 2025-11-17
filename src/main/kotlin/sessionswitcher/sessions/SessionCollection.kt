@@ -8,7 +8,7 @@ import sessionswitcher.savestate.getSaveStateKeys
 class SessionCollection: CanSaveAndLoadData {
     private val sessions = LinkedHashMap<String, Session>()
 
-    fun getSessionNames(): Collection<String> {
+    fun getSessionNames(): Set<String> {
         return this.sessions.keys
     }
 

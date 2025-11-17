@@ -12,7 +12,7 @@ abstract class RefreshAction(protected var session: Session) {
     }
 
     enum class COOKIE_REFRESH_MODE {
-        REPLACE_ALL,        // Replace the whole cookie set with the request's ones. Useful when updating from **Requests** to match the browser's cookies. (Default for requests)
+        REPLACE_ALL,         // Replace the whole cookie set with the request's ones. Useful when updating from **Requests** to match the browser's cookies. (Default for requests)
         REFRESH_ALL,         // Update all the cookies and add new ones (but keep old cookies too unless expired) (Default for Set-Cookie responses?)
         REFRESH_EXISTING,    // Only update the values of cookies already stored in the session
         REFRESH_SOME,        // Update a specific list of cookies specified in a different param
