@@ -6,7 +6,6 @@ import javax.swing.table.AbstractTableModel
 class RefreshRuleTableModel(private val rules: ArrayList<RefreshRule>): AbstractTableModel() {
     private val columnNames = arrayOf("Conditions", "Session")
 
-
     override fun getRowCount(): Int {
         return rules.size
     }
