@@ -1,13 +1,17 @@
 package sessionswitcher.ui.maintab
 
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.sessions.Session
+import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
+import sessionswitcher.ui.maintab.tables.SessionsTableModel
 import java.awt.BorderLayout
 import javax.swing.*
 
 class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
     private val component: JPanel
-    private val table = SessionsTable()
+    val sessionsTableModel = SessionsTableModel(sessionSwitcher.sessions)
+    private val table = Table(emptyArray()).also { it.model = sessionsTableModel }
 
     private val newSessionButton = JButton("New")
     private val editSessionButton = JButton("Edit").also { it.isEnabled = false }
@@ -27,12 +31,13 @@ class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
     }
 
     public fun refreshTable() {
-        table.update(sessionSwitcher.sessions.getSessions().toList())
+        sessionsTableModel.fireTableDataChanged()
     }
     init {
         this.refreshTable()
-        table.addRowSelectionListener { index: Int->
-            if (index == -1) {
+        table.selectionModel.addListSelectionListener { evt ->
+            if (evt.valueIsAdjusting) return@addListSelectionListener
+            if (table.selectedRow == -1) {
                 editSessionButton.isEnabled = false
                 deleteSessionButton.isEnabled = false
                 duplicateSessionButton.isEnabled = false
@@ -63,21 +68,29 @@ class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
         }
         val outerPanel = JPanel(BorderLayout()).also {
             it.add(leftPanel, BorderLayout.LINE_START)
-            it.add(table, BorderLayout.CENTER)
+            it.add(table.withScrollPane(), BorderLayout.CENTER)
         }
 
         // Add to session
         this.component = UISection("Saved Sessions", null, outerPanel)
     }
 
+    private fun getSelectedSession(): Session? {
+        val row = this.table.selectedRow
+        if (row == -1) return null
+        if (row >= sessionSwitcher.sessions.size) return null
+
+        return this.sessionsTableModel.getAt(row)
+    }
+
     private fun deleteButtonCallback() {
-        val session = this.table.getSelectedSession() ?: return
+        val session = getSelectedSession()?: return
         this.sessionSwitcher.sessions.deleteSession(session)
         this.refreshTable()
     }
 
     private fun duplicateButtonCallback() {
-        val session = this.table.getSelectedSession() ?: return
+        val session = getSelectedSession()?: return
         this.sessionSwitcher.sessions.duplicateSession(session.name)
         this.refreshTable()
     }

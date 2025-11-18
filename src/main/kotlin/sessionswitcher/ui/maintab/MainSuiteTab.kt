@@ -8,7 +8,6 @@ import sessionswitcher.ui.Label
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.maintab.tables.RefreshRuleTableModel
-import sessionswitcher.ui.maintab.tables.SessionsTableModel
 import java.awt.BorderLayout
 import java.util.*
 import javax.swing.*
@@ -22,7 +21,6 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
     }
 
     // Table models
-    val sessionsTableModel = SessionsTableModel(sessionSwitcher.sessions)
     val refreshRuleTableModel = RefreshRuleTableModel(sessionSwitcher.refreshRules)
 
     init {
