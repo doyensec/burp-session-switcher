@@ -3,6 +3,12 @@ package sessionswitcher.rules.autoupdate
 import java.util.*
 
 class UpdateConfig private constructor(val updateSource: UPDATE_SOURCE, val cookieUpdateMode: COOKIE_UPDATE_MODE, val headerUpdateMode: HEADER_UPDATE_MODE, val cookiesToUpdate: Set<String> = emptySet(), val headersToUpdate: Set<String> = emptySet(), ) {
+    companion object {
+        public fun make(updateSource: UPDATE_SOURCE, cookieUpdateMode: COOKIE_UPDATE_MODE, headerUpdateMode: HEADER_UPDATE_MODE, cookiesToUpdate: Set<String> = emptySet(), headersToUpdate: Set<String> = emptySet()): UpdateConfig {
+            return UpdateConfig(updateSource, cookieUpdateMode, headerUpdateMode, cookiesToUpdate, headersToUpdate)
+        }
+    }
+
     enum class UPDATE_SOURCE(val description: String) {
         REQUEST("Request"),
         RESPONSE("Response")

@@ -70,7 +70,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         val session = sessionSwitcher.sessions.getSession(sessionName)
             ?: throw IllegalStateException("Session with name $sessionName not found")
 
-        return UpdateRule(this.conditions.toTypedArray(), session, UpdateConfig()) // TODO: Add update config
+        return UpdateRule(this.conditions.toTypedArray(), session, UpdateConfig.make(UpdateConfig.UPDATE_SOURCE.RESPONSE, UpdateConfig.COOKIE_UPDATE_MODE.NO_UPDATE, UpdateConfig.HEADER_UPDATE_MODE.NO_UPDATE)) // TODO: Add update config
     }
 
     public fun showDialog(): Optional<UpdateRule> {
@@ -115,7 +115,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
             Logger.warning("Duplicate button clicked but no table item selected, row: ${this.tableSection.table.selectedRow}")
             return
         }
-        TODO("Not yet implemented")
+        this.conditions.add(selectedCondition.get().copy())
         this.refreshConditionsTable()
         this.checkEnableSaveButton()
     }

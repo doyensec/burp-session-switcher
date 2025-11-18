@@ -5,7 +5,7 @@ import java.util.*
 import javax.swing.table.AbstractTableModel
 
 class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>): AbstractTableModel(), ITableModel<UpdateRule> {
-    private val columnNames = arrayOf("Conditions", "Session")
+    private val columnNames = arrayOf("ID", "Conditions", "Session")
 
     override fun getRowCount(): Int {
         return rules.size
@@ -27,8 +27,9 @@ class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>): AbstractTa
         val rule = rules[rowIndex]
         val conditionsDescription = rule.conditions.joinToString(", ") { it.describe() }
         return when (columnIndex) {
-            0 -> conditionsDescription
-            1 -> rule.session.name
+            0 -> rule.id.toString()
+            1 -> conditionsDescription
+            2 -> rule.session.name
             else -> "N/A"
         }
     }
