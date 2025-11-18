@@ -2,9 +2,9 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
+import sessionswitcher.rules.autoupdate.UpdateConfig
+import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.rules.conditions.Condition
-import sessionswitcher.rules.refresher.RefreshConfig
-import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.ComboBox
 import sessionswitcher.ui.UISection
@@ -15,8 +15,8 @@ import java.util.*
 import javax.swing.*
 import kotlin.math.min
 
-class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private val initialRefreshRule: Optional<RefreshRule>) :
-    JDialog(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(), if (initialRefreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule", true) {
+class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val initialUpdateRule: Optional<UpdateRule>) :
+    JDialog(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(), if (initialUpdateRule.isEmpty) "New Update Rule" else "Edit Update Rule", true) {
 
     // Flags
     var cancelPressed = false
@@ -29,13 +29,13 @@ class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private va
     val cancelButton = JButton("Cancel")
     val tableSection = TableSection("Conditions", "Conditions in this list are evaluated with a logical AND", ConditionsTableModel(conditions), showRefreshButton = false)
 
-    val sessionSelector = ComboBox("Session to refresh")
+    val sessionSelector = ComboBox("Session to update")
 
-    val refreshSourceSelector = ComboBox("Refresh data from", "Request", "Response")
-    val REQUEST_COOKIES_REFRESH_OPTIONS = arrayOf("Replace All", "Refresh All", "Refresh Existing", "Don't refresh")
-    val RESPONSE_COOKIES_REFRESH_OPTIONS = arrayOf("Refresh All", "Refresh Existing", "Don't refresh")
-    val cookieRefreshMode = ComboBox("Cookie refresh mode", *REQUEST_COOKIES_REFRESH_OPTIONS)
-    val headerRefreshMode = ComboBox("Header refresh mode", "Refresh Existing", "Don't refresh")
+    val updateourceSelector = ComboBox("Update data from", "Request", "Response")
+    val REQUEST_COOKIES_UPDATE_OPTIONS = arrayOf("Replace All", "Update All", "Update Existing", "Don't update")
+    val RESPONSE_COOKIES_UPDATE_OPTIONS = arrayOf("Update All", "Update Existing", "Don't update")
+    val cookieUpdateMode = ComboBox("Cookie update mode", *REQUEST_COOKIES_UPDATE_OPTIONS)
+    val headerUpdateMode = ComboBox("Header update mode", "Update Existing", "Don't update")
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
@@ -62,7 +62,7 @@ class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private va
         this.tableSection.refreshTable()
     }
 
-    fun makeRule(): RefreshRule {
+    fun makeRule(): UpdateRule {
         val sessionName = this.sessionSelector.getSelectedItem()
         if (sessionName == "(No sessions)") {
             throw IllegalStateException("No sessions selected")
@@ -70,10 +70,10 @@ class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private va
         val session = sessionSwitcher.sessions.getSession(sessionName)
             ?: throw IllegalStateException("Session with name $sessionName not found")
 
-        return RefreshRule(this.conditions.toTypedArray(), session, RefreshConfig()) // TODO: Add refresh config
+        return UpdateRule(this.conditions.toTypedArray(), session, UpdateConfig()) // TODO: Add update config
     }
 
-    public fun showDialog(): Optional<RefreshRule> {
+    public fun showDialog(): Optional<UpdateRule> {
         this.isVisible = true
         return if (this.cancelPressed) {
             Optional.empty()
@@ -132,7 +132,7 @@ class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private va
         tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
 
-        // Refresh config
+        // Update config
         var sessions = SessionSwitcher.getInstance().sessions.getSessionNames().toTypedArray()
         if (sessions.isEmpty()) {
             sessions = arrayOf("(No sessions)")
@@ -142,15 +142,15 @@ class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private va
         sessionSelector.addItemListener { this.checkEnableSaveButton() }
         tableSection.tableModel
 
-        refreshSourceSelector.addItemListener { it ->
+        updateourceSelector.addItemListener { it ->
             if (it.stateChange == ItemEvent.SELECTED) {
-                val selectedItem = refreshSourceSelector.getSelectedItem()
-                cookieRefreshMode.component.removeAllItems()
+                val selectedItem = updateourceSelector.getSelectedItem()
+                cookieUpdateMode.component.removeAllItems()
                 if (selectedItem == "Request") {
-                    cookieRefreshMode.component.removeAllItems()
-                    REQUEST_COOKIES_REFRESH_OPTIONS.forEach { item -> cookieRefreshMode.component.addItem(item) }
+                    cookieUpdateMode.component.removeAllItems()
+                    REQUEST_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieUpdateMode.component.addItem(item) }
                 } else {
-                    RESPONSE_COOKIES_REFRESH_OPTIONS.forEach { item -> cookieRefreshMode.component.addItem(item) }
+                    RESPONSE_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieUpdateMode.component.addItem(item) }
                 }
             }
         }
@@ -159,21 +159,21 @@ class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private va
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(sessionSelector)
             it.add(Box.createVerticalStrut(5))
-            it.add(refreshSourceSelector)
+            it.add(updateourceSelector)
             it.add(Box.createVerticalStrut(5))
-            it.add(cookieRefreshMode)
+            it.add(cookieUpdateMode)
             it.add(Box.createVerticalStrut(5))
-            it.add(headerRefreshMode)
+            it.add(headerUpdateMode)
 
         }
-        val refreshActionSection = UISection("Refresh Options", null, outerPanel)
+        val updateConfigSection = UISection("Update Options", null, outerPanel)
 
         // Build the main window
         val panel = JPanel().also {
             it.border = BorderFactory.createEmptyBorder(5,5, 5, 5)
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(tableSection.getComponent())
-            it.add(refreshActionSection)
+            it.add(updateConfigSection)
             it.add(JPanel().also { p ->
                 p.layout = BoxLayout(p, BoxLayout.X_AXIS)
                 p.add(Box.createHorizontalGlue())

@@ -5,7 +5,7 @@ import kotlinx.coroutines.runBlocking
 import sessionswitcher.handlers.SessionInjectorHandler
 import sessionswitcher.handlers.SessionUpdaterHandler
 import sessionswitcher.requesteditor.RequestEditor
-import sessionswitcher.rules.refresher.RefreshRule
+import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
@@ -49,7 +49,7 @@ class SessionSwitcher private constructor(
 
     // Core Data
     val sessions = SessionCollection()
-    val refreshRules = ArrayList<RefreshRule>()
+    val updateRules = ArrayList<UpdateRule>()
 
     // UI stuff
     val settings = Settings(this.settingsProvider)

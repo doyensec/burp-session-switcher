@@ -35,9 +35,9 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         mainPanel.add(savedSessionsSection)
         mainPanel.add(JSeparator())
 
-        // AutoRefresh Rules Section
-        val autoRefreshRulesSection = RefreshRuleSection.make(sessionSwitcher)
-        mainPanel.add(autoRefreshRulesSection)
+        // AutoUpdate Rules Section
+        val autoUpdateRulesSection = UpdateRuleSection.make(sessionSwitcher)
+        mainPanel.add(autoUpdateRulesSection)
         mainPanel.add(JSeparator())
 
         // AutoInject Rules Section
