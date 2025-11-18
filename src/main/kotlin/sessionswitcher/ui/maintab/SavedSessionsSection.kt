@@ -1,17 +1,20 @@
 package sessionswitcher.ui.maintab
 
+import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.maintab.tables.SessionsTableModel
 import java.awt.BorderLayout
+import java.util.*
 import javax.swing.*
+import javax.swing.event.ListSelectionEvent
 
 class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
     private val component: JPanel
     val sessionsTableModel = SessionsTableModel(sessionSwitcher.sessions)
-    private val table = Table(emptyArray()).also { it.model = sessionsTableModel }
+    private val table = Table(emptyArray()).also { it.model = sessionsTableModel; it.selectionModel.addListSelectionListener(this::tableSelectionListener) }
 
     private val newSessionButton = JButton("New")
     private val editSessionButton = JButton("Edit").also { it.isEnabled = false }
@@ -33,20 +36,22 @@ class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
     public fun refreshTable() {
         sessionsTableModel.fireTableDataChanged()
     }
+
+    private fun tableSelectionListener(evt: ListSelectionEvent) {
+        if (evt.valueIsAdjusting) return
+        if (table.selectedRow == -1) {
+            editSessionButton.isEnabled = false
+            deleteSessionButton.isEnabled = false
+            duplicateSessionButton.isEnabled = false
+        } else {
+            editSessionButton.isEnabled = true
+            deleteSessionButton.isEnabled = true
+            duplicateSessionButton.isEnabled = true
+        }
+    }
+
     init {
         this.refreshTable()
-        table.selectionModel.addListSelectionListener { evt ->
-            if (evt.valueIsAdjusting) return@addListSelectionListener
-            if (table.selectedRow == -1) {
-                editSessionButton.isEnabled = false
-                deleteSessionButton.isEnabled = false
-                duplicateSessionButton.isEnabled = false
-            } else {
-                editSessionButton.isEnabled = true
-                deleteSessionButton.isEnabled = true
-                duplicateSessionButton.isEnabled = true
-            }
-        }
 
         // Button Panel
         val buttonsPanel = JPanel().also { it ->
@@ -75,23 +80,29 @@ class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) {
         this.component = UISection("Saved Sessions", null, outerPanel)
     }
 
-    private fun getSelectedSession(): Session? {
+    private fun getSelectedSession(): Optional<Session> {
         val row = this.table.selectedRow
-        if (row == -1) return null
-        if (row >= sessionSwitcher.sessions.size) return null
+        if (row == -1) return Optional.empty<Session>()
+        if (row >= sessionSwitcher.sessions.size) return Optional.empty<Session>()
 
-        return this.sessionsTableModel.getAt(row)
+        return Optional.of(this.sessionsTableModel.getAt(row))
     }
 
     private fun deleteButtonCallback() {
-        val session = getSelectedSession()?: return
-        this.sessionSwitcher.sessions.deleteSession(session)
+        val session = getSelectedSession()
+        if (session.isEmpty) {
+            Logger.warning("Delete button clicked but no session selected, row: ${table.selectedRow}")
+        }
+        this.sessionSwitcher.sessions.deleteSession(session.get())
         this.refreshTable()
     }
 
     private fun duplicateButtonCallback() {
-        val session = getSelectedSession()?: return
-        this.sessionSwitcher.sessions.duplicateSession(session.name)
+        val session = getSelectedSession()
+        if (session.isEmpty) {
+            Logger.warning("Delete button clicked but no session selected, row: ${table.selectedRow}")
+        }
+        this.sessionSwitcher.sessions.duplicateSession(session.get().name)
         this.refreshTable()
     }
 }
