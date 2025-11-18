@@ -20,7 +20,7 @@ object UpdateRuleSection {
         tableSection.setEditButtonCallback(this::editButtonCallback)
         tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
-        tableSection.table.columnModel.getColumn(0).maxWidth = 30
+        tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
         return tableSection.getComponent()
     }
 

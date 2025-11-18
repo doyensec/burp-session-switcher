@@ -42,7 +42,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
 
         // AutoInject Rules Section
         val autoInjectRulesSection = makeAutoInjectRulesSection()
-        mainPanel.add(autoInjectRulesSection)
+        //mainPanel.add(autoInjectRulesSection)
 
         // Wrap everything in a cozy scrollPane
         val padded = JPanel(BorderLayout())
