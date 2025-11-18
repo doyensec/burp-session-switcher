@@ -2,14 +2,11 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
-import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.Label
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
-import sessionswitcher.ui.maintab.tables.RefreshRuleTableModel
 import java.awt.BorderLayout
-import java.util.*
 import javax.swing.*
 
 class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
@@ -19,9 +16,6 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
         it.border = BorderFactory.createEmptyBorder(5, 5, 0, 5)
     }
-
-    // Table models
-    val refreshRuleTableModel = RefreshRuleTableModel(sessionSwitcher.refreshRules)
 
     init {
         // Title section
@@ -42,8 +36,8 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         mainPanel.add(JSeparator())
 
         // AutoRefresh Rules Section
-        val autoRefreshRulesSection = makeAutoRefreshRulesSection()
-        mainPanel.add(autoRefreshRulesSection)
+        val autoRefreshRulesSection = RefreshRuleSection(sessionSwitcher)
+        mainPanel.add(autoRefreshRulesSection.getComponent())
         mainPanel.add(JSeparator())
 
         // AutoInject Rules Section
@@ -59,47 +53,6 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         this.add(scrollPane)
     }
 
-    // Refresh Rules
-    fun newRefreshRule() {
-        val ruleOptional = RefreshRuleWindow(Optional.empty<RefreshRule>()).showDialog()
-        if (ruleOptional.isEmpty) return
-        sessionSwitcher.refreshRules.add(ruleOptional.get())
-        refreshRuleTableModel.fireTableDataChanged()
-    }
-
-    private fun makeAutoRefreshRulesSection(): JPanel {
-        val table = Table(emptyArray()).also { it.model = refreshRuleTableModel }
-
-        // |- Buttons
-        val newButton = JButton("New")
-        val editButton = JButton("Edit").also { it.isEnabled = false }
-        val deleteButton = JButton("Delete").also { it.isEnabled = false }
-        val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
-
-        newButton.addActionListener { newRefreshRule() }
-
-        val buttonsPanel = JPanel().also { it ->
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
-            it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
-        }
-
-        val middlePanel = JPanel(BorderLayout()).also {
-            it.add(buttonsPanel, BorderLayout.PAGE_START)
-        }
-        val outerPanel = JPanel(BorderLayout()).also {
-            it.add(middlePanel, BorderLayout.LINE_START)
-            it.add(table.withScrollPane(), BorderLayout.CENTER)
-        }
-
-        return UISection("AutoRefresh Rules", null, outerPanel)
-    }
     private fun makeAutoInjectRulesSection(): JPanel {
         val table = Table(arrayOf("Rules", "Inject Session"))
         return UISection("AutoInject Rules", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, table.withScrollPane())
