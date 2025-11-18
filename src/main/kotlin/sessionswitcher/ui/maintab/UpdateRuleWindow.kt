@@ -6,10 +6,12 @@ import sessionswitcher.rules.autoupdate.UpdateConfig
 import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.ui.ButtonPrimary
-import sessionswitcher.ui.ComboBox
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.maintab.tables.ConditionsTableModel
 import java.awt.Dimension
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Insets
 import java.awt.event.ItemEvent
 import java.util.*
 import javax.swing.*
@@ -19,7 +21,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     JDialog(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(), if (initialUpdateRule.isEmpty) "New Update Rule" else "Edit Update Rule", true) {
 
     // Flags
-    var cancelPressed = false
+    var shouldSave = false
 
     // Conditions
     val conditions = ArrayList<Condition>()
@@ -29,13 +31,17 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     val cancelButton = JButton("Cancel")
     val tableSection = TableSection("Conditions", "Conditions in this list are evaluated with a logical AND", ConditionsTableModel(conditions), showRefreshButton = false)
 
-    val sessionSelector = ComboBox("Session to update")
+    val sessionSelector = JComboBox<String>()
 
-    val updateourceSelector = ComboBox("Update data from", "Request", "Response")
-    val REQUEST_COOKIES_UPDATE_OPTIONS = arrayOf("Replace All", "Update All", "Update Existing", "Don't update")
-    val RESPONSE_COOKIES_UPDATE_OPTIONS = arrayOf("Update All", "Update Existing", "Don't update")
-    val cookieUpdateMode = ComboBox("Cookie update mode", *REQUEST_COOKIES_UPDATE_OPTIONS)
-    val headerUpdateMode = ComboBox("Header update mode", "Update Existing", "Don't update")
+    // Combo box valid options
+    private val REQUEST_COOKIES_UPDATE_OPTIONS = UpdateConfig.COOKIES_UPDATE_MODE.entries.toTypedArray()
+    private val RESPONSE_COOKIES_UPDATE_OPTIONS = UpdateConfig.COOKIES_UPDATE_MODE.entries.filterNot { it == UpdateConfig.COOKIES_UPDATE_MODE.REPLACE_ALL }.toTypedArray()
+    private val HEADERS_UPDATE_OPTIONS = UpdateConfig.HEADERS_UPDATE_MODE.entries.toTypedArray()
+    private val UPDATE_SOURCE_OPTIONS = UpdateConfig.UPDATE_SOURCE.entries.filterNot { it == UpdateConfig.UPDATE_SOURCE.RESPONSE }.toTypedArray() // Disable response parsing for now
+
+    val updateSourceSelector = JComboBox<UpdateConfig.UPDATE_SOURCE>(UPDATE_SOURCE_OPTIONS)
+    val cookieModeSelector = JComboBox<UpdateConfig.COOKIES_UPDATE_MODE>(REQUEST_COOKIES_UPDATE_OPTIONS)
+    val headersModeSelector = JComboBox<UpdateConfig.HEADERS_UPDATE_MODE>(HEADERS_UPDATE_OPTIONS)
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
@@ -58,27 +64,55 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         this.setLocationRelativeTo(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame())
     }
 
+    private fun loadInitialRule() {
+        if (this.initialUpdateRule.isPresent) {
+            // Load conditions
+            this.conditions.addAll(this.initialUpdateRule.get().conditions)
+
+            // Set session
+            val sessionName = this.initialUpdateRule.get().session.name
+            val session = this.sessionSwitcher.sessions.getSession(sessionName)
+            if (session == null) {
+                Logger.warning("RefreshRule: Session with name $sessionName not found, cannot set initial session")
+                return
+            }
+            this.sessionSelector.selectedItem = sessionName
+
+            // Set update config
+            val config = this.initialUpdateRule.get().config
+            this.updateSourceSelector.selectedItem = config.updateSource
+            this.cookieModeSelector.selectedItem = config.cookiesUpdateMode
+            this.headersModeSelector.selectedItem = config.headersUpdateMode
+        }
+    }
+
     fun refreshConditionsTable() {
         this.tableSection.refreshTable()
     }
 
     fun makeRule(): UpdateRule {
-        val sessionName = this.sessionSelector.getSelectedItem()
+        val sessionName = this.sessionSelector.selectedItem as String
         if (sessionName == "(No sessions)") {
             throw IllegalStateException("No sessions selected")
         }
         val session = sessionSwitcher.sessions.getSession(sessionName)
             ?: throw IllegalStateException("Session with name $sessionName not found")
 
-        return UpdateRule(this.conditions.toTypedArray(), session, UpdateConfig.make(UpdateConfig.UPDATE_SOURCE.RESPONSE, UpdateConfig.COOKIE_UPDATE_MODE.NO_UPDATE, UpdateConfig.HEADER_UPDATE_MODE.NO_UPDATE)) // TODO: Add update config
+        val config = UpdateConfig.make(
+            updateSourceSelector.selectedItem as UpdateConfig.UPDATE_SOURCE,
+            cookieModeSelector.selectedItem as UpdateConfig.COOKIES_UPDATE_MODE,
+            headersModeSelector.selectedItem as UpdateConfig.HEADERS_UPDATE_MODE,
+        )
+
+        return UpdateRule(this.conditions.toTypedArray(), session, config)
     }
 
     public fun showDialog(): Optional<UpdateRule> {
         this.isVisible = true
-        return if (this.cancelPressed) {
-            Optional.empty()
-        } else {
+        return if (this.shouldSave) {
             Optional.of(makeRule())
+        } else {
+            Optional.empty()
         }
     }
 
@@ -93,7 +127,20 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     }
 
     fun editButtonCallback() {
-        TODO()
+        val selectedCondition = this.tableSection.getSelected()
+        if (selectedCondition.isEmpty) {
+            Logger.warning("Delete button clicked but no table item selected, row: ${this.tableSection.table.selectedRow}")
+            return
+        }
+
+        val newCondition = ConditionEditWindow(this, Optional.of(selectedCondition.get())).showDialog()
+        if (!newCondition.isPresent) {
+            return
+        }
+
+        val oldIndex = this.conditions.indexOf(selectedCondition.get())
+        this.conditions.remove(selectedCondition.get())
+        this.conditions.add(oldIndex, newCondition.get())
         this.refreshConditionsTable()
         this.checkEnableSaveButton()
     }
@@ -120,6 +167,46 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         this.checkEnableSaveButton()
     }
 
+    private fun updateOptionsSection(): JPanel {
+        val controls = arrayOf(
+            Pair("Session to update:", sessionSelector),
+            Pair("Update from:", updateSourceSelector),
+            Pair("Cookie update mode:", cookieModeSelector),
+            Pair("Headers update mode:", headersModeSelector),
+        )
+
+        val panel = JPanel(GridBagLayout())
+        val c = GridBagConstraints()
+        c.insets = Insets(5, 5, 5, 5)
+        var index = 0
+        for ((text, control) in controls) {
+            c.gridy = index
+            // Add label first
+            c.anchor = GridBagConstraints.LINE_START
+            c.fill = GridBagConstraints.NONE
+            c.ipadx = 0
+            c.ipady = 0
+            c.gridx = 0
+            c.weightx = 0.0
+            c.gridwidth = 1
+            val label = JLabel(text)
+            panel.add(label, c)
+
+            // Add combo box
+            c.anchor = GridBagConstraints.LINE_END
+            c.fill = GridBagConstraints.HORIZONTAL
+            c.gridx = 1
+            c.ipadx = 100
+            c.weightx = 1.0
+            c.gridwidth = 2
+            panel.add(control, c)
+
+            // Next row
+            index++
+        }
+        return panel
+    }
+
     init {
         // Set window properties
         this.isResizable = true
@@ -137,36 +224,25 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         if (sessions.isEmpty()) {
             sessions = arrayOf("(No sessions)")
         }
-        sessions.forEach { this.sessionSelector.component.addItem(it) }
+        sessions.forEach { this.sessionSelector.addItem(it) }
 
         sessionSelector.addItemListener { this.checkEnableSaveButton() }
         tableSection.tableModel
 
-        updateourceSelector.addItemListener { it ->
+        updateSourceSelector.addItemListener { it ->
             if (it.stateChange == ItemEvent.SELECTED) {
-                val selectedItem = updateourceSelector.getSelectedItem()
-                cookieUpdateMode.component.removeAllItems()
+                val selectedItem = updateSourceSelector.getSelectedItem()
+                cookieModeSelector.removeAllItems()
                 if (selectedItem == "Request") {
-                    cookieUpdateMode.component.removeAllItems()
-                    REQUEST_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieUpdateMode.component.addItem(item) }
+                    cookieModeSelector.removeAllItems()
+                    REQUEST_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieModeSelector.addItem(item) }
                 } else {
-                    RESPONSE_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieUpdateMode.component.addItem(item) }
+                    RESPONSE_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieModeSelector.addItem(item) }
                 }
             }
         }
 
-        val outerPanel = JPanel().also {
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.add(sessionSelector)
-            it.add(Box.createVerticalStrut(5))
-            it.add(updateourceSelector)
-            it.add(Box.createVerticalStrut(5))
-            it.add(cookieUpdateMode)
-            it.add(Box.createVerticalStrut(5))
-            it.add(headerUpdateMode)
-
-        }
-        val updateConfigSection = UISection("Update Options", null, outerPanel)
+        val updateConfigSection = UISection("Update Options", null, updateOptionsSection())
 
         // Build the main window
         val panel = JPanel().also {
@@ -185,11 +261,11 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
 
         // Set button listeners
         saveButton.addActionListener {
-            this.cancelPressed = false
+            this.shouldSave = true
             this.dispose()
         }
         cancelButton.addActionListener {
-            this.cancelPressed = true
+            this.shouldSave = false
             this.dispose()
         }
 
@@ -200,10 +276,12 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         this.add(panel)
         this.autoSize()
         this.checkEnableSaveButton()
+
+        loadInitialRule()
     }
 
     fun checkEnableSaveButton() {
-        val enable = tableSection.table.rowCount > 0 && sessionSelector.getSelectedItem() != "(No sessions)" && sessionSelector.getSelectedItem() != ""
+        val enable = tableSection.table.rowCount > 0 && sessionSelector.selectedItem != "(No sessions)" && sessionSelector.selectedItem != ""
         saveButton.isEnabled = enable
     }
 }

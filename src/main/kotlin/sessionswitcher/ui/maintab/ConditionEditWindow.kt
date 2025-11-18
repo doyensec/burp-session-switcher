@@ -16,7 +16,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     JDialog(owner, if (initialCondition.isEmpty) "New Condition" else "Edit Condition", true) {
 
     // Flags
-    var cancelPressed = false
+    var shouldSave = false
 
     // Buttons
     val saveButton = ButtonPrimary("OK")
@@ -53,10 +53,19 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
     public fun showDialog(): Optional<Condition> {
         this.isVisible = true
-        return if (this.cancelPressed) {
-            Optional.empty()
-        } else {
+        return if (this.shouldSave) {
             Optional.of(Condition.make(this.selectedConditionType, this.configuration))
+        } else {
+            Optional.empty()
+        }
+    }
+
+    private fun loadInitialCondition() {
+        if (this.initialCondition.isPresent) {
+            this.conditionTypesSelector.selectedItem = this.initialCondition.get().type
+            this.operationSelector.selectedItem = this.initialCondition.get().configuration.operation
+            this.patternTextBox.text = this.initialCondition.get().configuration.pattern.orElse("")
+            this.negativeMatchCheckBox.isSelected = this.initialCondition.get().configuration.negativeMatch
         }
     }
 
@@ -129,11 +138,11 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
         // Setup action listeners
         saveButton.addActionListener {
-            this.cancelPressed = false
+            this.shouldSave = true
             this.dispose()
         }
         cancelButton.addActionListener {
-            this.cancelPressed = true
+            this.shouldSave = false
             this.dispose()
         }
         conditionTypesSelector.addActionListener {
@@ -158,6 +167,9 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
         // Populate operations for the first condition type
         this.selectedConditionType.availableOperations.forEach { this.operationSelector.addItem(it) }
+
+        // Load initial condition if present
+        this.loadInitialCondition()
     }
 
     fun validateConfiguration() {

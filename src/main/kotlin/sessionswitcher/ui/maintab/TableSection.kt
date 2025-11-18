@@ -8,6 +8,7 @@ import java.util.*
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
 import javax.swing.table.TableModel
+import kotlin.math.min
 
 @Suppress("UNCHECKED_CAST")
 class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, showDeleteButtonIfSelected: Boolean = true, showDuplicateButtonIfSelected: Boolean = true, showRefreshButtonIfSelected: Boolean = true) {
@@ -40,8 +41,18 @@ class TableSection<T>(public val title: String, public val description: String?,
         this.refreshTable()
     }
 
-    public open fun refreshTable() {
+    public fun refreshTable() {
+        // Save current selected row
+        var selectedRow = this.table.selectedRow
+
+        // Update
         this.tableModel.refresh()
+
+        // Restore selection
+        selectedRow = min(selectedRow, this.table.rowCount - 1) // Do not select a row that does not exist anymore
+        if (selectedRow != -1 && selectedRow < this.table.rowCount) {
+            this.table.setRowSelectionInterval(selectedRow, selectedRow)
+        }
     }
 
     public fun setNewButtonCallback(callback: () -> Unit) {
