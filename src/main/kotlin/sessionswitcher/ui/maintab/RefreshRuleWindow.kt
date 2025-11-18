@@ -1,36 +1,33 @@
 package sessionswitcher.ui.maintab
 
+import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.rules.refresher.RefreshConfig
 import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.ComboBox
-import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.maintab.tables.ConditionsTableModel
-import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.event.ItemEvent
 import java.util.*
 import javax.swing.*
 import kotlin.math.min
 
-class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
-    JDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), if (initialRefreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule", true) {
+class RefreshRuleWindow(private val sessionSwitcher: SessionSwitcher, private val initialRefreshRule: Optional<RefreshRule>) :
+    JDialog(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(), if (initialRefreshRule.isEmpty) "New Refresh Rule" else "Edit Refresh Rule", true) {
 
     // Flags
     var cancelPressed = false
 
     // Conditions
     val conditions = ArrayList<Condition>()
-    val tableModel = ConditionsTableModel(conditions)
 
     // UI elements
     val saveButton = ButtonPrimary("Save")
     val cancelButton = JButton("Cancel")
-
-    val conditionsTable = Table(emptyArray()).also { it.model = tableModel }
+    val tableSection = TableSection("Conditions", "Conditions in this list are evaluated with a logical AND", ConditionsTableModel(conditions), showRefreshButton = false)
 
     val sessionSelector = ComboBox("Session to refresh")
 
@@ -42,7 +39,7 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
-        val screenSize = SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame().graphicsConfiguration.device.displayMode
+        val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame().graphicsConfiguration.device.displayMode
 
         val reasonableHeight = min(this.preferredSize.height, screenSize.height - 50)
         //this.preferredSize = Dimension(reasonableWidth, reasonableHeight)
@@ -58,20 +55,11 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
 
         // Pack the window to fit its content
         this.pack()
-        this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
-    }
-
-    fun newCondition() {
-        val newCondition = ConditionEditWindow(this, Optional.empty<Condition>()).showDialog()
-        if (!newCondition.isPresent) {
-            return
-        }
-        this.conditions.add(newCondition.get())
-        this.refreshConditionsTable()
+        this.setLocationRelativeTo(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame())
     }
 
     fun refreshConditionsTable() {
-        tableModel.fireTableDataChanged()
+        this.tableSection.refreshTable()
     }
 
     fun makeRule(): RefreshRule {
@@ -79,7 +67,7 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
         if (sessionName == "(No sessions)") {
             throw IllegalStateException("No sessions selected")
         }
-        val session = SessionSwitcher.getInstance().sessions.getSession(sessionName)
+        val session = sessionSwitcher.sessions.getSession(sessionName)
             ?: throw IllegalStateException("Session with name $sessionName not found")
 
         return RefreshRule(this.conditions.toTypedArray(), session, RefreshConfig()) // TODO: Add refresh config
@@ -94,6 +82,44 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
         }
     }
 
+    fun newButtonCallback() {
+        val newCondition = ConditionEditWindow(this, Optional.empty<Condition>()).showDialog()
+        if (!newCondition.isPresent) {
+            return
+        }
+        this.conditions.add(newCondition.get())
+        this.refreshConditionsTable()
+        this.checkEnableSaveButton()
+    }
+
+    fun editButtonCallback() {
+        TODO()
+        this.refreshConditionsTable()
+        this.checkEnableSaveButton()
+    }
+
+    fun deleteButtonCallback() {
+        val selectedCondition = this.tableSection.getSelected()
+        if (selectedCondition.isEmpty) {
+            Logger.warning("Delete button clicked but no table item selected, row: ${this.tableSection.table.selectedRow}")
+            return
+        }
+        this.conditions.remove(selectedCondition.get())
+        this.refreshConditionsTable()
+        this.checkEnableSaveButton()
+    }
+
+    fun duplicateButtonCallback() {
+        val selectedCondition = this.tableSection.getSelected()
+        if (selectedCondition.isEmpty) {
+            Logger.warning("Duplicate button clicked but no table item selected, row: ${this.tableSection.table.selectedRow}")
+            return
+        }
+        TODO("Not yet implemented")
+        this.refreshConditionsTable()
+        this.checkEnableSaveButton()
+    }
+
     init {
         // Set window properties
         this.isResizable = true
@@ -101,9 +127,12 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
 
         saveButton.isEnabled = false
 
-        val conditionSection = makeConditionsSection()
+        tableSection.setNewButtonCallback(this::newButtonCallback)
+        tableSection.setEditButtonCallback(this::editButtonCallback)
+        tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
+        tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
 
-        // Refresh options
+        // Refresh config
         var sessions = SessionSwitcher.getInstance().sessions.getSessionNames().toTypedArray()
         if (sessions.isEmpty()) {
             sessions = arrayOf("(No sessions)")
@@ -111,7 +140,7 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
         sessions.forEach { this.sessionSelector.component.addItem(it) }
 
         sessionSelector.addItemListener { this.checkEnableSaveButton() }
-        conditionsTable.model.addTableModelListener { this.checkEnableSaveButton() }
+        tableSection.tableModel
 
         refreshSourceSelector.addItemListener { it ->
             if (it.stateChange == ItemEvent.SELECTED) {
@@ -143,7 +172,7 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
         val panel = JPanel().also {
             it.border = BorderFactory.createEmptyBorder(5,5, 5, 5)
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.add(conditionSection)
+            it.add(tableSection.getComponent())
             it.add(refreshActionSection)
             it.add(JPanel().also { p ->
                 p.layout = BoxLayout(p, BoxLayout.X_AXIS)
@@ -173,41 +202,8 @@ class RefreshRuleWindow(private val initialRefreshRule: Optional<RefreshRule>) :
         this.checkEnableSaveButton()
     }
 
-    private fun makeConditionsSection(): JPanel {
-        // |- Buttons
-        val newButton = JButton("New")
-        val editButton = JButton("Edit").also { it.isEnabled = false }
-        val deleteButton = JButton("Delete").also { it.isEnabled = false }
-        val duplicateButton = JButton("Duplicate").also { it.isEnabled = false }
-
-        // Set button listeners
-        newButton.addActionListener { newCondition() }
-
-        val buttonsPanel = JPanel().also { it ->
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
-            it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
-        }
-
-        val middlePanel = JPanel(BorderLayout()).also {
-            it.add(buttonsPanel, BorderLayout.PAGE_START)
-        }
-        val outerPanel = JPanel(BorderLayout()).also {
-            it.add(middlePanel, BorderLayout.LINE_START)
-            it.add(conditionsTable.withScrollPane(), BorderLayout.CENTER)
-        }
-
-        return UISection("Conditions", "Conditions in this list are evaluated with a logical AND", outerPanel)
-    }
-
     fun checkEnableSaveButton() {
-        val enable = conditionsTable.model.rowCount > 0 && sessionSelector.getSelectedItem() != "(No sessions)" && sessionSelector.getSelectedItem() != ""
+        val enable = tableSection.table.rowCount > 0 && sessionSelector.getSelectedItem() != "(No sessions)" && sessionSelector.getSelectedItem() != ""
         saveButton.isEnabled = enable
     }
 }

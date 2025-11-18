@@ -1,9 +1,10 @@
 package sessionswitcher.ui.maintab.tables
 
 import sessionswitcher.rules.conditions.Condition
+import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class ConditionsTableModel(private val conditions: ArrayList<Condition>): AbstractTableModel() {
+class ConditionsTableModel(private val conditions: ArrayList<Condition>): AbstractTableModel(), ITableModel<Condition> {
     private val columnNames = arrayOf("Type", "Operation", "Pattern", "Negative")
 
     override fun getRowCount(): Int {
@@ -33,5 +34,12 @@ class ConditionsTableModel(private val conditions: ArrayList<Condition>): Abstra
         }
     }
 
-    public fun getAt(index: Int): Condition = this.conditions[index]
+    override fun getAt(index: Int): Optional<Condition> {
+        return try {
+            Optional.of(this.conditions[index])
+        } catch (e: IndexOutOfBoundsException) {
+            Optional.empty()
+        }
+    }
+    override fun refresh() = this.fireTableDataChanged()
 }

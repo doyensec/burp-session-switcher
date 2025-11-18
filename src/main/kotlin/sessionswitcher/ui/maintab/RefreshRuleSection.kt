@@ -5,50 +5,54 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.refresher.RefreshRule
 import sessionswitcher.ui.maintab.tables.RefreshRuleTableModel
 import java.util.*
+import javax.swing.JComponent
 
-class RefreshRuleSection(private val sessionSwitcher: SessionSwitcher):
-    TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  RefreshRuleTableModel(sessionSwitcher.refreshRules)) {
+object RefreshRuleSection {
     // Table model
-    val refreshRuleTableModel = RefreshRuleTableModel(sessionSwitcher.refreshRules)
+    private lateinit var sessionSwitcher: SessionSwitcher
+    private lateinit var tableSection: TableSection<RefreshRule>
 
-    private fun getSelectedItem(): Optional<RefreshRule> {
-        val row = this.table.selectedRow
-        if (row == -1) return Optional.empty<RefreshRule>()
-        if (row >= sessionSwitcher.sessions.size) return Optional.empty<RefreshRule>()
-
-        return Optional.of((this.tableModel as RefreshRuleTableModel).getAt(row))
+    public fun make(sessionSwitcher: SessionSwitcher): JComponent {
+        this.sessionSwitcher = sessionSwitcher
+        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  RefreshRuleTableModel(sessionSwitcher.refreshRules))
+        tableSection.refreshTable()
+        tableSection.setNewButtonCallback(this::newButtonCallback)
+        tableSection.setEditButtonCallback(this::editButtonCallback)
+        tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
+        tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
+        return tableSection.getComponent()
     }
 
-    override fun deleteButtonCallback() {
-        val item = getSelectedItem()
+    private fun deleteButtonCallback() {
+        val item = tableSection.getSelected()
         if (item.isEmpty) {
-            Logger.warning("Delete button clicked but no table item selected, row: ${table.selectedRow}")
+            Logger.warning("Delete button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
         }
         this.sessionSwitcher.refreshRules.remove(item.get())
-        refreshRuleTableModel.fireTableDataChanged()
+        tableSection.refreshTable()
     }
 
-    override fun duplicateButtonCallback() {
+    private fun duplicateButtonCallback() {
         TODO("Not yet implemented")
     }
 
-    override fun editButtonCallback() {
-        val oldRule = getSelectedItem()
+    private fun editButtonCallback() {
+        val oldRule = tableSection.getSelected()
         if (oldRule.isEmpty) {
-            Logger.warning("Delete button clicked but no table item selected, row: ${table.selectedRow}")
+            Logger.warning("Delete button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
         }
-        val newRule = RefreshRuleWindow(oldRule).showDialog()
+        val newRule = RefreshRuleWindow(sessionSwitcher, oldRule).showDialog()
         if (newRule.isEmpty) return
         val oldIndex = sessionSwitcher.refreshRules.indexOf(oldRule.get())
         sessionSwitcher.refreshRules.remove(oldRule.get())
         sessionSwitcher.refreshRules.add(oldIndex, newRule.get())
-        refreshRuleTableModel.fireTableDataChanged()
+        tableSection.refreshTable()
     }
 
-    override fun newButtonCallback() {
-        val ruleOptional = RefreshRuleWindow(Optional.empty<RefreshRule>()).showDialog()
+    private fun newButtonCallback() {
+        val ruleOptional = RefreshRuleWindow(sessionSwitcher, Optional.empty<RefreshRule>()).showDialog()
         if (ruleOptional.isEmpty) return
         sessionSwitcher.refreshRules.add(ruleOptional.get())
-        refreshRuleTableModel.fireTableDataChanged()
+        tableSection.refreshTable()
     }
 }

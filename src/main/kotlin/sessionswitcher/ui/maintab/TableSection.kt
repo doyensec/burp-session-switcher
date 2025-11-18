@@ -2,15 +2,18 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
+import sessionswitcher.ui.maintab.tables.ITableModel
 import java.awt.BorderLayout
+import java.util.*
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
-import javax.swing.table.AbstractTableModel
+import javax.swing.table.TableModel
 
-abstract class TableSection(public val title: String, public val description: String?, public val tableModel: AbstractTableModel) {
+@Suppress("UNCHECKED_CAST")
+class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, showDeleteButtonIfSelected: Boolean = true, showDuplicateButtonIfSelected: Boolean = true, showRefreshButtonIfSelected: Boolean = true) {
     // Table model
     val table = Table(emptyArray()).also {
-        it.model = tableModel
+        it.model = tableModel as TableModel?
         it.selectionModel.addListSelectionListener(this::tableSelectionListener)
     }
 
@@ -18,37 +21,52 @@ abstract class TableSection(public val title: String, public val description: St
     val mainPanel = JPanel(BorderLayout())
 
     // Buttons
-    val newButton = JButton("New").also {
-        it.addActionListener { newButtonCallback() }
-    }
+    val newButton = JButton("New")
     val editButton = JButton("Edit").also {
         it.isEnabled = false
-        it.addActionListener { editButtonCallback() }
     }
     val deleteButton = JButton("Delete").also {
         it.isEnabled = false
-        it.addActionListener { deleteButtonCallback() }
     }
     val duplicateButton = JButton("Duplicate").also {
         it.isEnabled = false
-        it.addActionListener { duplicateButtonCallback() }
     }
     val refreshButton = JButton("Refresh").also {
-        it.addActionListener { refreshButtonCallback() }
+        it.addActionListener { this.refreshButtonCallback() }
     }
 
     // Callbacks
-    abstract fun newButtonCallback()
-    abstract fun deleteButtonCallback()
-    abstract fun duplicateButtonCallback()
-    abstract fun editButtonCallback()
-
-    open fun refreshButtonCallback() {
+    fun refreshButtonCallback() {
         this.refreshTable()
     }
 
     public open fun refreshTable() {
-        this.tableModel.fireTableDataChanged()
+        this.tableModel.refresh()
+    }
+
+    public fun setNewButtonCallback(callback: () -> Unit) {
+        this.newButton.addActionListener { callback() }
+    }
+
+    public fun setEditButtonCallback(callback: () -> Unit) {
+        this.editButton.addActionListener { callback() }
+    }
+
+    public fun setDeleteButtonCallback(callback: () -> Unit) {
+        this.deleteButton.addActionListener { callback() }
+    }
+
+    public fun setDuplicateButtonCallback(callback: () -> Unit) {
+        this.duplicateButton.addActionListener { callback() }
+    }
+
+    public fun setRefreshButtonCallback(callback: () -> Unit) {
+        this.refreshButton.addActionListener { callback() }
+    }
+
+    public fun getSelected(): Optional<T> {
+        val row = this.table.selectedRow
+        return tableModel.getAt(row)
     }
 
     open fun tableSelectionListener(e: ListSelectionEvent) {
@@ -64,18 +82,30 @@ abstract class TableSection(public val title: String, public val description: St
         }
     }
 
-
     init {
         val buttonsPanel = JPanel().also { it ->
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
-            it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
-            it.add(Box.createVerticalStrut(5))
-            it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
+            if (showNewButton) {
+                it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
+                it.add(Box.createVerticalStrut(5))
+            }
+            if (showEditButton) {
+                it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
+                it.add(Box.createVerticalStrut(5))
+            }
+            if (showDeleteButton) {
+                it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
+                it.add(Box.createVerticalStrut(5))
+            }
+            if (showDuplicateButton) {
+                it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
+                it.add(Box.createVerticalStrut(5))
+            }
+            if (showRefreshButton) {
+                it.add(JPanel(BorderLayout()).also{p-> p.add(refreshButton, BorderLayout.PAGE_START)})
+                it.add(Box.createVerticalStrut(5))
+            }
         }
 
         val middlePanel = JPanel(BorderLayout()).also {

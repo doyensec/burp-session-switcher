@@ -1,9 +1,10 @@
 package sessionswitcher.ui.maintab.tables
 
 import sessionswitcher.rules.refresher.RefreshRule
+import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class RefreshRuleTableModel(private val rules: ArrayList<RefreshRule>): AbstractTableModel() {
+class RefreshRuleTableModel(private val rules: ArrayList<RefreshRule>): AbstractTableModel(), ITableModel<RefreshRule> {
     private val columnNames = arrayOf("Conditions", "Session")
 
     override fun getRowCount(): Int {
@@ -32,5 +33,11 @@ class RefreshRuleTableModel(private val rules: ArrayList<RefreshRule>): Abstract
         }
     }
 
-    public fun getAt(index: Int): RefreshRule = this.rules[index]
+    override fun getAt(index: Int): Optional<RefreshRule> {
+        return try {
+            Optional.of(this.rules[index])
+        } catch (e: IndexOutOfBoundsException) {
+            Optional.empty()
+        }
+    }    override fun refresh() = this.fireTableDataChanged()
 }

@@ -4,47 +4,49 @@ import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.ui.maintab.tables.SessionsTableModel
-import java.util.*
+import javax.swing.JComponent
 
-class SavedSessionsSection(private val sessionSwitcher: SessionSwitcher) :
-    TableSection("Sessions", "Saved sessions for this project", SessionsTableModel(sessionSwitcher.sessions))
+object SavedSessionsSection
 {
+    private lateinit var tableSection: TableSection<Session>
+    private lateinit var sessionSwitcher: SessionSwitcher
 
-    init {
-        this.refreshTable()
+    public fun make(sessionSwitcher: SessionSwitcher): JComponent {
+        this.sessionSwitcher = sessionSwitcher
+        this.tableSection = TableSection("Sessions", "Saved sessions for this project",
+            SessionsTableModel(sessionSwitcher.sessions)
+        )
+        tableSection.refreshTable()
+        tableSection.setNewButtonCallback(this::newButtonCallback)
+        tableSection.setEditButtonCallback(this::editButtonCallback)
+        tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
+        tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
+        return tableSection.getComponent()
     }
 
-    private fun getSelectedSession(): Optional<Session> {
-        val row = this.table.selectedRow
-        if (row == -1) return Optional.empty<Session>()
-        if (row >= sessionSwitcher.sessions.size) return Optional.empty<Session>()
-
-        return Optional.of((this.tableModel as SessionsTableModel).getAt(row))
-    }
-
-    override fun newButtonCallback() {
+    private fun newButtonCallback() {
         TODO("Not yet implemented")
     }
 
-    override fun deleteButtonCallback() {
-        val session = getSelectedSession()
+    private fun deleteButtonCallback() {
+        val session = tableSection.getSelected()
         if (session.isEmpty) {
-            Logger.warning("Delete button clicked but no session selected, row: ${table.selectedRow}")
+            Logger.warning("Delete button clicked but no session selected, row: ${tableSection.table.selectedRow}")
         }
         this.sessionSwitcher.sessions.deleteSession(session.get())
-        this.refreshTable()
+        tableSection.refreshTable()
     }
 
-    override fun duplicateButtonCallback() {
-        val session = getSelectedSession()
+    private fun duplicateButtonCallback() {
+        val session = tableSection.getSelected()
         if (session.isEmpty) {
-            Logger.warning("Delete button clicked but no session selected, row: ${table.selectedRow}")
+            Logger.warning("Delete button clicked but no session selected, row: ${tableSection.table.selectedRow}")
         }
         this.sessionSwitcher.sessions.duplicateSession(session.get().name)
-        this.refreshTable()
+        tableSection.refreshTable()
     }
 
-    override fun editButtonCallback() {
+    private fun editButtonCallback() {
         TODO("Not yet implemented")
     }
 }

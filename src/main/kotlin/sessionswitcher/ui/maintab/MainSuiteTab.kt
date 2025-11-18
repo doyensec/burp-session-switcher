@@ -31,13 +31,13 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         mainPanel.add(JSeparator())
 
         // Sessions Table Section
-        val savedSessionsSection = SavedSessionsSection(sessionSwitcher)
-        mainPanel.add(savedSessionsSection.getComponent())
+        val savedSessionsSection = SavedSessionsSection.make(sessionSwitcher)
+        mainPanel.add(savedSessionsSection)
         mainPanel.add(JSeparator())
 
         // AutoRefresh Rules Section
-        val autoRefreshRulesSection = RefreshRuleSection(sessionSwitcher)
-        mainPanel.add(autoRefreshRulesSection.getComponent())
+        val autoRefreshRulesSection = RefreshRuleSection.make(sessionSwitcher)
+        mainPanel.add(autoRefreshRulesSection)
         mainPanel.add(JSeparator())
 
         // AutoInject Rules Section

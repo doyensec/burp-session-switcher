@@ -2,9 +2,10 @@ package sessionswitcher.ui.maintab.tables
 
 import sessionswitcher.sessions.Session
 import sessionswitcher.sessions.SessionCollection
+import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class SessionsTableModel(private val sessionCollection: SessionCollection): AbstractTableModel() {
+class SessionsTableModel(private val sessionCollection: SessionCollection): AbstractTableModel(), ITableModel<Session> {
     private val columnNames = arrayOf("Name", "Host")
     private val sessions: ArrayList<Session> get() {
         return sessionCollection.getSessions().toTypedArray().toCollection(ArrayList())
@@ -35,5 +36,11 @@ class SessionsTableModel(private val sessionCollection: SessionCollection): Abst
         }
     }
 
-    public fun getAt(index: Int): Session = this.sessions[index]
+    override fun getAt(index: Int): Optional<Session> {
+        return try {
+            Optional.of(this.sessions[index])
+        } catch (e: IndexOutOfBoundsException) {
+            Optional.empty()
+        }
+    }    override fun refresh() = this.fireTableDataChanged()
 }
