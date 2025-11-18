@@ -1,50 +1,33 @@
 package sessionswitcher.rules.autoupdate
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.conditions.MatchInfo
 import java.util.*
 
-class UpdateConfig() {
-    enum class UPDATE_SOURCE {
-        REQUEST,
-        RESPONSE
+class UpdateConfig private constructor(val updateSource: UPDATE_SOURCE, val cookieUpdateMode: COOKIE_UPDATE_MODE, val headerUpdateMode: HEADER_UPDATE_MODE, val cookiesToUpdate: Set<String> = emptySet(), val headersToUpdate: Set<String> = emptySet(), ) {
+    enum class UPDATE_SOURCE(val description: String) {
+        REQUEST("Request"),
+        RESPONSE("Response")
     }
 
-    enum class COOKIE_UPDATE_MODE {
-        REPLACE_ALL,         // Replace the whole cookie set with the request's ones. Useful when updating from **Requests** to match the browser's cookies. (Default for requests)
-        UPDATE_ALL,          // Update all the cookies and add new ones (but keep old cookies too unless expired) (Default for Set-Cookie responses?)
-        UPDATE_EXISTING,    // Only update the values of cookies already stored in the session
-        UPDATE_SOME,        // Update a specific list of cookies specified in a different param
-        NO_UPDATE,          // Do nothing
+    enum class COOKIE_UPDATE_MODE(val description: String) {
+        REPLACE_ALL("Replace all"),         // Replace the whole cookie set with the request's ones. Useful when updating from **Requests** to match the browser's cookies. (Default for requests)
+        UPDATE_ALL("Update all"),          // Update all the cookies and add new ones (but keep old cookies too unless expired) (Default for Set-Cookie responses?)
+        UPDATE_EXISTING("Update existing"),    // Only update the values of cookies already stored in the session
+        UPDATE_SOME("Update some"),        // Update a specific list of cookies specified in a different param
+        NO_UPDATE("Don't update"),          // Do nothing
     }
 
-    enum class HEADER_UPDATE_MODE {
-        UPDATE_EXISTING,    // Only update the values of headers already stored in the session
-        UPDATE_SOME,        // Update a specific list of headers specified in a different param
-        NO_UPDATE,          // Do nothing
-    }
-
-    public lateinit var updateSource: UPDATE_SOURCE
-        private set
-
-    public lateinit var cookieUpdateMode: COOKIE_UPDATE_MODE
-        private set
-
-    public var cookiesToUpdate: Set<String> = emptySet()
-        private set
-
-    public lateinit var headerUpdateMode: HEADER_UPDATE_MODE
-        private set
-
-    public var headersToUpdate: Set<String> = emptySet()
-        private set
-
-    fun updateFrom(httpRequestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo) {
-        // TODO: DELETE EXPIRED COOKIES WHEN UPDATING FROM RESPONSE
-        TODO()
+    enum class HEADER_UPDATE_MODE(val description: String) {
+        UPDATE_EXISTING("Update existing"),    // Only update the values of headers already stored in the session
+        UPDATE_SOME("Update some"),        // Update a specific list of headers specified in a different param
+        NO_UPDATE("Don't update"),          // Do nothing
     }
 
     public fun describe(name: String): String {
         return name.split(" ").joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
+    }
+
+    // Copy constructor
+    public fun copy(): UpdateConfig{
+        return UpdateConfig(this.updateSource, this.cookieUpdateMode, this.headerUpdateMode, this.cookiesToUpdate.toSet(), this.headersToUpdate.toSet())
     }
 }

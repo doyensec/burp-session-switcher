@@ -45,4 +45,8 @@ class Condition private constructor(public val type: ConditionType, public val c
     fun describe(): String {
         return this.type.describe(this.configuration)
     }
+
+    public fun copy(): Condition {
+        return Condition(this.type, this.configuration.copy())
+    }
 }
