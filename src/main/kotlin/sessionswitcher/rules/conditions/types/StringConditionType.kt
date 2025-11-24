@@ -47,6 +47,6 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
     }
 
     override fun describe(configuration: ConditionConfiguration): String {
-        return "${this.matchOn} ${configuration.operation} \"${configuration.pattern.get()}\""
+        return "${this.matchOn} ${if (configuration.negativeMatch) "NOT " else ""}${configuration.operation} \"${configuration.pattern.get()}\""
     }
 }
