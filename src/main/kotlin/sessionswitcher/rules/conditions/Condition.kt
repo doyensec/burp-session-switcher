@@ -4,9 +4,9 @@ import burp.api.montoya.proxy.ProxyHttpRequestResponse
 import sessionswitcher.rules.conditions.types.*
 import java.util.*
 
-class Condition private constructor(public val type: ConditionType, public val configuration: ConditionConfiguration) {
+class Condition private constructor(public val type: ConditionType, public val configuration: ConditionConfig) {
     companion object {
-        public fun make(type: ConditionType, configuration: ConditionConfiguration): Condition {
+        public fun make(type: ConditionType, configuration: ConditionConfig): Condition {
             val validationResult = type.validateConfiguration(configuration)
             if (!validationResult.first) {
                 throw IllegalArgumentException("Invalid configuration for selected type: ${validationResult.second}")
@@ -15,7 +15,7 @@ class Condition private constructor(public val type: ConditionType, public val c
         }
 
         public fun make(type: ConditionType, operation: String, pattern: Optional<String>, negativeMatch: Boolean): Condition {
-            val configuration = ConditionConfiguration(operation, pattern, negativeMatch)
+            val configuration = ConditionConfig(operation, pattern, negativeMatch)
             return this.make(type, configuration)
         }
 

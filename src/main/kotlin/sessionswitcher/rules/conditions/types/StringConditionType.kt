@@ -1,6 +1,6 @@
 package sessionswitcher.rules.conditions.types
 
-import sessionswitcher.rules.conditions.ConditionConfiguration
+import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionType
 
 abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
@@ -14,7 +14,7 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
         REGEX_MATCH("Matches Regex"),
     }
 
-    protected fun stringMatches(configuration: ConditionConfiguration, value: String): Boolean {
+    protected fun stringMatches(configuration: ConditionConfig, value: String): Boolean {
         val match = when (configuration.operation) {
             OPERATORS.STARTS_WITH.description -> {
                 value.lowercase().startsWith(configuration.pattern.get().lowercase())
@@ -36,7 +36,7 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
        return match xor configuration.negativeMatch
     }
 
-    override fun validateConfiguration(configuration: ConditionConfiguration): Pair<Boolean, String> {
+    override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> {
         if (!configuration.pattern.isPresent || configuration.pattern.get().isBlank()) {
             return Pair(true, "Pattern is empty!")
         }
@@ -46,7 +46,7 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
         return Pair(true, "")
     }
 
-    override fun describe(configuration: ConditionConfiguration): String {
+    override fun describe(configuration: ConditionConfig): String {
         val operation = if (configuration.negativeMatch) {
              when (configuration.operation) {
                 OPERATORS.EXACT_MATCH.description -> "does NOT match exactly"

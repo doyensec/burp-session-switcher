@@ -2,7 +2,7 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
-import sessionswitcher.rules.conditions.ConditionConfiguration
+import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionType
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
@@ -36,11 +36,11 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
         return conditionTypesSelector.selectedItem as ConditionType
     }
 
-    val configuration: ConditionConfiguration get() {
+    val configuration: ConditionConfig get() {
         val operation = operationSelector.selectedItem as String
         val pattern = if (patternTextBox.isEnabled) Optional.of(patternTextBox.text) else Optional.empty<String>()
         val negativeMatch = this.negativeMatchCheckBox.isSelected
-        return ConditionConfiguration(operation, pattern, negativeMatch)
+        return ConditionConfig(operation, pattern, negativeMatch)
     }
 
     fun autoSize() {

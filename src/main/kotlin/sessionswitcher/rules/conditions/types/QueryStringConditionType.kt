@@ -1,13 +1,13 @@
 package sessionswitcher.rules.conditions.types
 
 import burp.api.montoya.proxy.ProxyHttpRequestResponse
-import sessionswitcher.rules.conditions.ConditionConfiguration
+import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.MatchInfo
 
 object QueryStringConditionType :
     StringConditionType(matchOn = "Request Parameter", needsResponse = false) {
     override fun matches(
-        configuration: ConditionConfiguration,
+        configuration: ConditionConfig,
         requestResponse: ProxyHttpRequestResponse,
         matchInfo: MatchInfo
     ): Boolean {
@@ -20,7 +20,7 @@ object QueryStringConditionType :
         }
     }
 
-    override fun describe(configuration: ConditionConfiguration): String {
+    override fun describe(configuration: ConditionConfig): String {
         return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.pattern.get()}\""
     }
 }
