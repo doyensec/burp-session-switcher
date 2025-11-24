@@ -33,6 +33,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             settings.updateOnlyExistingCookies.drawCheckbox()
         )
 
+        /*
         val autoInjectorSections = UISection(
             "Auto Injector",
             "Customize the options of the Auto Injector",
@@ -40,6 +41,12 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             Box.createVerticalStrut(6),
             settings.injectorAnnotateRequest.drawCheckbox()
           )
+          */
+        val autoUpdateSections = UISection(
+            "Auto Updater",
+            "Set the behavior of Auto Update Rules",
+            settings.stopAtFirstUpdateRule.drawCheckbox()
+        )
 
         val loggingLevelSection = UISection(
             "Logging options",
@@ -56,7 +63,8 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(sessionUpdateSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
-            it.add(autoInjectorSections)
+            //it.add(autoInjectorSections)
+            it.add(autoUpdateSections)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(loggingLevelSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))

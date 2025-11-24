@@ -36,19 +36,18 @@ class Settings(val provider: SettingsProvider) {
     /* Editor Settings */
     val editorShowRequestBody = BooleanSetting(provider, "editor.show_request_body", "Show the body in the request editor", true)
     val editorShowHeadersMode = EnumSetting(provider, "editor.hide_headers_mode", "Hide headers in the request editor:", HideHeadersMode::class.java, HideHeadersMode.HIDE_COMMON)
-    val filterSessionMode = EnumSetting(provider, "sessions.switcher_filter_mode", "In the selector, show only the Sessions that match:", FilterSessionMode::class.java, FilterSessionMode.BY_DOMAIN)
-    val editorDoNotAskOverwriteConfirmation = BooleanSetting(provider, "editor.no_confirm_overwrite", "Do not ask confirmation when overwriting a Session", false)
-
-    /* Injector settings */
+    val filterSessionMode = EnumSetting(provider, "sessions.switcher_filter_mode", "In the Session menu, show only requests matching:", FilterSessionMode::class.java, FilterSessionMode.BY_DOMAIN)
+    val editorDoNotAskOverwriteConfirmation = BooleanSetting(provider, "editor.no_confirm_overwrite", "Do not ask confirmation when updating a Session", false)
     val removeOtherCookies = BooleanSetting(provider, "session.remove_other_cookies", "Remove from the request the cookies that are not in the Session", false)
-
-    /* Update settings */
     val updateOnlyExistingHeaders = BooleanSetting(provider, "updater.only_update_existing_headers", "Update only the headers that already in the Session", true)
     val updateOnlyExistingCookies = BooleanSetting(provider, "updater.only_update_existing_cookies", "Update only the cookies that already in the Session", true)
 
+    /* Auto Update Rules */
+    val stopAtFirstUpdateRule = BooleanSetting(provider, "auto_updater.stop_at_first_match", "Stop after the first matching rule", true)
+
     /* Auto Injector settings */
-    val injectorHighlightColor = EnumSetting(provider, "injector.highlight_color", "Highlight injected requests with color:", HighlightColor::class.java, HighlightColor.ORANGE)
-    val injectorAnnotateRequest = BooleanSetting(provider, "injector.annotate_request", "Annotate injected request with session name", true)
+    val injectorHighlightColor = EnumSetting(provider, "auto_injector.highlight_color", "Highlight injected requests with color:", HighlightColor::class.java, HighlightColor.ORANGE)
+    val injectorAnnotateRequest = BooleanSetting(provider, "auto_injector.annotate_request", "Annotate injected request with session name", true)
 
     /* Logging settings */
     val loggingLevel = EnumSetting(provider,"logging.level", "Logging level:", Logger.Level::class.java, Logger.Level.DEBUG)
