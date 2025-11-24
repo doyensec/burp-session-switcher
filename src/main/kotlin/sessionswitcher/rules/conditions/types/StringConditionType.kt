@@ -47,6 +47,18 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
     }
 
     override fun describe(configuration: ConditionConfiguration): String {
-        return "${this.matchOn} ${if (configuration.negativeMatch) "NOT " else ""}${configuration.operation} \"${configuration.pattern.get()}\""
+        val operation = if (configuration.negativeMatch) {
+             when (configuration.operation) {
+                OPERATORS.EXACT_MATCH.description -> "does NOT match exactly"
+                OPERATORS.CONTAINS.description -> "does NOT contain"
+                OPERATORS.STARTS_WITH.description -> "does NOT start with"
+                OPERATORS.ENDS_WITH.description -> "does NOT end with"
+                OPERATORS.REGEX_MATCH.description -> "does NOT match Regex"
+                else -> {configuration.operation}
+            }
+        } else {
+            configuration.operation.lowercase()
+        }
+        return "${this.matchOn} $operation \"${configuration.pattern.get()}\""
     }
 }

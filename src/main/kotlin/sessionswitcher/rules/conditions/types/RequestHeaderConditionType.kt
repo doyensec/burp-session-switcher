@@ -16,6 +16,6 @@ object RequestHeaderConditionType :
     }
 
     override fun describe(configuration: ConditionConfiguration): String {
-        return "${if (configuration.negativeMatch) "No " else "Any "} ${this.matchOn} ${configuration.operation} \"${configuration.pattern.get()}\""
+        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.pattern.get()}\""
     }
 }
