@@ -33,7 +33,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             return provider as Provider
         }
 
-        val SESSION_NONE = Session("No change", "none")
+        val SESSION_NONE = Session("No change") // Placeholder for no session selected
     }
 
     // State-holding stuff

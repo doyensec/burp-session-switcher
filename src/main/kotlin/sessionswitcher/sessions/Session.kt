@@ -8,10 +8,11 @@ import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
 import sessionswitcher.utils.*
+import java.time.Instant
 import java.util.*
 
 
-class Session(val name: String, private val id: String = UUID.randomUUID().toString()) : CanSaveData {
+class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
         val EXCLUDED_HEADER_PREFIXES = setOf<String>(
             // Keep these lowercase
@@ -49,6 +50,8 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         }
     }
 
+    constructor(name: String) : this(name, UUID.randomUUID().toString())
+
     // Duplication constructor
     constructor(name: String, old: Session) : this(name) {
         this.host = old.host
@@ -56,49 +59,37 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         this.cookies = Cookies.duplicate(old.cookies)
     }
 
-    class Deserializer(key: String) : DeserializerFactory<Session>(key) {
-        override fun burpDeserialize(obj: PersistedObject) {
-            val p = Session(obj.getString("name"), obj.getString("id"))
-            p.host = obj.getString("host")
-            p.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
-            val headersLst = obj.getChildObjectList("headers")
-            if (headersLst != null) {
-                for (headerObj in headersLst) {
-                    p.headers[headerObj.getString("k")] = headerObj.getString("v")
-                }
-            }
-            this.deserialized = p
-        }
-    }
-
     private var host: String = ""
 
-    /* Note: this map always hold lowercase header names to prevent issues
+    /* Note: this map always holds lowercase header names to prevent issues
         with HTTP/2 requests. Burp should automatically fix the capitalization.
      */
     private val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
     private var cookies = Cookies()
 
-    override val saveStateKey: String
-        get() = "Session.$id"
+    /*
+    Some metadata about the last time this session was updated
+     */
+    public enum class LAST_UPDATE_TYPE(val description: String) {
+        CREATION("Creation"),
+        MANUAL_EDIT("Manual (Edit Menu)"),
+        MANUAL_REQUEST("Manual (From Request)"),
+        UPDATE_RULE("Update rule");
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+        override fun toString(): String = description
+    }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-        obj.setString("name", name)
-        obj.setString("id", id)
-        obj.setString("host", host)
-        val headersLst = ArrayList<PersistedObject>(this.headers.size)
-        for ((k, v) in this.headers) {
-            val headerObj = PersistedObject.persistedObject()
-            headerObj.setString("k", k)
-            headerObj.setString("v", v)
-            headersLst.add(headerObj)
-        }
-        obj.setChildObjectList("headers", headersLst)
-        obj.setString("cookies", this.cookies.toString())
-        return obj
+    public var lastUpdatedAt: Instant = Instant.now()
+        private set
+    public var lastUpdatedBy: LAST_UPDATE_TYPE = LAST_UPDATE_TYPE.CREATION
+        private set
+    public var lastUpdatedRuleId: Int? = null
+        private set
+
+    public fun setLastUpdateReason(reason: LAST_UPDATE_TYPE, ruleId: Int? = null) {
+        if (reason != LAST_UPDATE_TYPE.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
+        this.lastUpdatedBy = reason
+        this.lastUpdatedRuleId = ruleId
     }
 
     override fun toString(): String {
@@ -134,8 +125,13 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         return Triple(output, Pair(updatedHeaders, addedHeaders), Pair(updatedCookies, addedCookies))
     }
 
+    /*
+    Loads all the info from a request into this session. Discards any previous data.
+     */
     fun loadFromRequest(r: HttpRequest) {
         this.host = r.host()
+
+        // Headers
         val reqHeaders = r.mergedHeaders()
         val custom = reqHeaders
             .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
@@ -143,11 +139,22 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         this.headers.clear()
         this.headers.putAll(custom.map { Pair(it.name().lowercase(), it.value()) })
 
+        // Cookies
         this.cookies = Cookies.fromHttpRequest(r)
+
+        // Set last update info
+        this.lastUpdatedAt = Instant.now()
+        this.lastUpdatedBy = LAST_UPDATE_TYPE.MANUAL_REQUEST
+
         Logger.debug("Saving cookies into session: ${this.cookies}")
         this.saveToProjectFileAsync()
     }
 
+    /*
+    Updates stored info from a request.
+     onlyUpdateExistingHeaders: do not add new headers not present in the request
+     onlyUpdateExistingCookies: do not add new cookies not present in the request
+     */
     fun updateFromRequest(r: HttpRequest, onlyUpdateExistingHeaders: Boolean = true, onlyUpdateExistingCookies: Boolean = true) {
         Logger.debug("Updating session from request")
         // Update headers
@@ -170,6 +177,11 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         // Update cookies
         val newCookies = Cookies.fromHttpRequest(r)
         this.cookies.update(newCookies, onlyUpdateExistingCookies)
+
+        // Set last update info
+        this.lastUpdatedAt = Instant.now()
+        this.lastUpdatedBy = LAST_UPDATE_TYPE.MANUAL_REQUEST
+
         this.saveToProjectFileAsync()
     }
 
@@ -187,5 +199,75 @@ class Session(val name: String, private val id: String = UUID.randomUUID().toStr
         // Check cookies
         val otherCookies = Cookies.fromHttpRequest(httpRequest)
         return otherCookies.contains(this.cookies)
+    }
+
+    /*
+    Project saving stuff
+     */
+
+    class Deserializer(key: String) : DeserializerFactory<Session>(key) {
+        override fun burpDeserialize(obj: PersistedObject) {
+            // Basic data
+            val p = Session(obj.getString("name"), obj.getString("id"))
+            p.host = obj.getString("host")
+
+            // Cookies
+            p.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
+
+            // Headers
+            val headersLst = obj.getChildObjectList("headers")
+            if (headersLst != null) {
+                for (headerObj in headersLst) {
+                    p.headers[headerObj.getString("k")] = headerObj.getString("v")
+                }
+            }
+
+            // Last update info
+            if (obj.getLong("lastUpdatedAt") != null) {
+                p.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
+                p.lastUpdatedBy = LAST_UPDATE_TYPE.entries[obj.getInteger("lastUpdatedFrom")]
+                val lastUpdatedRuleId = obj.getInteger("lastUpdatedRuleId")
+                if (lastUpdatedRuleId != null && lastUpdatedRuleId != -1) {
+                    p.lastUpdatedRuleId = lastUpdatedRuleId
+                } else {
+                    p.lastUpdatedRuleId = null
+                }
+            }
+
+            this.deserialized = p
+        }
+    }
+
+    override val saveStateKey: String
+        get() = "Session.$id"
+
+    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+
+    override fun burpSerialize(): PersistedObject {
+        val obj = PersistedObject.persistedObject()
+
+        // Basic data
+        obj.setString("name", name)
+        obj.setString("id", id)
+        obj.setString("host", host)
+
+        // Headers
+        val headersLst = ArrayList<PersistedObject>(this.headers.size)
+        for ((k, v) in this.headers) {
+            val headerObj = PersistedObject.persistedObject()
+            headerObj.setString("k", k)
+            headerObj.setString("v", v)
+            headersLst.add(headerObj)
+        }
+        obj.setChildObjectList("headers", headersLst)
+
+        // Cookies
+        obj.setString("cookies", this.cookies.toString())
+
+        // Last update info
+        obj.setLong("lastUpdatedAt", lastUpdatedAt.epochSecond)
+        obj.setInteger("lastUpdatedFrom", lastUpdatedBy.ordinal)
+        obj.setInteger("lastUpdatedRuleId", lastUpdatedRuleId ?: -1)
+        return obj
     }
 }
