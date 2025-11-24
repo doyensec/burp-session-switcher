@@ -11,5 +11,7 @@ object InScopeConditionType: ConditionType(matchOn = "Scope", needsResponse = fa
     }
     override fun  validateConfiguration(configuration: ConditionConfiguration): Pair<Boolean, String> = Pair(true, "")
 
-    override fun describe(configuration: ConditionConfiguration): String = "Request is in scope"
+    override fun describe(configuration: ConditionConfiguration): String {
+        return "Request is ${if (configuration.negativeMatch) "not in" else "in"} scope"
+    }
 }
