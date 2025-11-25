@@ -1,15 +1,15 @@
 package sessionswitcher.rules.conditions.types
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionType
 import sessionswitcher.rules.conditions.MatchInfo
 
 object ProtocolConditionType:
-    ConditionType(matchOn = "Protocol", needsResponse = false, availableOperations = listOf("HTTP", "HTTPS"), canSetPattern = false)
+    ConditionType(matchOn = "Protocol", matchesOnResponse = false, availableOperations = listOf("HTTP", "HTTPS"), canSetPattern = false)
  {
-    override fun matches(configuration: ConditionConfig, requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
-        return (requestResponse.httpService().secure() && configuration.operation == "HTTPS") || (!requestResponse.httpService().secure() && configuration.operation == "HTTP")
+    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+        return (request.httpService().secure() && configuration.operation == "HTTPS") || (!request.httpService().secure() && configuration.operation == "HTTP")
     }
 
     override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> = Pair(true, "")

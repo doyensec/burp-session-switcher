@@ -3,8 +3,8 @@ package sessionswitcher.rules.conditions.types
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionType
 
-abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
-    ConditionType(matchOn, needsResponse, availableOperations = OPERATORS.entries.map { it.description }, canSetPattern = true)
+abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
+    ConditionType(matchOn, matchesOnResponse, availableOperations = OPERATORS.entries.map { it.description }, canSetPattern = true)
     {
     public enum class OPERATORS(val description: String) {
         EXACT_MATCH("Matches exactly"),
@@ -14,7 +14,7 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
         REGEX_MATCH("Matches Regex"),
     }
 
-    protected fun stringMatches(configuration: ConditionConfig, value: String): Boolean {
+    protected fun stringMatches(configuration: ConditionConfig, value: String, negativeMatch: Boolean = configuration.negativeMatch): Boolean {
         val match = when (configuration.operation) {
             OPERATORS.STARTS_WITH.description -> {
                 value.lowercase().startsWith(configuration.pattern.get().lowercase())
@@ -33,7 +33,7 @@ abstract class StringConditionType(matchOn: String, needsResponse: Boolean):
             }
             else -> throw IllegalArgumentException("Unknown operation: ${configuration.operation}")
         }
-       return match xor configuration.negativeMatch
+       return match xor negativeMatch
     }
 
     override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> {

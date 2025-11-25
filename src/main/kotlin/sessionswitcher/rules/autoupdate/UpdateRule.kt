@@ -1,6 +1,8 @@
 package sessionswitcher.rules.autoupdate
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
+import burp.api.montoya.proxy.http.InterceptedRequest
+import burp.api.montoya.proxy.http.InterceptedResponse
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.rules.conditions.MatchInfo
 import sessionswitcher.sessions.Session
@@ -15,18 +17,54 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
 
     public val id = generateId()
 
-    fun matches(httpRequestResponse: ProxyHttpRequestResponse): Boolean {
-        TODO()
+    fun needsResponse(): Boolean {
+        return config.updateSource == UpdateConfig.UPDATE_SOURCE.RESPONSE || conditions.any{ it.type.matchesOnResponse }
     }
 
-    fun updateIfMatch(httpRequestResponse: ProxyHttpRequestResponse) {
-        // TODO: DELETE EXPIRED COOKIES WHEN UPDATING FROM RESPONSE
-        TODO()
+    fun matchesRequest(httpRequest: InterceptedRequest): Boolean {
+        if (needsResponse()) return false
+        val m = MatchInfo()
+        return conditions.all { it.matchesRequest(httpRequest, m) }
     }
 
-    fun update(httpRequestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo) {
-        // TODO: DELETE EXPIRED COOKIES WHEN UPDATING FROM RESPONSE
-        TODO()
+    fun matchesResponse(httpResponse: InterceptedResponse): Boolean {
+        val m = MatchInfo()
+        return conditions.all {
+            if (it.type.matchesOnResponse) {
+                it.matchesResponse(httpResponse, m)
+            } else {
+                it.matchesRequest(httpResponse.request(), m)
+            }
+
+        }
+    }
+
+    fun updateIfRequestMatches(httpRequest: InterceptedRequest): Boolean {
+        if (this.matchesRequest(httpRequest)) {
+            when (config.updateSource) {
+                UpdateConfig.UPDATE_SOURCE.REQUEST -> this.updateFromRequest(httpRequest)
+                UpdateConfig.UPDATE_SOURCE.RESPONSE -> TODO("Not yet implemented")
+            }
+            return true
+        }
+        return false
+    }
+
+    fun updateIfResponseMatches(httpResponse: InterceptedResponse): Boolean {
+        if (this.matchesResponse(httpResponse)) {
+            when (config.updateSource) {
+                UpdateConfig.UPDATE_SOURCE.REQUEST -> this.updateFromRequest(httpResponse.request())
+                UpdateConfig.UPDATE_SOURCE.RESPONSE -> TODO("Not yet implemented")
+            }
+            return true
+        }
+        return false
+    }
+
+    private fun updateFromRequest(httpRequest: HttpRequest) {
+        if (this.config.updateSource != UpdateConfig.UPDATE_SOURCE.REQUEST) throw Exception("updateFromRequest called on a rule that doesn't update from request")
+        this.session.updateFromRequest(httpRequest, config.cookiesUpdateMode, config.headersUpdateMode)
+        this.session.setLastUpdateReason(Session.LAST_UPDATE_TYPE.UPDATE_RULE, this.id)
     }
 
     public fun copy(): UpdateRule {

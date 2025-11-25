@@ -1,6 +1,7 @@
 package sessionswitcher.rules.conditions
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
+import burp.api.montoya.http.message.responses.HttpResponse
 import sessionswitcher.rules.conditions.types.*
 import java.util.*
 
@@ -31,14 +32,17 @@ class Condition private constructor(public val type: ConditionType, public val c
             FileExtensionConditionType,
             ResponseHeaderConditionType,
             StatusCodeConditionType,
-            ResponseBodyConditionType,
-            ListenerPortConditionType
+            ResponseBodyConditionType
         )
     }
 
     // Main function called during evaluation
-    fun matches(requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
-        return this.type.matches(this.configuration, requestResponse, matchInfo)
+    fun matchesRequest(request: HttpRequest, matchInfo: MatchInfo): Boolean {
+        return this.type.matchesRequest(this.configuration, request, matchInfo)
+    }
+
+    fun matchesResponse(response: HttpResponse, matchInfo: MatchInfo): Boolean {
+        return this.type.matchesResponse(this.configuration, response, matchInfo)
     }
 
     // Prints the Rule in text format for the logs and such

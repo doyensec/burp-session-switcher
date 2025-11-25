@@ -1,12 +1,12 @@
 package sessionswitcher.rules.conditions.types
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.responses.HttpResponse
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.MatchInfo
 
 object StatusCodeConditionType :
-    StringConditionType(matchOn = "Response Status Code", needsResponse = true) {
-    override fun matches(configuration: ConditionConfig, requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
-        return this.stringMatches(configuration, requestResponse.originalResponse().statusCode().toString())
+    StringConditionType(matchOn = "Response Status Code", matchesOnResponse = true) {
+    override fun matchesResponse(configuration: ConditionConfig, response: HttpResponse, matchInfo: MatchInfo): Boolean {
+        return this.stringMatches(configuration, response.statusCode().toString())
     }
 }

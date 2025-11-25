@@ -1,22 +1,23 @@
 package sessionswitcher.rules.conditions.types
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.MatchInfo
 
 object QueryStringConditionType :
-    StringConditionType(matchOn = "Request Parameter", needsResponse = false) {
-    override fun matches(
+    StringConditionType(matchOn = "Request Parameter", matchesOnResponse = false) {
+    override fun matchesRequest(
         configuration: ConditionConfig,
-        requestResponse: ProxyHttpRequestResponse,
+        request: HttpRequest,
         matchInfo: MatchInfo
     ): Boolean {
-        val queryString = requestResponse.request().query()
+        request.parameters()
+        val queryString = request.query()
         val parameters = queryString.split("&")
         return if (configuration.negativeMatch) {
-            parameters.none { this.stringMatches(configuration, it) }
+            parameters.none { this.stringMatches(configuration, it, false) }
         } else {
-            parameters.any { this.stringMatches(configuration, it) }
+            parameters.any { this.stringMatches(configuration, it, false) }
         }
     }
 

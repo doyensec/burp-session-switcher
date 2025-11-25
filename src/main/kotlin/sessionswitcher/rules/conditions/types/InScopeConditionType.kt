@@ -1,13 +1,13 @@
 package sessionswitcher.rules.conditions.types
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionType
 import sessionswitcher.rules.conditions.MatchInfo
 
-object InScopeConditionType: ConditionType(matchOn = "Scope", needsResponse = false, availableOperations = listOf("Request is in scope"), canSetPattern = false) {
-    override fun matches(configuration: ConditionConfig, requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
-        return requestResponse.request().isInScope xor configuration.negativeMatch
+object InScopeConditionType: ConditionType(matchOn = "Scope", matchesOnResponse = false, availableOperations = listOf("Request is in scope"), canSetPattern = false) {
+    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+        return request.isInScope xor configuration.negativeMatch
     }
     override fun  validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> = Pair(true, "")
 

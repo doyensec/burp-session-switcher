@@ -1,17 +1,17 @@
 package sessionswitcher.rules.conditions.types
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.MatchInfo
 
 object RequestHeaderConditionType :
-    StringConditionType(matchOn = "Request Header", needsResponse = false) {
-    override fun matches(configuration: ConditionConfig, requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
-        val headers = requestResponse.request().headers().map { it.toString() }
+    StringConditionType(matchOn = "Request Header", matchesOnResponse = false) {
+    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+        val headers = request.headers().map { it.toString() }
         return if (configuration.negativeMatch) {
-            headers.none { this.stringMatches(configuration, it) }
+            headers.none { this.stringMatches(configuration, it, false) }
         } else {
-            headers.any { this.stringMatches(configuration, it) }
+            headers.any { this.stringMatches(configuration, it, false) }
         }
     }
 

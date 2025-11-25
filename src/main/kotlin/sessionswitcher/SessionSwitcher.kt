@@ -5,6 +5,7 @@ import kotlinx.coroutines.runBlocking
 import sessionswitcher.handlers.SessionInjectorHandler
 import sessionswitcher.handlers.SessionUpdaterHandler
 import sessionswitcher.requesteditor.RequestEditor
+import sessionswitcher.rules.autoupdate.AutoUpdateProxyListener
 import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
@@ -55,6 +56,9 @@ class SessionSwitcher private constructor(
     val settings = Settings(this.settingsProvider)
     var mainSuiteTab: MainSuiteTab? = null
 
+    // Proxy Listeners
+    val autoUpdateProxyListener: AutoUpdateProxyListener
+
     init {
         montoyaApi.logging().raiseInfoEvent("Session Switcher v${SessionSwitcherExtension.VERSION} Started")
 
@@ -78,6 +82,11 @@ class SessionSwitcher private constructor(
         if (settings.registerInjectorHandler.get()) {
             montoyaApi.http().registerSessionHandlingAction(SessionInjectorHandler(this))
         }
+
+        // Register proxy listeners
+        autoUpdateProxyListener = AutoUpdateProxyListener(this)
+        montoyaApi.proxy().registerRequestHandler(autoUpdateProxyListener)
+        montoyaApi.proxy().registerResponseHandler(autoUpdateProxyListener)
 
         // Reload data from the project file
         this.sessions.loadFromProjectFile()

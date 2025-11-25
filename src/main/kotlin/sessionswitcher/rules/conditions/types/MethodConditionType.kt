@@ -1,12 +1,12 @@
 package sessionswitcher.rules.conditions.types
 
-import burp.api.montoya.proxy.ProxyHttpRequestResponse
+import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.MatchInfo
 
 object MethodConditionType :
-    StringConditionType(matchOn = "Request Method", needsResponse = false) {
-    override fun matches(configuration: ConditionConfig, requestResponse: ProxyHttpRequestResponse, matchInfo: MatchInfo): Boolean {
-        return this.stringMatches(configuration, requestResponse.request().method())
+    StringConditionType(matchOn = "Request Method", matchesOnResponse = false) {
+    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+        return this.stringMatches(configuration, request.method())
     }
 }
