@@ -43,6 +43,13 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
         if (!availableOperations.contains(configuration.operation)) {
             return Pair(false, "Unknown operation! Send bug report.")
         }
+        if (configuration.operation == OPERATORS.REGEX_MATCH.description) {
+            try {
+                Regex(configuration.pattern.get())
+            } catch (e: Exception) {
+                return Pair(false, e.message?: "Invalid Regex")
+            }
+        }
         return Pair(true, "")
     }
 
