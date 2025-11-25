@@ -42,10 +42,15 @@ fun HttpRequest.withHeaders(newHeaders: Map<String, String>): Triple<HttpRequest
     Replaces Cookies in HTTP Request
  */
 fun HttpRequest.withCookies(cookies: Cookies): HttpRequest {
-    val headerName = if (this.httpVersion() == "HTTP/2") "cookie" else "Cookie"
-    val insertIndex = this.headers().indexOfFirst { it.name() == headerName }
+    var headerName = "Cookie"
+    var insertIndex = this.headers().indexOfFirst { it.name() == headerName }
+
+    if (insertIndex == -1) headerName = headerName.lowercase() // Try "cookie"
+    insertIndex = this.headers().indexOfFirst { it.name() == headerName }
+
     if (insertIndex == -1) {
-        return this.withAddedHeader(headerName, cookies.toString())
+        // Still not found, add a new header
+        return this.withAddedHeader("Cookie", cookies.toString())
     } else {
         var outputReq = this.withRemovedHeader(headerName)
         val headersList = outputReq.headers().toMutableList()
@@ -79,7 +84,7 @@ fun HttpRequest.mergedHeaders(): List<HttpHeader> {
 }
 fun HttpRequest.headersMap(): Map<String, String> {
     val map = mutableMapOf<String, String>()
-    this.mergedHeaders().forEach { map.put(it.name().lowercase(), it.value()) }
+    this.mergedHeaders().forEach { map[it.name().lowercase()] = it.value() }
     return map
 }
 
