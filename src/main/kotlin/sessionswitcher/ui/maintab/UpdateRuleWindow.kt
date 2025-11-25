@@ -5,6 +5,8 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.autoupdate.UpdateConfig
 import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.rules.conditions.Condition
+import sessionswitcher.sessions.CookiesUpdateMode
+import sessionswitcher.sessions.HeadersUpdateMode
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.maintab.tables.ConditionsTableModel
@@ -34,14 +36,14 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     val sessionSelector = JComboBox<String>()
 
     // Combo box valid options
-    private val REQUEST_COOKIES_UPDATE_OPTIONS = UpdateConfig.COOKIES_UPDATE_MODE.entries.toTypedArray()
-    private val RESPONSE_COOKIES_UPDATE_OPTIONS = UpdateConfig.COOKIES_UPDATE_MODE.entries.filterNot { it == UpdateConfig.COOKIES_UPDATE_MODE.REPLACE_ALL }.toTypedArray()
-    private val HEADERS_UPDATE_OPTIONS = UpdateConfig.HEADERS_UPDATE_MODE.entries.toTypedArray()
+    private val REQUEST_COOKIES_UPDATE_OPTIONS = CookiesUpdateMode.entries.toTypedArray()
+    private val RESPONSE_COOKIES_UPDATE_OPTIONS = CookiesUpdateMode.entries.filterNot { it == CookiesUpdateMode.MIRROR }.toTypedArray()
+    private val HEADERS_UPDATE_OPTIONS = HeadersUpdateMode.entries.toTypedArray()
     private val UPDATE_SOURCE_OPTIONS = UpdateConfig.UPDATE_SOURCE.entries.filterNot { it == UpdateConfig.UPDATE_SOURCE.RESPONSE }.toTypedArray() // Disable response parsing for now
 
     val updateSourceSelector = JComboBox<UpdateConfig.UPDATE_SOURCE>(UPDATE_SOURCE_OPTIONS)
-    val cookieModeSelector = JComboBox<UpdateConfig.COOKIES_UPDATE_MODE>(REQUEST_COOKIES_UPDATE_OPTIONS)
-    val headersModeSelector = JComboBox<UpdateConfig.HEADERS_UPDATE_MODE>(HEADERS_UPDATE_OPTIONS)
+    val cookieModeSelector = JComboBox<CookiesUpdateMode>(REQUEST_COOKIES_UPDATE_OPTIONS)
+    val headersModeSelector = JComboBox<HeadersUpdateMode>(HEADERS_UPDATE_OPTIONS)
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
@@ -100,8 +102,8 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
 
         val config = UpdateConfig.make(
             updateSourceSelector.selectedItem as UpdateConfig.UPDATE_SOURCE,
-            cookieModeSelector.selectedItem as UpdateConfig.COOKIES_UPDATE_MODE,
-            headersModeSelector.selectedItem as UpdateConfig.HEADERS_UPDATE_MODE,
+            cookieModeSelector.selectedItem as CookiesUpdateMode,
+            headersModeSelector.selectedItem as HeadersUpdateMode,
         )
 
         return UpdateRule(this.conditions.toTypedArray(), session, config)

@@ -1,18 +1,20 @@
 package sessionswitcher.rules.autoupdate
 
+import sessionswitcher.sessions.CookiesUpdateMode
+import sessionswitcher.sessions.HeadersUpdateMode
 import java.util.*
 
-class UpdateConfig private constructor(val updateSource: UPDATE_SOURCE, val cookiesUpdateMode: COOKIES_UPDATE_MODE, val headersUpdateMode: HEADERS_UPDATE_MODE, val cookiesToUpdate: Set<String> = emptySet(), val headersToUpdate: Set<String> = emptySet(), ) {
+class UpdateConfig private constructor(val updateSource: UPDATE_SOURCE, val cookiesUpdateMode: CookiesUpdateMode, val headersUpdateMode: HeadersUpdateMode, val cookiesToUpdate: Set<String> = emptySet(), val headersToUpdate: Set<String> = emptySet(), ) {
     companion object {
-        public fun make(updateSource: UPDATE_SOURCE, cookiesUpdateMode: COOKIES_UPDATE_MODE, headersUpdateMode: HEADERS_UPDATE_MODE, cookiesToUpdate: Set<String> = emptySet(), headersToUpdate: Set<String> = emptySet()): UpdateConfig {
-            if (updateSource == UPDATE_SOURCE.RESPONSE && cookiesUpdateMode == COOKIES_UPDATE_MODE.REPLACE_ALL) {
-                throw IllegalArgumentException("Cannot use REPLACE_ALL cookie update mode when updating from a response")
+        public fun make(updateSource: UPDATE_SOURCE, cookiesUpdateMode: CookiesUpdateMode, headersUpdateMode: HeadersUpdateMode, cookiesToUpdate: Set<String> = emptySet(), headersToUpdate: Set<String> = emptySet()): UpdateConfig {
+            if (updateSource == UPDATE_SOURCE.RESPONSE && cookiesUpdateMode == CookiesUpdateMode.MIRROR) {
+                throw IllegalArgumentException("Cannot use MIRROR cookie update mode when updating from a response")
             }
             return UpdateConfig(updateSource, cookiesUpdateMode, headersUpdateMode, cookiesToUpdate, headersToUpdate)
         }
 
         public fun make(updateSource: String, cookiesUpdateMode: String, headersUpdateMode: String, cookiesToUpdate: Set<String> = emptySet(), headersToUpdate: Set<String> = emptySet()): UpdateConfig {
-            return this.make(UPDATE_SOURCE.valueOf(updateSource.uppercase()), COOKIES_UPDATE_MODE.valueOf(cookiesUpdateMode.uppercase()), HEADERS_UPDATE_MODE.valueOf(headersUpdateMode.uppercase()), cookiesToUpdate, headersToUpdate)
+            return this.make(UPDATE_SOURCE.valueOf(updateSource.uppercase()), CookiesUpdateMode.valueOf(cookiesUpdateMode.uppercase()), HeadersUpdateMode.valueOf(headersUpdateMode.uppercase()), cookiesToUpdate, headersToUpdate)
         }
     }
 
@@ -25,28 +27,6 @@ class UpdateConfig private constructor(val updateSource: UPDATE_SOURCE, val cook
     enum class UPDATE_SOURCE(val description: String) {
         REQUEST("Request"),
         RESPONSE("Response");
-
-        override fun toString(): String {
-            return this.description
-        }
-    }
-
-    enum class COOKIES_UPDATE_MODE(val description: String) {
-        REPLACE_ALL("Replace all"),         // Replace the whole cookie set with the request's ones. Useful when updating from **Requests** to match the browser's cookies. (Default for requests)
-        UPDATE_ALL("Update all"),           // Update all the cookies and add new ones (but keep old cookies too unless expired) (Default for Set-Cookie responses?)
-        UPDATE_EXISTING("Update existing"), // Only update the values of cookies already stored in the session
-        //UPDATE_SOME("Update some"),         // Update a specific list of cookies specified in a different param
-        NO_UPDATE("Don't update");          // Do nothing
-
-        override fun toString(): String {
-            return this.description
-        }
-    }
-
-    enum class HEADERS_UPDATE_MODE(val description: String) {
-        UPDATE_EXISTING("Update existing"),   // Only update the values of headers already stored in the session
-        //UPDATE_SOME("Update some"),           // Update a specific list of headers specified in a different param
-        NO_UPDATE("Don't update");            // Do nothing
 
         override fun toString(): String {
             return this.description
