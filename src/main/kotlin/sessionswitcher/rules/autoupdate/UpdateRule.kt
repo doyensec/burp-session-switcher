@@ -1,26 +1,51 @@
 package sessionswitcher.rules.autoupdate
 
 import burp.api.montoya.http.message.requests.HttpRequest
+import burp.api.montoya.persistence.PersistedList
 import burp.api.montoya.persistence.PersistedObject
 import burp.api.montoya.proxy.http.InterceptedRequest
 import burp.api.montoya.proxy.http.InterceptedResponse
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.rules.conditions.MatchInfo
 import sessionswitcher.savestate.CanSaveData
+import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.sessions.Session
+import java.util.*
 
-class UpdateRule(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig) : CanSaveData {
+class UpdateRule private constructor(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig, val ruleId: Int, private val saveStateId: UUID) : CanSaveData {
     companion object {
         private var currentId = 1;
         private fun generateId(): Int {
             return currentId++
         }
+
+        val Deserializer = object: DeserializerFactory<UpdateRule>() {
+            override fun deserializeObject(obj: PersistedObject): UpdateRule {
+                val saveStateId = UUID.fromString(obj.getString("id"))
+                val ruleId = obj.getInteger("ruleId")
+
+                val sessionName = obj.getString("session")
+                val session = SessionSwitcher.getInstance().sessions.getSession(sessionName)
+                    ?: throw Exception("Cannot find session with name $sessionName")
+
+                val configKey = obj.getString("config")
+                val config = UpdateConfig.Deserializer.deserialize(configKey)
+                    ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
+
+                val conditionsList = obj.getStringList("conditions")
+
+                val conditions: ArrayList<Condition> = ArrayList<Condition>()
+                conditionsList.forEach { Condition.Deserializer.deserialize(it)?.let { e -> conditions.add(e) } }
+                return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
+            }
+        }
     }
 
-    public val id = generateId()
+    constructor(conditions: Array<Condition>, session: Session, config: UpdateConfig, ruleId: Int = generateId()): this(conditions, session, config, ruleId, UUID.randomUUID())
 
     fun needsResponse(): Boolean {
-        return config.updateSource == UpdateConfig.UPDATE_SOURCE.RESPONSE || conditions.any{ it.type.matchesOnResponse }
+        return config.updateSource == UpdateConfig.UpdateSource.RESPONSE || conditions.any{ it.typeInstance.matchesOnResponse }
     }
 
     fun matchesRequest(httpRequest: InterceptedRequest): Boolean {
@@ -32,7 +57,7 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
     fun matchesResponse(httpResponse: InterceptedResponse): Boolean {
         val m = MatchInfo()
         return conditions.all {
-            if (it.type.matchesOnResponse) {
+            if (it.typeInstance.matchesOnResponse) {
                 it.matchesResponse(httpResponse, m)
             } else {
                 it.matchesRequest(httpResponse.request(), m)
@@ -44,8 +69,8 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
     fun updateIfRequestMatches(httpRequest: InterceptedRequest): Boolean {
         if (this.matchesRequest(httpRequest)) {
             when (config.updateSource) {
-                UpdateConfig.UPDATE_SOURCE.REQUEST -> this.updateFromRequest(httpRequest)
-                UpdateConfig.UPDATE_SOURCE.RESPONSE -> TODO("Not yet implemented")
+                UpdateConfig.UpdateSource.REQUEST -> this.updateFromRequest(httpRequest)
+                UpdateConfig.UpdateSource.RESPONSE -> TODO("Not yet implemented")
             }
             return true
         }
@@ -55,8 +80,8 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
     fun updateIfResponseMatches(httpResponse: InterceptedResponse): Boolean {
         if (this.matchesResponse(httpResponse)) {
             when (config.updateSource) {
-                UpdateConfig.UPDATE_SOURCE.REQUEST -> this.updateFromRequest(httpResponse.request())
-                UpdateConfig.UPDATE_SOURCE.RESPONSE -> TODO("Not yet implemented")
+                UpdateConfig.UpdateSource.REQUEST -> this.updateFromRequest(httpResponse.request())
+                UpdateConfig.UpdateSource.RESPONSE -> TODO("Not yet implemented")
             }
             return true
         }
@@ -64,9 +89,9 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
     }
 
     private fun updateFromRequest(httpRequest: HttpRequest) {
-        if (this.config.updateSource != UpdateConfig.UPDATE_SOURCE.REQUEST) throw Exception("updateFromRequest called on a rule that doesn't update from request")
+        if (this.config.updateSource != UpdateConfig.UpdateSource.REQUEST) throw Exception("updateFromRequest called on a rule that doesn't update from request")
         this.session.updateFromRequest(httpRequest, config.cookiesUpdateMode, config.headersUpdateMode)
-        this.session.setLastUpdateReason(Session.LAST_UPDATE_TYPE.UPDATE_RULE, this.id)
+        this.session.setLastUpdateReason(Session.LAST_UPDATE_TYPE.UPDATE_RULE, this.ruleId)
     }
 
     public fun copy(): UpdateRule {
@@ -74,11 +99,31 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
     }
 
     override val saveStateKey: String
-        get() = "UpdateRule.$id"
+        get() = "UpdateRule.$saveStateId"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
+        return arrayListOf(*conditions, config)
+    }
 
     override fun burpSerialize(): PersistedObject {
-        TODO("Not yet implemented")
+        val obj = PersistedObject.persistedObject()
+
+        val saveStateId = this.saveStateId.toString()
+        obj.setString("id", saveStateId)
+
+        val ruleId = this.ruleId
+        obj.setInteger("ruleId", ruleId)
+
+        val session = session.name
+        obj.setString("session", session)
+
+        val updateConfig = config.saveStateKey
+        obj.setString("config", updateConfig)
+
+        val conditionsList = PersistedList.persistedStringList()
+        conditionsList.addAll(conditions.map { it.saveStateKey })
+        obj.setStringList("conditions", conditionsList)
+
+        return obj
     }
 }

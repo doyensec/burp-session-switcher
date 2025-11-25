@@ -1,10 +1,10 @@
 package sessionswitcher.rules.conditions.types
 
 import sessionswitcher.rules.conditions.ConditionConfig
-import sessionswitcher.rules.conditions.ConditionType
+import sessionswitcher.rules.conditions.ConditionTypeInstance
 
 abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
-    ConditionType(matchOn, matchesOnResponse, availableOperations = OPERATORS.entries.map { it.description }, canSetPattern = true)
+    ConditionTypeInstance(matchOn, matchesOnResponse, availableOperations = OPERATORS.entries.map { it.description }, canSetPattern = true)
     {
     public enum class OPERATORS(val description: String) {
         EXACT_MATCH("Matches exactly"),

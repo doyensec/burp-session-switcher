@@ -3,7 +3,7 @@ package sessionswitcher.rules.conditions
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
 
-abstract class ConditionType(val matchOn: String, val matchesOnResponse: Boolean, val availableOperations: List<String>, val canSetPattern: Boolean) {
+abstract class ConditionTypeInstance(val matchOn: String, val matchesOnResponse: Boolean, val availableOperations: List<String>, val canSetPattern: Boolean) {
     // Main functions called during evaluation
 
     open fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {

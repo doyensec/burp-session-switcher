@@ -151,13 +151,24 @@ interface CanSaveAndLoadData : CanSaveData, CanLoadData
 
 // This Factory-Deserializer class allows to create a Kotlin object from the deserialization
 // of data from the project file, instead of creating the object first and then loading data into it
-abstract class DeserializerFactory<T>(val key: String) : CanLoadData {
-    protected var deserialized: T? = null
-    fun get(): T? {
-        this.loadFromProjectFile()
-        return deserialized
+abstract class DeserializerFactory<T> {
+    fun deserialize(id: String): T? {
+        val deserializer = object: CanLoadData {
+            var deserialized: T? = null
+            override val saveStateKey: String
+                get() = id
+
+            override fun burpDeserialize(obj: PersistedObject) {
+                this.deserialized = deserializeObject(obj)
+            }
+
+            fun deserialize(): T? {
+                this.loadFromProjectFile()
+                return this.deserialized
+            }
+        }
+        return deserializer.deserialize()
     }
 
-    override val saveStateKey: String
-        get() = this.key
+    protected abstract fun deserializeObject(obj: PersistedObject): T?
 }

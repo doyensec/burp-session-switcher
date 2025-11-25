@@ -30,9 +30,9 @@ class AutoUpdateProxyListener(private val sessipnSwitcher: SessionSwitcher): Pro
     override fun handleRequestReceived(interceptedRequest: InterceptedRequest): ProxyRequestReceivedAction {
         coroutineScope.launch {
             tasks.send {
-                for (rule in sessipnSwitcher.updateRules.filter { !it.needsResponse() }) {
+                for (rule in sessipnSwitcher.updateRulesCollection.getRequestMatchingRules()) {
                     if (rule.updateIfRequestMatches(interceptedRequest)) {
-                        Logger.info("Request ${interceptedRequest.messageId()} with URL ${interceptedRequest.url()} matched rule ${rule.id}")
+                        Logger.info("Request ${interceptedRequest.messageId()} with URL ${interceptedRequest.url()} matched rule ${rule.ruleId}")
                         if (stopAtFirstMatch) return@send
                     }
                 }
@@ -48,9 +48,9 @@ class AutoUpdateProxyListener(private val sessipnSwitcher: SessionSwitcher): Pro
     override fun handleResponseReceived(interceptedResponse: InterceptedResponse): ProxyResponseReceivedAction {
         coroutineScope.launch {
             tasks.send {
-                for (rule in sessipnSwitcher.updateRules.filter { it.needsResponse() }) {
+                for (rule in sessipnSwitcher.updateRulesCollection.getResponseMatchingRules()) {
                     if (rule.updateIfResponseMatches(interceptedResponse)) {
-                        Logger.info("Response ${interceptedResponse.messageId()} with URL ${interceptedResponse.request().url()} matched rule ${rule.id}")
+                        Logger.info("Response ${interceptedResponse.messageId()} with URL ${interceptedResponse.request().url()} matched rule ${rule.ruleId}")
                         if (stopAtFirstMatch) return@send
                     }
                 }

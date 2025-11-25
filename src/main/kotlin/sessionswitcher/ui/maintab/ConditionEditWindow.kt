@@ -2,8 +2,9 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
+import sessionswitcher.rules.conditions.Condition.ConditionType
 import sessionswitcher.rules.conditions.ConditionConfig
-import sessionswitcher.rules.conditions.ConditionType
+import sessionswitcher.rules.conditions.ConditionTypeInstance
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
 import java.awt.*
@@ -23,7 +24,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     val cancelButton = JButton("Cancel")
 
     // Condition selection
-    val conditionTypesSelector = JComboBox<ConditionType>(Condition.AVAILABLE_TYPES)
+    val conditionTypesSelector = JComboBox<ConditionTypeInstance>(Condition.ConditionType.instances)
     val operationSelector = JComboBox<String>()
     val patternTextBox =  JTextField().also {
         it.isEnabled = false
@@ -32,8 +33,8 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     val negativeMatchCheckBox = JCheckBox("Negative match")
     val validationMessageLabel = JLabel("")
 
-    val selectedConditionType: ConditionType get() {
-        return conditionTypesSelector.selectedItem as ConditionType
+    val selectedConditionType: ConditionTypeInstance get() {
+        return conditionTypesSelector.selectedItem as ConditionTypeInstance
     }
 
     val configuration: ConditionConfig get() {
@@ -54,7 +55,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     public fun showDialog(): Optional<Condition> {
         this.isVisible = true
         return if (this.shouldSave) {
-            Optional.of(Condition.make(this.selectedConditionType, this.configuration))
+            Optional.of(Condition.make(ConditionType.fromInstance(this.selectedConditionType), this.configuration))
         } else {
             Optional.empty()
         }
@@ -62,7 +63,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
     private fun loadInitialCondition() {
         if (this.initialCondition.isPresent) {
-            this.conditionTypesSelector.selectedItem = this.initialCondition.get().type
+            this.conditionTypesSelector.selectedItem = this.initialCondition.get().typeInstance
             this.operationSelector.selectedItem = this.initialCondition.get().configuration.operation
             this.patternTextBox.text = this.initialCondition.get().configuration.pattern.orElse("")
             this.negativeMatchCheckBox.isSelected = this.initialCondition.get().configuration.negativeMatch

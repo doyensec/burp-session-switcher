@@ -33,12 +33,13 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
     fun deleteSession(key: String) {
         if (this.sessions.containsKey(key)) {
             val session = this.sessions[key] ?: return
-            this.sessions.remove(key)
-            // Remove rules that reference this session
-            val updateRules = this.sessionSwitcher.updateRules
-            updateRules.filter { it.session == session }.forEach { updateRules.remove(it) }
 
-            this.sessions[key]?.deleteFromProjectFileAsync()
+            // Remove rules that reference this session
+            this.sessionSwitcher.updateRulesCollection.deleteRulesForSession(session)
+
+            // Delete session
+            this.sessions.remove(key)
+            this.deleteChildObject(session)
         }
     }
 
@@ -90,7 +91,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
         val sessionsList = obj.getStringList("SavedSessions") ?: return
 
         for (sessionId in sessionsList) {
-            val p = Session.Deserializer(sessionId).get() ?: continue
+            val p = Session.Deserializer.deserialize(sessionId) ?: continue
             this.sessions[p.name] = p
         }
     }

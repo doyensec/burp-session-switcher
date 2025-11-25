@@ -1,9 +1,12 @@
 package sessionswitcher.rules.autoupdate
 
+import burp.api.montoya.persistence.PersistedList
 import burp.api.montoya.persistence.PersistedObject
+import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
+import sessionswitcher.sessions.Session
 
 class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAndLoadData {
     val updateRules = ArrayList<UpdateRule>()
@@ -12,12 +15,29 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSa
         return updateRules
     }
 
+    fun getRequestMatchingRules(): List<UpdateRule> {
+        return updateRules.filterNot { it.needsResponse() }
+    }
+    fun getResponseMatchingRules(): List<UpdateRule> {
+        return updateRules.filter { it.needsResponse() }
+    }
+
+    fun indexOf(rule: UpdateRule): Int {
+        return updateRules.indexOf(rule)
+    }
+
     fun getRuleWithId(id: Int): UpdateRule? {
-        return updateRules.find { it.id == id }
+        return updateRules.find { it.ruleId == id }
     }
 
     fun addRule(rule: UpdateRule) {
         updateRules.add(rule)
+        this.updateChildObjectAsync(rule)
+    }
+
+    fun addRule(index: Int, rule: UpdateRule) {
+        updateRules.add(index, rule)
+        this.updateChildObjectAsync(rule)
     }
 
     fun deleteRule(id: Int) {
@@ -27,6 +47,15 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSa
 
     fun deleteRule(rule: UpdateRule) {
         updateRules.remove(rule)
+        this.deleteChildObject(rule)
+    }
+
+    fun deleteRulesForSession(session: Session) {
+        updateRules.filter { it.session == session }.forEach { deleteRule(it) }
+    }
+
+    fun deleteRulesForSession(session: String) {
+        updateRules.filter { it.session.name == session }.forEach { deleteRule(it) }
     }
 
     fun duplicateRule(id: Int) {
@@ -42,10 +71,22 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSa
     }
 
     override fun burpSerialize(): PersistedObject {
-        TODO("Not yet implemented")
+        val obj = PersistedObject.persistedObject()
+        val rules = PersistedList.persistedStringList()
+        obj.setStringList("rules", rules)
+        return obj
     }
 
     override fun burpDeserialize(obj: PersistedObject) {
-        TODO("Not yet implemented")
+        val rules = obj.getStringList("rules") ?: return
+        for (ruleKey in rules) {
+            try {
+                val rule = UpdateRule.Deserializer.deserialize(ruleKey) ?: continue
+                this.updateRules.add(rule)
+            } catch (e: Exception) {
+                Logger.error("Failed deserializing rule: $ruleKey")
+                continue
+            }
+        }
     }
 }

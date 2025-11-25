@@ -26,7 +26,7 @@ class ConditionsTableModel(private val conditions: ArrayList<Condition>): Abstra
     override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? {
         val condition = conditions[rowIndex]
         return when (columnIndex) {
-            0 -> condition.type.toString()
+            0 -> condition.typeInstance.toString()
             1 -> condition.configuration.operation
             2 -> condition.configuration.pattern.orElse("")
             3 -> if (condition.configuration.negativeMatch) "Yes" else "No"

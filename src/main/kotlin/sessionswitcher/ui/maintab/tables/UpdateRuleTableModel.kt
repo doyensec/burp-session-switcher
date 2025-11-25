@@ -27,7 +27,7 @@ class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>): AbstractTa
         val rule = rules[rowIndex]
         val conditionsDescription = rule.conditions.joinToString(", ") { it.describe() }
         return when (columnIndex) {
-            0 -> rule.id.toString()
+            0 -> rule.ruleId.toString()
             1 -> conditionsDescription
             2 -> rule.session.name
             else -> "N/A"

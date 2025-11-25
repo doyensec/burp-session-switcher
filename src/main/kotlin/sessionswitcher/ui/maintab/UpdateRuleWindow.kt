@@ -39,9 +39,9 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     private val REQUEST_COOKIES_UPDATE_OPTIONS = CookiesUpdateMode.entries.toTypedArray()
     private val RESPONSE_COOKIES_UPDATE_OPTIONS = CookiesUpdateMode.entries.filterNot { it == CookiesUpdateMode.MIRROR }.toTypedArray()
     private val HEADERS_UPDATE_OPTIONS = HeadersUpdateMode.entries.toTypedArray()
-    private val UPDATE_SOURCE_OPTIONS = UpdateConfig.UPDATE_SOURCE.entries.filterNot { it == UpdateConfig.UPDATE_SOURCE.RESPONSE }.toTypedArray() // Disable response parsing for now
+    private val UPDATE_SOURCE_OPTIONS = UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }.toTypedArray() // Disable response parsing for now
 
-    val updateSourceSelector = JComboBox<UpdateConfig.UPDATE_SOURCE>(UPDATE_SOURCE_OPTIONS)
+    val updateSourceSelector = JComboBox<UpdateConfig.UpdateSource>(UPDATE_SOURCE_OPTIONS)
     val cookieModeSelector = JComboBox<CookiesUpdateMode>(REQUEST_COOKIES_UPDATE_OPTIONS)
     val headersModeSelector = JComboBox<HeadersUpdateMode>(HEADERS_UPDATE_OPTIONS)
 
@@ -101,12 +101,16 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
             ?: throw IllegalStateException("Session with name $sessionName not found")
 
         val config = UpdateConfig.make(
-            updateSourceSelector.selectedItem as UpdateConfig.UPDATE_SOURCE,
+            updateSourceSelector.selectedItem as UpdateConfig.UpdateSource,
             cookieModeSelector.selectedItem as CookiesUpdateMode,
             headersModeSelector.selectedItem as HeadersUpdateMode,
         )
 
-        return UpdateRule(this.conditions.toTypedArray(), session, config)
+        return if (initialUpdateRule.isPresent) {
+            UpdateRule(this.conditions.toTypedArray(), session, config, initialUpdateRule.get().ruleId)
+        } else {
+            UpdateRule(this.conditions.toTypedArray(), session, config)
+        }
     }
 
     public fun showDialog(): Optional<UpdateRule> {

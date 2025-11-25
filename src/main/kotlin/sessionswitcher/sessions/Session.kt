@@ -15,6 +15,38 @@ import java.util.*
 
 class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
+        val Deserializer = object: DeserializerFactory<Session>() {
+            override fun deserializeObject(obj: PersistedObject): Session {
+                // Basic data
+                val session = Session(obj.getString("name"), obj.getString("id"))
+                session.host = obj.getString("host")
+
+                // Cookies
+                session.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
+
+                // Headers
+                val headersLst = obj.getChildObjectList("headers")
+                if (headersLst != null) {
+                    for (headerObj in headersLst) {
+                        session.headers[headerObj.getString("k")] = headerObj.getString("v")
+                    }
+                }
+
+                // Last update info
+                if (obj.getLong("lastUpdatedAt") != null) {
+                    session.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
+                    session.lastUpdatedBy = LAST_UPDATE_TYPE.entries[obj.getInteger("lastUpdatedFrom")]
+                    val lastUpdatedRuleId = obj.getInteger("lastUpdatedRuleId")
+                    if (lastUpdatedRuleId != null && lastUpdatedRuleId != -1) {
+                        session.lastUpdatedRuleId = lastUpdatedRuleId
+                    } else {
+                        session.lastUpdatedRuleId = null
+                    }
+                }
+                return session
+            }
+        }
+
         val EXCLUDED_HEADER_PREFIXES = setOf<String>(
             // Keep these lowercase
             ":", // HTTP2 headers
@@ -91,6 +123,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
         if (reason != LAST_UPDATE_TYPE.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
         this.lastUpdatedBy = reason
         this.lastUpdatedRuleId = ruleId
+        this.saveToProjectFileAsync()
     }
 
     override fun toString(): String {
@@ -220,39 +253,6 @@ class Session private constructor(val name: String, private val id: String) : Ca
     /*
     Project saving stuff
      */
-
-    class Deserializer(key: String) : DeserializerFactory<Session>(key) {
-        override fun burpDeserialize(obj: PersistedObject) {
-            // Basic data
-            val p = Session(obj.getString("name"), obj.getString("id"))
-            p.host = obj.getString("host")
-
-            // Cookies
-            p.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
-
-            // Headers
-            val headersLst = obj.getChildObjectList("headers")
-            if (headersLst != null) {
-                for (headerObj in headersLst) {
-                    p.headers[headerObj.getString("k")] = headerObj.getString("v")
-                }
-            }
-
-            // Last update info
-            if (obj.getLong("lastUpdatedAt") != null) {
-                p.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
-                p.lastUpdatedBy = LAST_UPDATE_TYPE.entries[obj.getInteger("lastUpdatedFrom")]
-                val lastUpdatedRuleId = obj.getInteger("lastUpdatedRuleId")
-                if (lastUpdatedRuleId != null && lastUpdatedRuleId != -1) {
-                    p.lastUpdatedRuleId = lastUpdatedRuleId
-                } else {
-                    p.lastUpdatedRuleId = null
-                }
-            }
-
-            this.deserialized = p
-        }
-    }
 
     override val saveStateKey: String
         get() = "Session.$id"

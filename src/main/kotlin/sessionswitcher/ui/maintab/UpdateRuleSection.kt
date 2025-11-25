@@ -14,7 +14,7 @@ object UpdateRuleSection {
 
     public fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRules))
+        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules))
         tableSection.refreshTable()
         tableSection.setNewButtonCallback(this::newButtonCallback)
         tableSection.setEditButtonCallback(this::editButtonCallback)
@@ -29,7 +29,7 @@ object UpdateRuleSection {
         if (item.isEmpty) {
             Logger.warning("Delete button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
         }
-        this.sessionSwitcher.updateRules.remove(item.get())
+        this.sessionSwitcher.updateRulesCollection.deleteRule(item.get())
         tableSection.refreshTable()
     }
 
@@ -38,7 +38,7 @@ object UpdateRuleSection {
         if (item.isEmpty) {
             Logger.warning("Duplicate button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
         }
-        this.sessionSwitcher.updateRules.add(item.get().copy())
+        this.sessionSwitcher.updateRulesCollection.addRule(item.get().copy())
         tableSection.refreshTable()
     }
 
@@ -49,16 +49,16 @@ object UpdateRuleSection {
         }
         val newRule = UpdateRuleWindow(sessionSwitcher, oldRule).showDialog()
         if (newRule.isEmpty) return
-        val oldIndex = sessionSwitcher.updateRules.indexOf(oldRule.get())
-        sessionSwitcher.updateRules.remove(oldRule.get())
-        sessionSwitcher.updateRules.add(oldIndex, newRule.get())
+        val oldIndex = sessionSwitcher.updateRulesCollection.indexOf(oldRule.get())
+        sessionSwitcher.updateRulesCollection.deleteRule(oldRule.get())
+        sessionSwitcher.updateRulesCollection.addRule(oldIndex, newRule.get())
         tableSection.refreshTable()
     }
 
     private fun newButtonCallback() {
         val ruleOptional = UpdateRuleWindow(sessionSwitcher, Optional.empty<UpdateRule>()).showDialog()
         if (ruleOptional.isEmpty) return
-        sessionSwitcher.updateRules.add(ruleOptional.get())
+        sessionSwitcher.updateRulesCollection.addRule(ruleOptional.get())
         tableSection.refreshTable()
     }
 }
