@@ -1,11 +1,12 @@
 package sessionswitcher.sessions
 
 import burp.api.montoya.persistence.PersistedObject
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.getSaveStateKeys
 
-class SessionCollection: CanSaveAndLoadData {
+class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAndLoadData {
     private val sessions = LinkedHashMap<String, Session>()
 
     val size get() = this.sessions.size
@@ -31,7 +32,12 @@ class SessionCollection: CanSaveAndLoadData {
 
     fun deleteSession(key: String) {
         if (this.sessions.containsKey(key)) {
+            val session = this.sessions[key] ?: return
             this.sessions.remove(key)
+            // Remove rules that reference this session
+            val updateRules = this.sessionSwitcher.updateRules
+            updateRules.filter { it.session == session }.forEach { updateRules.remove(it) }
+
             this.sessions[key]?.deleteFromProjectFileAsync()
         }
     }

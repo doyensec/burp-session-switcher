@@ -49,7 +49,7 @@ class SessionSwitcher private constructor(
     }
 
     // Core Data
-    val sessions = SessionCollection()
+    val sessions = SessionCollection(this)
     val updateRules = ArrayList<UpdateRule>()
 
     // UI stuff

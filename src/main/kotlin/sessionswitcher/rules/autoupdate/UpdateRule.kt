@@ -1,13 +1,15 @@
 package sessionswitcher.rules.autoupdate
 
 import burp.api.montoya.http.message.requests.HttpRequest
+import burp.api.montoya.persistence.PersistedObject
 import burp.api.montoya.proxy.http.InterceptedRequest
 import burp.api.montoya.proxy.http.InterceptedResponse
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.rules.conditions.MatchInfo
+import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.sessions.Session
 
-class UpdateRule(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig) {
+class UpdateRule(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig) : CanSaveData {
     companion object {
         private var currentId = 1;
         private fun generateId(): Int {
@@ -69,5 +71,14 @@ class UpdateRule(val conditions: Array<Condition>, val session: Session, val con
 
     public fun copy(): UpdateRule {
         return UpdateRule(conditions.map { it.copy() }.toTypedArray(), session, config.copy())
+    }
+
+    override val saveStateKey: String
+        get() = "UpdateRule.$id"
+
+    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+
+    override fun burpSerialize(): PersistedObject {
+        TODO("Not yet implemented")
     }
 }
