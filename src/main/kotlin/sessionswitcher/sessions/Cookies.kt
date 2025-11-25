@@ -86,11 +86,13 @@ class Cookies() {
     }
 
     fun replace(other: Cookies): Pair<List<String>, List<String>> {
-        val keysBefore = this.cookies.keys
+        val keysBefore = this.cookies.keys.toTypedArray()
         val diff = this.update(other)
-        val updatedKeys = diff.first
-        // Remove other keys
-        keysBefore.filter { !updatedKeys.contains(it) }.forEach { this.cookies.remove(it) }
+
+        // Remove old cookies that are not in the new cookies
+        keysBefore.filter { other.get(it) == null }.forEach {
+            this.cookies.remove(it)
+        }
         return diff
     }
 
