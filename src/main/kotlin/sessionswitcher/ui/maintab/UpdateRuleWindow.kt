@@ -36,14 +36,17 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     val sessionSelector = JComboBox<String>()
 
     // Combo box valid options
-    private val REQUEST_COOKIES_UPDATE_OPTIONS = CookiesUpdateMode.entries.toTypedArray()
-    private val RESPONSE_COOKIES_UPDATE_OPTIONS = CookiesUpdateMode.entries.filterNot { it == CookiesUpdateMode.MIRROR }.toTypedArray()
-    private val HEADERS_UPDATE_OPTIONS = HeadersUpdateMode.entries.toTypedArray()
-    private val UPDATE_SOURCE_OPTIONS = UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }.toTypedArray() // Disable response parsing for now
+    private val requestCookiesUpdateOptions = CookiesUpdateMode.entries.toTypedArray()
+    private val responseCookiesUpdateOptions = CookiesUpdateMode.entries.filterNot { it == CookiesUpdateMode.MIRROR }.toTypedArray()
+    private val defaultRequestCookieUpdateOption = CookiesUpdateMode.MIRROR
+    private val defaultResponseCookieUpdateOption = CookiesUpdateMode.ADD_ALL
+    private val headersUpdateOptions = HeadersUpdateMode.entries.toTypedArray()
+    private val defaultHeadersUpdateOption = HeadersUpdateMode.UPDATE_EXISTING
+    private val updateSourceOptions = UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }.toTypedArray() // Disable response parsing for now
 
-    val updateSourceSelector = JComboBox<UpdateConfig.UpdateSource>(UPDATE_SOURCE_OPTIONS)
-    val cookieModeSelector = JComboBox<CookiesUpdateMode>(REQUEST_COOKIES_UPDATE_OPTIONS)
-    val headersModeSelector = JComboBox<HeadersUpdateMode>(HEADERS_UPDATE_OPTIONS)
+    val updateSourceSelector = JComboBox<UpdateConfig.UpdateSource>(updateSourceOptions)
+    val cookieModeSelector = JComboBox<CookiesUpdateMode>(requestCookiesUpdateOptions)
+    val headersModeSelector = JComboBox<HeadersUpdateMode>(headersUpdateOptions)
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
@@ -241,12 +244,20 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
                 cookieModeSelector.removeAllItems()
                 if (selectedItem == "Request") {
                     cookieModeSelector.removeAllItems()
-                    REQUEST_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieModeSelector.addItem(item) }
+                    requestCookiesUpdateOptions.forEach { item -> cookieModeSelector.addItem(item) }
+                    cookieModeSelector.selectedItem = defaultRequestCookieUpdateOption
+                    headersModeSelector.selectedItem = defaultHeadersUpdateOption
+                    headersModeSelector.isEnabled = true
                 } else {
-                    RESPONSE_COOKIES_UPDATE_OPTIONS.forEach { item -> cookieModeSelector.addItem(item) }
+                    responseCookiesUpdateOptions.forEach { item -> cookieModeSelector.addItem(item) }
+                    cookieModeSelector.selectedItem = defaultResponseCookieUpdateOption
+                    headersModeSelector.isEnabled = false
                 }
             }
         }
+
+        cookieModeSelector.selectedItem = defaultRequestCookieUpdateOption
+        headersModeSelector.selectedItem = defaultHeadersUpdateOption
 
         val updateConfigSection = UISection("Update Options", null, updateOptionsSection())
 
