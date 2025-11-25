@@ -2,8 +2,8 @@ package sessionswitcher.settings
 
 import burp.api.montoya.core.HighlightColor
 import sessionswitcher.Logger
-import sessionswitcher.sessions.CookiesUpdateMode
 import sessionswitcher.sessions.CookiesInjectMode
+import sessionswitcher.sessions.CookiesUpdateMode
 import sessionswitcher.sessions.HeadersUpdateMode
 
 class Settings(val provider: SettingsProvider) {
@@ -38,7 +38,7 @@ class Settings(val provider: SettingsProvider) {
 
     /* Editor Settings */
     val editorShowRequestBody = BooleanSetting(provider, "editor.show_request_body", "Show the body in the request editor", true)
-    val editorShowHeadersMode = EnumSetting(provider, "editor.hide_headers_mode", "Hide headers in the request editor:", HideHeadersMode::class.java, HideHeadersMode.HIDE_COMMON)
+    val editorHideHeadersMode = EnumSetting(provider, "editor.hide_headers_mode", "Hide headers in the request editor:", HideHeadersMode::class.java, HideHeadersMode.HIDE_COMMON)
     val filterSessionMode = EnumSetting(provider, "sessions.switcher_filter_mode", "In the Session menu, show only requests matching:", FilterSessionMode::class.java, FilterSessionMode.BY_DOMAIN)
     val editorDoNotAskOverwriteConfirmation = BooleanSetting(provider, "editor.no_confirm_overwrite", "Do not ask confirmation when updating a Session", false)
 

@@ -10,7 +10,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
         val requestEditorSection = UISection(
             "Request Editor",
             "Settings related to the Request Editor UI",
-            settings.editorShowHeadersMode.drawComboBox(true),
+            settings.editorHideHeadersMode.drawComboBox(true),
             Box.createVerticalStrut(6),
             settings.editorShowRequestBody.drawCheckbox(),
             Box.createVerticalStrut(6),

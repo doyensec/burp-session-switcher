@@ -89,7 +89,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         // Add first line of request as normal text
         this.appendText(requestLines[0] + "\n")
 
-        val hideHeadersMode = settings.editorShowHeadersMode.get()
+        val hideHeadersMode = settings.editorHideHeadersMode.get()
         val showRequestBody = settings.editorShowRequestBody.get()
 
         var cookiesProcessed = false
@@ -126,7 +126,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
                 this.appendText("$headerName: $headerValue", addedElementStyle)
             } else if (
                     hideHeadersMode == Settings.HideHeadersMode.SHOW_ALL ||
-                    (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && isCommonHeader)
+                    (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && !isCommonHeader)
                     ) {
                 this.appendText("$headerName: $headerValue")
                 Logger.debug("Header noop: $headerName")
