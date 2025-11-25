@@ -3,6 +3,7 @@ package sessionswitcher.sessions
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
@@ -100,7 +101,11 @@ class Session private constructor(val name: String, private val id: String) : Ca
         return this.host
     }
 
-    fun apply(r: HttpRequest, keepOtherCookies: Boolean = true): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
+    fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
+        return apply(r, SessionSwitcher.getInstance().settings.cookiesInjectMode.get())
+    }
+
+    fun apply(r: HttpRequest, cookiesInjectMode: CookiesInjectMode): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.debug("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withHeaders(this.headers)
 
@@ -111,11 +116,15 @@ class Session private constructor(val name: String, private val id: String) : Ca
             val reqCookies = Cookies.fromHttpRequest(r)
             Logger.debug("Cookies in the Request: $reqCookies")
 
-            val cookieDiffPair = if (keepOtherCookies) {
-                reqCookies.update(this.cookies)
-            } else {
-                reqCookies.replace(this.cookies)
+            Logger.debug("Cookies Inject Mode: $cookiesInjectMode")
+            val cookieDiffPair = when (cookiesInjectMode) {
+                CookiesInjectMode.MIRROR -> reqCookies.replace(this.cookies)
+                CookiesInjectMode.ADD_ALL -> reqCookies.update(this.cookies, onlyUpdateExisting = false)
+                CookiesInjectMode.UPDATE_EXISTING -> reqCookies.update(this.cookies, onlyUpdateExisting = true)
+                CookiesInjectMode.NOOP -> Pair(listOf(), listOf())
             }
+
+            Logger.debug("Cookies in the output: $reqCookies")
 
             updatedCookies = cookieDiffPair.first
             addedCookies = cookieDiffPair.second
@@ -130,55 +139,62 @@ class Session private constructor(val name: String, private val id: String) : Ca
      */
     fun loadFromRequest(r: HttpRequest) {
         this.host = r.host()
-
-        // Headers
-        val reqHeaders = r.mergedHeaders()
-        val custom = reqHeaders
-            .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
-        Logger.debug("Saving headers into session: $custom")
-        this.headers.clear()
-        this.headers.putAll(custom.map { Pair(it.name().lowercase(), it.value()) })
-
-        // Cookies
-        this.cookies = Cookies.fromHttpRequest(r)
-
-        // Set last update info
-        this.lastUpdatedAt = Instant.now()
-        this.lastUpdatedBy = LAST_UPDATE_TYPE.MANUAL_REQUEST
-
-        Logger.debug("Saving cookies into session: ${this.cookies}")
+        this.updateFromRequest(r, CookiesUpdateMode.MIRROR, HeadersUpdateMode.MIRROR)
         this.saveToProjectFileAsync()
     }
 
     /*
     Updates stored info from a request.
-     onlyUpdateExistingHeaders: do not add new headers not present in the request
-     onlyUpdateExistingCookies: do not add new cookies not present in the request
      */
-    fun updateFromRequest(r: HttpRequest, onlyUpdateExistingHeaders: Boolean = true, onlyUpdateExistingCookies: Boolean = true) {
-        Logger.debug("Updating session from request")
-        // Update headers
-        for (header in r.mergedHeaders()) {
-            val headerName = header.name().lowercase()
-            Logger.debug("Processing header $headerName")
-            if (this.headers.containsKey(headerName)) {
-                if (this.headers[headerName] != header.value()) {
-                    // Update existing header if value is different
-                    Logger.debug("Updating header in session ${this.name}: $headerName: ${this.headers[headerName]} -> ${header.value()}")
-                    this.headers[headerName] = header.value()
+
+    private fun updateHeaders(r: HttpRequest, headersUpdateMode: HeadersUpdateMode) {
+        if (headersUpdateMode == HeadersUpdateMode.NOOP) return
+
+        if (headersUpdateMode == HeadersUpdateMode.MIRROR || headersUpdateMode == HeadersUpdateMode.ADD_ALL) {
+            // If it's MIRROR mode, just clear all the saved headers
+            if (headersUpdateMode == HeadersUpdateMode.MIRROR) this.headers.clear()
+
+            // Filter useless headers
+            val filtered = r.mergedHeaders()
+                .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
+
+            // Add the filtered headers
+            this.headers.putAll(filtered.map { Pair(it.name().lowercase(), it.value()) })
+        } else if (headersUpdateMode == HeadersUpdateMode.UPDATE_EXISTING) {
+            for (header in r.mergedHeaders()) {
+                val headerName = header.name().lowercase()
+                Logger.debug("Processing header $headerName")
+                if (this.headers.containsKey(headerName)) {
+                    if (this.headers[headerName] != header.value()) {
+                        // Update existing header if value is different
+                        Logger.debug("Updating header in session ${this.name}: $headerName: ${this.headers[headerName]} -> ${header.value()}")
+                        this.headers[headerName] = header.value()
+                    }
                 }
-            } else if (!onlyUpdateExistingHeaders && !EXCLUDED_HEADER_PREFIXES.any { h -> headerName.startsWith(h) }) {
-                // If new header, filter out common headers
-                Logger.debug("Adding new header to session ${this.name}: $headerName: ${header.value()}")
-                this.headers[headerName] = header.value()
             }
         }
+    }
 
-        // Update cookies
-        val newCookies = Cookies.fromHttpRequest(r)
-        this.cookies.update(newCookies, onlyUpdateExistingCookies)
+    private fun updateCookies(r: HttpRequest, cookiesUpdateMode: CookiesUpdateMode) {
+        when (cookiesUpdateMode) {
+            CookiesUpdateMode.MIRROR -> {
+                this.cookies = Cookies.fromHttpRequest(r)
+            }
+            CookiesUpdateMode.ADD_ALL -> {
+                this.cookies.update(Cookies.fromHttpRequest(r), onlyUpdateExisting = false)
+            }
+            CookiesUpdateMode.UPDATE_EXISTING -> {
+                this.cookies.update(Cookies.fromHttpRequest(r), onlyUpdateExisting = true)
+            }
+            CookiesUpdateMode.NOOP -> return
+        }
+    }
 
-        // Set last update info
+    fun updateFromRequest(r: HttpRequest, cookiesUpdateMode: CookiesUpdateMode, headersUpdateMode: HeadersUpdateMode) {
+        Logger.debug("Updating session from request")
+        this.updateHeaders(r, headersUpdateMode)
+        this.updateCookies(r, cookiesUpdateMode)
+
         this.lastUpdatedAt = Instant.now()
         this.lastUpdatedBy = LAST_UPDATE_TYPE.MANUAL_REQUEST
 

@@ -2,6 +2,9 @@ package sessionswitcher.settings
 
 import burp.api.montoya.core.HighlightColor
 import sessionswitcher.Logger
+import sessionswitcher.sessions.CookiesUpdateMode
+import sessionswitcher.sessions.CookiesInjectMode
+import sessionswitcher.sessions.HeadersUpdateMode
 
 class Settings(val provider: SettingsProvider) {
 
@@ -38,9 +41,11 @@ class Settings(val provider: SettingsProvider) {
     val editorShowHeadersMode = EnumSetting(provider, "editor.hide_headers_mode", "Hide headers in the request editor:", HideHeadersMode::class.java, HideHeadersMode.HIDE_COMMON)
     val filterSessionMode = EnumSetting(provider, "sessions.switcher_filter_mode", "In the Session menu, show only requests matching:", FilterSessionMode::class.java, FilterSessionMode.BY_DOMAIN)
     val editorDoNotAskOverwriteConfirmation = BooleanSetting(provider, "editor.no_confirm_overwrite", "Do not ask confirmation when updating a Session", false)
-    val removeOtherCookies = BooleanSetting(provider, "session.remove_other_cookies", "Remove from the request the cookies that are not in the Session", false)
-    val updateOnlyExistingHeaders = BooleanSetting(provider, "updater.only_update_existing_headers", "Update only the headers that already in the Session", true)
-    val updateOnlyExistingCookies = BooleanSetting(provider, "updater.only_update_existing_cookies", "Update only the cookies that already in the Session", true)
+
+    val cookiesUpdateMode = EnumSetting(provider, "editor.cookies_update_mode", "When updating cookies from a request:", CookiesUpdateMode::class.java, CookiesUpdateMode.MIRROR)
+    val headersUpdateMode = EnumSetting(provider, "editor.headers_update_mode", "When updating headers from a request:", HeadersUpdateMode::class.java, HeadersUpdateMode.UPDATE_EXISTING)
+
+    val cookiesInjectMode = EnumSetting(provider, "editor.cookies_inject_mode", "When injecting cookies in a request:", CookiesInjectMode::class.java, CookiesInjectMode.ADD_ALL)
 
     /* Auto Update Rules */
     val stopAtFirstUpdateRule = BooleanSetting(provider, "auto_updater.stop_at_first_match", "Stop after the first matching rule", true)

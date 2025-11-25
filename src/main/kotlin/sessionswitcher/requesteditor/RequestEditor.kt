@@ -68,7 +68,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             this.editedLabel.text = ""
             if (s != null) {
                 Logger.info("Session is ${s.name}")
-                val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, !settings.removeOtherCookies.get())
+                val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, settings.cookiesInjectMode.get())
                 this.httpRequest = req
                 this.editor.setRequest(req, headersDiffInfo, cookiesDiffInfo)
                 this.originalRequestModified = true
@@ -182,8 +182,8 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         val settings = this.sessionSwitcher.settings
         session.updateFromRequest(
             req,
-            settings.updateOnlyExistingHeaders.get(),
-            settings.updateOnlyExistingCookies.get()
+            settings.cookiesUpdateMode.get(),
+            settings.headersUpdateMode.get()
         )
 
         // Apply the new session and refresh the list for good measure

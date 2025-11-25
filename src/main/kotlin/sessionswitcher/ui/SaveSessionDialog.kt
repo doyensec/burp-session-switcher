@@ -72,8 +72,8 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
         val settings = this.sessionSwitcher.settings
         session.updateFromRequest(
             httpRequest,
-            settings.updateOnlyExistingHeaders.get(),
-            settings.updateOnlyExistingCookies.get()
+            settings.cookiesUpdateMode.get(),
+            settings.headersUpdateMode.get()
         )
 
         // TODO: trigger global session list update?

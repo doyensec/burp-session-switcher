@@ -16,22 +16,15 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             Box.createVerticalStrut(6),
             settings.filterSessionMode.drawComboBox(true),
             Box.createVerticalStrut(6),
-            settings.editorDoNotAskOverwriteConfirmation.drawCheckbox()
-        )
-
-        val sessionInjectionSection = UISection(
-            "Session Injection Settings",
-            "When you inject a Session into a request...",
-            settings.removeOtherCookies.drawCheckbox()
-        )
-
-        val sessionUpdateSection = UISection(
-            "Session Update Settings",
-            "When you update a Session from a request...",
-            settings.updateOnlyExistingHeaders.drawCheckbox(),
+            settings.editorDoNotAskOverwriteConfirmation.drawCheckbox(),
             Box.createVerticalStrut(6),
-            settings.updateOnlyExistingCookies.drawCheckbox()
-        )
+            settings.cookiesUpdateMode.drawComboBox(true),
+            Box.createVerticalStrut(6),
+            settings.headersUpdateMode.drawComboBox(true),
+            Box.createVerticalStrut(6),
+            settings.cookiesInjectMode.drawComboBox(true),
+            Box.createVerticalStrut(6),
+            )
 
         /*
         val autoInjectorSections = UISection(
@@ -58,10 +51,6 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
         val panel = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(requestEditorSection)
-            it.add(JSeparator(JSeparator.HORIZONTAL))
-            it.add(sessionInjectionSection)
-            it.add(JSeparator(JSeparator.HORIZONTAL))
-            it.add(sessionUpdateSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             //it.add(autoInjectorSections)
             it.add(autoUpdateSections)
