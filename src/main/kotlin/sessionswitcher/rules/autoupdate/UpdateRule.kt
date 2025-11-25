@@ -12,6 +12,7 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.sessions.Session
 import java.util.*
+import kotlin.math.max
 
 class UpdateRule private constructor(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig, val ruleId: Int, private val saveStateId: UUID) : CanSaveData {
     companion object {
@@ -19,30 +20,14 @@ class UpdateRule private constructor(val conditions: Array<Condition>, val sessi
         private fun generateId(): Int {
             return currentId++
         }
-
-        val Deserializer = object: DeserializerFactory<UpdateRule>() {
-            override fun deserializeObject(obj: PersistedObject): UpdateRule {
-                val saveStateId = UUID.fromString(obj.getString("id"))
-                val ruleId = obj.getInteger("ruleId")
-
-                val sessionName = obj.getString("session")
-                val session = SessionSwitcher.getInstance().sessions.getSession(sessionName)
-                    ?: throw Exception("Cannot find session with name $sessionName")
-
-                val configKey = obj.getString("config")
-                val config = UpdateConfig.Deserializer.deserialize(configKey)
-                    ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
-
-                val conditionsList = obj.getStringList("conditions")
-
-                val conditions: ArrayList<Condition> = ArrayList<Condition>()
-                conditionsList.forEach { Condition.Deserializer.deserialize(it)?.let { e -> conditions.add(e) } }
-                return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
-            }
-        }
     }
 
     constructor(conditions: Array<Condition>, session: Session, config: UpdateConfig, ruleId: Int = generateId()): this(conditions, session, config, ruleId, UUID.randomUUID())
+
+    init {
+        // Update the stored ID counter in case the ID was set externally
+        currentId = max(currentId, ruleId + 1)
+    }
 
     fun needsResponse(): Boolean {
         return config.updateSource == UpdateConfig.UpdateSource.RESPONSE || conditions.any{ it.typeInstance.matchesOnResponse }
@@ -125,5 +110,26 @@ class UpdateRule private constructor(val conditions: Array<Condition>, val sessi
         obj.setStringList("conditions", conditionsList)
 
         return obj
+    }
+
+    class Deserializer(val sessionSwitcher: SessionSwitcher): DeserializerFactory<UpdateRule>() {
+        override fun deserializeObject(obj: PersistedObject): UpdateRule {
+            val saveStateId = UUID.fromString(obj.getString("id"))
+            val ruleId = obj.getInteger("ruleId")
+
+            val sessionName = obj.getString("session")
+            val session = sessionSwitcher.sessions.getSession(sessionName)
+                ?: throw Exception("Cannot find session with name $sessionName")
+
+            val configKey = obj.getString("config")
+            val config = UpdateConfig.Deserializer.deserialize(configKey)
+                ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
+
+            val conditionsList = obj.getStringList("conditions")
+
+            val conditions: ArrayList<Condition> = ArrayList<Condition>()
+            conditionsList.forEach { Condition.Deserializer.deserialize(it)?.let { e -> conditions.add(e) } }
+            return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
+        }
     }
 }

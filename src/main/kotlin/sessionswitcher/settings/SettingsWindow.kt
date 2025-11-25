@@ -1,5 +1,6 @@
 package sessionswitcher.settings
 
+import sessionswitcher.SessionSwitcher
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.Window
 import javax.swing.*
@@ -47,6 +48,30 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             settings.loggingLevel.drawComboBox(true),
         )
 
+        val deleteSessionsButton = JButton("Delete All Sessions From Project File").also {
+            it.addActionListener {
+                val data = SessionSwitcher.getApi().persistence().extensionData()
+                data.childObjectKeys().filter { s -> s.startsWith("Session.")}.forEach { s -> data.deleteChildObject(s) }
+                data.deleteChildObject("SessionCollection")
+                }
+            }
+
+        val deleteUpdateRulesButton = JButton("Delete All Update Rules").also {
+            it.addActionListener {
+                val data = SessionSwitcher.getApi().persistence().extensionData()
+                data.childObjectKeys().filter { s -> s.startsWith("UpdateRule.")}.forEach { s -> data.deleteChildObject(s) }
+                data.deleteChildObject("UpdateRulesCollection")
+            }
+        }
+
+        val resetButtonsPanel = UISection(
+            "Project data",
+            "Use these buttons to reset the project data in case of issues.",
+            deleteSessionsButton,
+            Box.createVerticalStrut(6),
+            deleteUpdateRulesButton
+            )
+
         // Build the main window
         val panel = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
@@ -57,6 +82,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(loggingLevelSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
+            it.add(resetButtonsPanel)
         }
 
         val scrollable = JScrollPane(panel)

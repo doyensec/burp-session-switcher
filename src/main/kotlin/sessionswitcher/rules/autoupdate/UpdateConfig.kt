@@ -61,7 +61,7 @@ class UpdateConfig private constructor(val updateSource: UpdateSource, val cooki
     }
 
     override val saveStateKey: String
-        get() = "UpdateRule.Condition.$saveStateId"
+        get() = "UpdateRule.Config.$saveStateId"
 
     override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
 
