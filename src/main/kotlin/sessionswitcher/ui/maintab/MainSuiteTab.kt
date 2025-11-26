@@ -4,8 +4,6 @@ import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.Label
-import sessionswitcher.ui.Table
-import sessionswitcher.ui.UISection
 import java.awt.BorderLayout
 import javax.swing.*
 
@@ -57,11 +55,6 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         val scrollPane = JScrollPane(padded)
         scrollPane.border = BorderFactory.createEmptyBorder()
         this.add(scrollPane)
-    }
-
-    private fun makeAutoInjectRulesSection(): JPanel {
-        val table = Table(arrayOf("Rules", "Inject Session"))
-        return UISection("AutoInject Rules", null, JLabel("Work in progress"), JLabel("Come back later :)"), null, table.withScrollPane())
     }
 
     fun focus() {

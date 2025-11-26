@@ -386,6 +386,14 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
     }
 }
 
+public fun JTable.withScrollPane(): JScrollPane {
+    val scrollPane = PDControlScrollPane(this)
+    val tableHeight = this.rowHeight * 15 // 15 rows high
+    scrollPane.preferredSize = Dimension(scrollPane.preferredSize.width, tableHeight)
+    this.fillsViewportHeight = true
+    return scrollPane
+}
+
 class Table(columns: Array<String>, editable: Boolean = false): JTable() {
     class TableModel(columns: Array<String>, val editable: Boolean = false): DefaultTableModel(emptyArray(), columns) {
         override fun isCellEditable(row: Int, column: Int): Boolean {
@@ -398,15 +406,6 @@ class Table(columns: Array<String>, editable: Boolean = false): JTable() {
         this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
         val headerRenderer = this.tableHeader.defaultRenderer as DefaultTableCellRenderer
         headerRenderer.horizontalAlignment = JLabel.LEFT
-    }
-
-    public fun withScrollPane(): JScrollPane {
-        val scrollPane = PDControlScrollPane(this)
-        val tableHeight = this.rowHeight * 15 // 15 rows high
-        scrollPane.preferredSize = Dimension(scrollPane.preferredSize.width, tableHeight)
-        this.fillsViewportHeight = true
-
-        return scrollPane
     }
 }
 

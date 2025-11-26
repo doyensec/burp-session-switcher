@@ -24,6 +24,7 @@ object SavedSessionsSection
         tableSection.setEditButtonCallback(this::editButtonCallback)
         tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
+        tableSection.table.autoCreateRowSorter = true
         return tableSection.getComponent()
     }
 

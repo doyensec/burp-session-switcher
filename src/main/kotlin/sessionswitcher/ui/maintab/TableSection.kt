@@ -1,21 +1,23 @@
 package sessionswitcher.ui.maintab
 
-import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.tables.ITableModel
+import sessionswitcher.ui.withScrollPane
 import java.awt.BorderLayout
 import java.util.*
 import javax.swing.*
 import javax.swing.event.ListSelectionEvent
+import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.TableModel
 import kotlin.math.min
 
 @Suppress("UNCHECKED_CAST")
 class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, showDeleteButtonIfSelected: Boolean = true, showDuplicateButtonIfSelected: Boolean = true, showRefreshButtonIfSelected: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
     // Table model
-    val table = Table(emptyArray()).also {
-        it.model = tableModel as TableModel?
+    val table = JTable(tableModel as TableModel).also {
+        it.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
         it.selectionModel.addListSelectionListener(this::tableSelectionListener)
+        (it.tableHeader.defaultRenderer as DefaultTableCellRenderer).horizontalAlignment = JLabel.LEFT
     }
 
     // UI elements
