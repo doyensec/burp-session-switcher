@@ -2,15 +2,11 @@ package sessionswitcher.requesteditor
 
 import burp.api.montoya.http.message.ContentType
 import burp.api.montoya.http.message.requests.HttpRequest
-import burp.api.montoya.ui.Theme
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Cookies
 import sessionswitcher.settings.Settings
 import sessionswitcher.utils.JsonPrettifier
-import java.awt.Color
-import javax.swing.text.SimpleAttributeSet
-import javax.swing.text.StyleConstants
 
 class DiffHighlightRequestEditor: StyledTextEditor() {
     companion object {
@@ -18,7 +14,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             return name.split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } }
         }
     }
-    val COMMON_HEADER_PREFIXES = setOf<String>(
+    val commonHeaderPrefixes = setOf<String>(
         "connection",
         "sec-",
         "user-agent",
@@ -32,20 +28,6 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         "warning"
     )
 
-    private val modifiedElementStyle = SimpleAttributeSet().also {
-        if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
-            StyleConstants.setForeground(it, Color.ORANGE)
-        } else {
-            StyleConstants.setForeground(it, Color.RED)
-        }
-    }
-    private val addedElementStyle = SimpleAttributeSet().also {
-        if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
-            StyleConstants.setForeground(it, Color.GREEN)
-        } else {
-            StyleConstants.setForeground(it, Color.GREEN)
-        }
-    }
     private fun appendCookieHeader(value: String, cookiesDiffInfo: Pair<List<String>, List<String>>) {
         // Preparation
         val modifiedCookies = cookiesDiffInfo.first.toSet()
@@ -56,18 +38,21 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             return
         }
 
-        this.appendText("Cookie:")
+        this.appendText("Cookie:", EditorColors.headerName.asAttributeSet())
         for (cookiePair in cookies) {
             this.appendText(" ")
             if (modifiedCookies.contains(cookiePair[0])) {
-                this.appendText("${cookiePair[0]}=")
-                this.appendText(cookiePair[1], modifiedElementStyle)
+                this.appendText(cookiePair[0], EditorColors.cookieName.asAttributeSet())
+                this.appendText("=")
+                this.appendText(cookiePair[1], EditorColors.updatedElement.asAttributeSet())
                 Logger.debug("Cookie modified: " + cookiePair[0])
             } else if (addedCookies.contains(cookiePair[0].lowercase())) {
-                this.appendText("${cookiePair[0]}=${cookiePair[1]}", addedElementStyle)
+                this.appendText("${cookiePair[0]}=${cookiePair[1]}", EditorColors.addedElement.asAttributeSet())
                 Logger.debug("Cookie added: " + cookiePair[0])
             } else {
-                this.appendText("${cookiePair[0]}=${cookiePair[1]}")
+                this.appendText(cookiePair[0], EditorColors.cookieName.asAttributeSet())
+                this.appendText("=")
+                this.appendText(cookiePair[1], EditorColors.cookieValue.asAttributeSet())
                 Logger.debug("Cookie noop: " + cookiePair[0])
             }
             this.appendText(";")
@@ -87,7 +72,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         this.clear()
 
         // Add first line of request as normal text
-        this.appendText(requestLines[0] + "\n")
+        this.appendText(requestLines[0] + "\n", EditorColors.headerName.asAttributeSet())
 
         val hideHeadersMode = settings.editorHideHeadersMode.get()
         val showRequestBody = settings.editorShowRequestBody.get()
@@ -98,11 +83,12 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         for (header in httpRequest.headers()) {
             val headerName = normalizeHeaderName(header.name()) // Train-Case
             val headerValue = header.value()
-            val isCommonHeader = COMMON_HEADER_PREFIXES.any { headerName.lowercase().startsWith(it) }
+            val isCommonHeader = commonHeaderPrefixes.any { headerName.lowercase().startsWith(it) }
 
             if (headerName == ":authority") {
                 // Turn HTTP/2 ":authority" header in "Host"
-                this.appendText("Host: $headerValue")
+                this.appendText("Host: ", EditorColors.headerName.asAttributeSet())
+                this.appendText("$headerValue")
             } else if (headerName.startsWith(":")) {
                 // Never show other HTTP/2 headers
                 continue
@@ -119,16 +105,17 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
                 }
             } else if (modifiedHeaders.contains(headerName.lowercase())) {
                 Logger.debug("Header modified: $headerName")
-                this.appendText("$headerName: ")
-                this.appendText(headerValue, modifiedElementStyle)
+                this.appendText("$headerName: ", EditorColors.headerName.asAttributeSet())
+                this.appendText(headerValue, EditorColors.updatedElement.asAttributeSet())
             } else if (addedHeaders.contains(headerName.lowercase())) {
                 Logger.debug("Header added: $headerName")
-                this.appendText("$headerName: $headerValue", addedElementStyle)
+                this.appendText("$headerName: $headerValue", EditorColors.addedElement.asAttributeSet())
             } else if (
                     hideHeadersMode == Settings.HideHeadersMode.SHOW_ALL ||
                     (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && !isCommonHeader)
                     ) {
-                this.appendText("$headerName: $headerValue")
+                this.appendText("$headerName: ", EditorColors.headerName.asAttributeSet())
+                this.appendText(headerValue)
                 Logger.debug("Header noop: $headerName")
             } else {
                 // If we got here, no text was appended, so let's continue to prevent a newline getting appended
