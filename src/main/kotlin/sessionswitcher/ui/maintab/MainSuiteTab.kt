@@ -24,7 +24,13 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         val title = Label("Sessions", bold = true, relativeSize = 12.0)
         topPanel.add(title, BorderLayout.LINE_START)
         // |- Settings button
-        val settingsButton = JButton("Settings")
+
+        val theme = sessionSwitcher.montoyaApi.userInterface().currentTheme()
+        val fullImage = ImageIcon(MainSuiteTab::class.java.getResource("/icons/${theme.name.lowercase()}/settings.png"))
+        val scaled = fullImage.image.getScaledInstance(24, 24, java.awt.Image.SCALE_SMOOTH)
+        val icon = ImageIcon(scaled)
+
+        val settingsButton = JButton(icon)
         settingsButton.addActionListener { SwingUtilities.invokeLater { settingsWindow.isVisible = true } }
         topPanel.add(settingsButton, BorderLayout.LINE_END)
         mainPanel.add(topPanel)
