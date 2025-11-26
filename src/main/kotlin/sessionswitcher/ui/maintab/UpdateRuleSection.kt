@@ -5,24 +5,14 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.ui.tables.UpdateRuleTableModel
 import java.util.*
+import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.event.ListSelectionEvent
 
 object UpdateRuleSection {
     // Table model
     private lateinit var sessionSwitcher: SessionSwitcher
     private lateinit var tableSection: TableSection<UpdateRule>
-
-    public fun make(sessionSwitcher: SessionSwitcher): JComponent {
-        this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules))
-        tableSection.refreshTable()
-        tableSection.setNewButtonCallback(this::newButtonCallback)
-        tableSection.setEditButtonCallback(this::editButtonCallback)
-        tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
-        tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
-        tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
-        return tableSection.getComponent()
-    }
 
     private fun deleteButtonCallback() {
         val item = tableSection.getSelected()
@@ -63,5 +53,84 @@ object UpdateRuleSection {
         if (ruleOptional.isEmpty) return
         sessionSwitcher.updateRulesCollection.addRule(ruleOptional.get())
         tableSection.refreshTable()
+    }
+
+    // Up and Down buttons
+    val upButton = JButton("Up").also {
+        it.isEnabled = false
+        it.addActionListener { upButtonCallback() }
+    }
+    val downButton = JButton("Down").also {
+        it.isEnabled = false
+        it.addActionListener { downButtonCallback() }
+    }
+
+    private fun selectionListener(e: ListSelectionEvent) {
+        if (e.valueIsAdjusting) return
+        val item = tableSection.getSelected()
+        val row = tableSection.table.selectedRow
+        when (row) {
+            -1 -> {
+                upButton.isEnabled = false
+                downButton.isEnabled = false
+            }
+            0 -> {
+                upButton.isEnabled = false
+                downButton.isEnabled = true
+            }
+            tableSection.table.rowCount - 1 -> {
+                upButton.isEnabled = true
+                downButton.isEnabled = false
+            }
+            else -> {
+                upButton.isEnabled = true
+                downButton.isEnabled = true
+            }
+        }
+    }
+
+    private fun upButtonCallback() {
+        val item = tableSection.getSelected()
+        if (item.isEmpty) {
+            Logger.warning("Up button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
+            return
+        }
+        val rules = sessionSwitcher.updateRulesCollection.updateRules
+        val index = rules.indexOf(item.get())
+        if (index == 0) return
+        val itemBefore = rules[index - 1]
+        rules[index - 1] = item.get()
+        rules[index] = itemBefore
+        tableSection.refreshTable()
+        sessionSwitcher.updateRulesCollection.saveToProjectFile(false)
+    }
+
+    private fun downButtonCallback() {
+        val item = tableSection.getSelected()
+        if (item.isEmpty) {
+            Logger.warning("Down button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
+            return
+        }
+        val rules = sessionSwitcher.updateRulesCollection.updateRules
+        val index = rules.indexOf(item.get())
+        if (index == rules.size - 1) return
+        val itemAfter = rules[index + 1]
+        rules[index + 1] = item.get()
+        rules[index] = itemAfter
+        tableSection.refreshTable()
+        sessionSwitcher.updateRulesCollection.saveToProjectFile(false)
+    }
+
+    public fun make(sessionSwitcher: SessionSwitcher): JComponent {
+        this.sessionSwitcher = sessionSwitcher
+        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules), otherButtons = arrayOf(upButton, downButton))
+        tableSection.refreshTable()
+        tableSection.setNewButtonCallback(this::newButtonCallback)
+        tableSection.setEditButtonCallback(this::editButtonCallback)
+        tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
+        tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
+        tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
+        tableSection.table.selectionModel.addListSelectionListener { this.selectionListener(it) }
+        return tableSection.getComponent()
     }
 }

@@ -11,7 +11,7 @@ import javax.swing.table.TableModel
 import kotlin.math.min
 
 @Suppress("UNCHECKED_CAST")
-class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, showDeleteButtonIfSelected: Boolean = true, showDuplicateButtonIfSelected: Boolean = true, showRefreshButtonIfSelected: Boolean = true) {
+class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, showDeleteButtonIfSelected: Boolean = true, showDuplicateButtonIfSelected: Boolean = true, showRefreshButtonIfSelected: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
     // Table model
     val table = Table(emptyArray()).also {
         it.model = tableModel as TableModel?
@@ -117,9 +117,13 @@ class TableSection<T>(public val title: String, public val description: String?,
                 it.add(JPanel(BorderLayout()).also{p-> p.add(refreshButton, BorderLayout.PAGE_START)})
                 it.add(Box.createVerticalStrut(5))
             }
+            for (button in otherButtons) {
+                it.add(JPanel(BorderLayout()).also{p-> p.add(button, BorderLayout.PAGE_START)})
+                it.add(Box.createVerticalStrut(5))
+            }
         }
 
-        if (showNewButton || showEditButton || showDeleteButton || showDuplicateButton || showRefreshButton) {
+        if (showNewButton || showEditButton || showDeleteButton || showDuplicateButton || showRefreshButton || otherButtons.isNotEmpty()) {
             // Add buttons panel only if there are buttons to show
             val middlePanel = JPanel(BorderLayout()).also {
                 it.add(buttonsPanel, BorderLayout.PAGE_START)
