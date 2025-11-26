@@ -1,19 +1,24 @@
 package sessionswitcher.ui
 
+import burp.api.montoya.ui.Theme
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.ui.maintab.TableSection
 import sessionswitcher.ui.tables.PairListTableModel
-import java.awt.Dimension
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
-import java.awt.Insets
+import java.awt.*
+import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.net.URI
 import java.net.URISyntaxException
 import java.util.*
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import javax.swing.table.DefaultTableCellRenderer
+import javax.swing.table.TableCellEditor
+import javax.swing.table.TableCellRenderer
 import kotlin.math.min
 
 class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private val initialSession: Optional<Session>) :
@@ -39,19 +44,21 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         "Headers",
         null,
         headerTableModel,
-        showRefreshButton = true,
-        showDeleteButton = true,
+        showRefreshButton = false,
+        showDeleteButton = false,
         showDuplicateButton = false,
-        showEditButton = false
+        showEditButton = false,
+        showNewButton = false
     )
     val cookieTableSection = TableSection(
         "Cookies",
         null,
         cookieTableModel,
-        showRefreshButton = true,
-        showDeleteButton = true,
+        showRefreshButton = false,
+        showDeleteButton = false,
         showDuplicateButton = false,
-        showEditButton = false
+        showEditButton = false,
+        showNewButton = false
     )
 
     private fun loadInitialSession() {
@@ -72,14 +79,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame().graphicsConfiguration.device.displayMode
 
         val reasonableHeight = min(this.preferredSize.height, screenSize.height - 50)
-        //this.preferredSize = Dimension(reasonableWidth, reasonableHeight)
-
-        // Set the maximum size of the frame to match its content
         this.maximumSize = Dimension(screenSize.width, reasonableHeight)
-
-        // Set the minimum size to something reasonable as well
-        //this.minimumSize = Dimension(this.minimumSize.width, 400)
-
         this.minimumSize = Dimension(680, 480)
         this.preferredSize = Dimension(1100, 550)
 
@@ -139,6 +139,19 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
         saveButton.isEnabled = false
 
+        // Set the renderer for the new row placeholder
+        headerTableSection.table.columnModel.getColumn(0).cellRenderer = NewRowCellRenderer()
+        cookieTableSection.table.columnModel.getColumn(0).cellRenderer = NewRowCellRenderer()
+        val theme = sessionSwitcher.montoyaApi.userInterface().currentTheme()
+        val headerTableDeleteButtonCell = DeleteButtonCell(headerTableSection.table, theme) { row -> headers.removeAt(row) }
+        val cookieTableDeleteButtonCell = DeleteButtonCell(cookieTableSection.table, theme) { row -> cookies.removeAt(row) }
+        headerTableSection.table.columnModel.getColumn(2).cellRenderer = headerTableDeleteButtonCell
+        cookieTableSection.table.columnModel.getColumn(2).cellRenderer = cookieTableDeleteButtonCell
+        headerTableSection.table.columnModel.getColumn(2).cellEditor = headerTableDeleteButtonCell
+        cookieTableSection.table.columnModel.getColumn(2).cellEditor = cookieTableDeleteButtonCell
+        headerTableSection.table.columnModel.getColumn(2).maxWidth = 50
+        cookieTableSection.table.columnModel.getColumn(2).maxWidth = 50
+
         val controls = arrayOf(
             Pair("Session Name:", nameField),
             Pair("Session Hostname:", hostField),
@@ -173,7 +186,6 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             // Next row
             index++
         }
-
 
         // Build the main window
         val panel = JPanel().also {
@@ -260,5 +272,100 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
     fun tableEditListener(row: Int, column: Int) {
         checkEnableSaveButton()
+    }
+
+    class NewRowCellRenderer: DefaultTableCellRenderer() {
+        override fun getTableCellRendererComponent(
+            table: JTable?,
+            value: Any?,
+            isSelected: Boolean,
+            hasFocus: Boolean,
+            row: Int,
+            column: Int
+        ): Component? {
+            val lastRow = (table?.rowCount?: 0) - 1
+            return if (row == lastRow && column == 0 && ((value == null) || (value == ""))) {
+                super.getTableCellRendererComponent(table, "(New)", isSelected, hasFocus, row, column)
+            } else {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
+            }
+        }
+    }
+
+    class DeleteButtonCell(val table: JTable, theme: Theme, val action: (Int) -> (Unit)): AbstractCellEditor(), TableCellEditor, TableCellRenderer, ActionListener, MouseListener {
+        companion object {
+            private fun getResizedIcon(path: String, w: Int, h: Int): ImageIcon {
+                val icon = ImageIcon(DeleteButtonCell::class.java.getResource(path))
+                val scaled = icon.image.getScaledInstance(w, h, java.awt.Image.SCALE_SMOOTH)
+                return ImageIcon(scaled)
+            }
+        }
+        val icon = getResizedIcon("/icons/${theme.name.lowercase()}/delete.png", 16, 16)
+        val renderButton: JButton = JButton(icon)
+        val editButton: JButton = JButton(icon)
+        var isButtonColumnEditor = false
+
+        init {
+            editButton.addActionListener(this)
+            table.addMouseListener(this)
+        }
+
+        override fun getTableCellRendererComponent(
+            table: JTable?,
+            value: Any?,
+            isSelected: Boolean,
+            hasFocus: Boolean,
+            row: Int,
+            column: Int
+        ): Component? {
+            val row = table?.convertRowIndexToModel(row) ?: return editButton
+            val lastRow = (table.rowCount - 1)
+            if (row == lastRow) {
+                return null
+            }
+            return renderButton
+        }
+
+        override fun getCellEditorValue(): Any? {
+            return "delete"
+        }
+
+        override fun getTableCellEditorComponent(
+            table: JTable?,
+            value: Any?,
+            isSelected: Boolean,
+            row: Int,
+            column: Int
+        ): Component? {
+            val row = table?.convertRowIndexToModel(row) ?: return editButton
+            val lastRow = (table.rowCount - 1)
+            if (row == lastRow) {
+                return null
+            }
+            return editButton
+        }
+
+        override fun actionPerformed(e: ActionEvent?) {
+            val row = table.convertRowIndexToModel(table.editingRow)
+            fireEditingStopped()
+            action(row)
+        }
+
+        override fun mousePressed(e: MouseEvent?) {
+            if (table.isEditing && table.cellEditor == this) {
+                isButtonColumnEditor = true
+            }
+        }
+
+        override fun mouseReleased(e: MouseEvent?) {
+            if (isButtonColumnEditor && table.isEditing) {
+                table.cellEditor.stopCellEditing()
+            }
+            isButtonColumnEditor = false
+        }
+
+        override fun mouseClicked(e: MouseEvent?) {}
+        override fun mouseEntered(e: MouseEvent?) {}
+        override fun mouseExited(e: MouseEvent?) {}
     }
 }

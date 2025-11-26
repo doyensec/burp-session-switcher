@@ -119,10 +119,14 @@ class TableSection<T>(public val title: String, public val description: String?,
             }
         }
 
-        val middlePanel = JPanel(BorderLayout()).also {
-            it.add(buttonsPanel, BorderLayout.PAGE_START)
+        if (showNewButton || showEditButton || showDeleteButton || showDuplicateButton || showRefreshButton) {
+            // Add buttons panel only if there are buttons to show
+            val middlePanel = JPanel(BorderLayout()).also {
+                it.add(buttonsPanel, BorderLayout.PAGE_START)
+            }
+            mainPanel.add(middlePanel, BorderLayout.LINE_START)
         }
-        mainPanel.add(middlePanel, BorderLayout.LINE_START)
+
         mainPanel.add(table.withScrollPane(), BorderLayout.CENTER)
     }
 

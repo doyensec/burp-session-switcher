@@ -15,6 +15,7 @@ import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 import kotlin.math.min
 
+
 class Label(text: String, bold: Boolean = false, big: Boolean = false, relativeSize: Double = 0.0) : JLabel(text) {
     init {
         isOpaque = false
@@ -413,7 +414,7 @@ class TextFieldWithPlaceholder(text: String, var placeholder: String): JTextFiel
     override fun paintComponent(g: Graphics?) {
         super.paintComponent(g)
         if (this.placeholder.isEmpty()) return
-        if (this.text.isNotEmpty()) return
+        if (this.text.isNotBlank()) return
 
         val g2d = g as Graphics2D
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)

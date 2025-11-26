@@ -5,7 +5,7 @@ import java.util.*
 import javax.swing.table.AbstractTableModel
 
 class PairListTableModel(private val list: MutableList<Pair<String, String>>): AbstractTableModel(), ITableModel<Pair<String, String>> {
-    private val columnNames = arrayOf("Name", "Value")
+    private val columnNames = arrayOf("Name", "Value", "Delete")
     private val editListeners = mutableListOf<(Int, Int) -> Unit>()
 
     override fun getRowCount(): Int {
@@ -30,13 +30,15 @@ class PairListTableModel(private val list: MutableList<Pair<String, String>>): A
         return when (columnIndex) {
             0 -> list[rowIndex].first
             1 -> list[rowIndex].second
+            2 -> "delete"
             else -> "N/A"
         }
     }
 
     override fun setValueAt(aValue: Any?, rowIndex: Int, columnIndex: Int) {
         val newValue = aValue as String
-        if (rowIndex == list.size && columnIndex == 0 && newValue.isNotBlank()) {
+        if (newValue.isBlank()) return
+        if (rowIndex == list.size && columnIndex == 0) {
             // New pair
             list.add(Pair(newValue, ""))
         } else if (rowIndex < list.size) {
@@ -46,6 +48,9 @@ class PairListTableModel(private val list: MutableList<Pair<String, String>>): A
                 }
                 1 -> {
                     list[rowIndex] = Pair(list[rowIndex].first, newValue)
+                }
+                2 -> {
+                    // Do nothing
                 }
                 else -> {
                     Logger.error("Trying to set value at invalid column: $columnIndex")
