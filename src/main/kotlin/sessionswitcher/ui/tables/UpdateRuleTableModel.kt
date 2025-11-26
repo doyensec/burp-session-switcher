@@ -1,4 +1,4 @@
-package sessionswitcher.ui.maintab.tables
+package sessionswitcher.ui.tables
 
 import sessionswitcher.rules.autoupdate.UpdateRule
 import java.util.*

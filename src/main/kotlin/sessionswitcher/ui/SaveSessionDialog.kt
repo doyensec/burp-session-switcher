@@ -45,6 +45,44 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
         return session
     }
 
+    fun duplicateSessionDialog(oldSession: Session): Session? {
+        var name: String?
+        var ok = false
+        do {
+            name = JOptionPane.showInputDialog(
+                sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                "Choose a name for the new Session",
+                "Duplicate Session",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                null,
+                "",
+            ) as String?
+            if (name == null) return null
+            if (!Session.isValidName(name)) {
+                JOptionPane.showMessageDialog(
+                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    "The chosen name contains invalid characters. Allowed characters: [A-Za-z0-9._-]",
+                    "Invalid characters in name",
+                    JOptionPane.WARNING_MESSAGE
+                )
+                continue
+            }
+            if (this.sessionSwitcher.sessions.hasSession(name)) {
+                JOptionPane.showMessageDialog(
+                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    "A session with this name already exists in this project, please choose a different name",
+                    "Name already in use",
+                    JOptionPane.WARNING_MESSAGE
+                )
+                continue
+            }
+            ok = true
+        } while (!ok)
+        val session = this.sessionSwitcher.sessions.duplicateSession(oldSession.name, name!!)
+        return session
+    }
+
     fun updateSessionDialog(httpRequest: HttpRequest): Session? {
         val sessions = this.sessionSwitcher.sessions.getSessions().toTypedArray()
 

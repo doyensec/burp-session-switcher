@@ -16,6 +16,7 @@ import sessionswitcher.ui.*
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
 import java.awt.*
+import java.util.*
 import javax.swing.*
 
 class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, val readOnly: Boolean) :
@@ -49,7 +50,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             this.editedLabel.text = ""
             this.deleteSessionBtn.isEnabled = selectedSession != null
             this.editSessionBtn.isEnabled = selectedSession != null
-            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Overwrite"
+            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Update"
         }
 
     private var originalRequest: HttpRequest? = null
@@ -144,7 +145,8 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     }
 
     private fun editSelectedSession() {
-        TODO()
+        val session = SessionEditWindow(sessionSwitcher, Optional.of(this.selectedSession as Session)).showDialog()
+        this.updateSessionsList()
     }
 
     private fun deleteSelectedSession() {

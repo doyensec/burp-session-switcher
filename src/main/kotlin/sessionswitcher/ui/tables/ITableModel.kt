@@ -1,4 +1,4 @@
-package sessionswitcher.ui.maintab.tables
+package sessionswitcher.ui.tables
 
 import java.util.*
 

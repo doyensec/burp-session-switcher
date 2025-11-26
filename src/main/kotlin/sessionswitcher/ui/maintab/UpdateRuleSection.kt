@@ -3,7 +3,7 @@ package sessionswitcher.ui.maintab
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.autoupdate.UpdateRule
-import sessionswitcher.ui.maintab.tables.UpdateRuleTableModel
+import sessionswitcher.ui.tables.UpdateRuleTableModel
 import java.util.*
 import javax.swing.JComponent
 
@@ -28,6 +28,7 @@ object UpdateRuleSection {
         val item = tableSection.getSelected()
         if (item.isEmpty) {
             Logger.warning("Delete button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
+            return
         }
         this.sessionSwitcher.updateRulesCollection.deleteRule(item.get())
         tableSection.refreshTable()
@@ -37,6 +38,7 @@ object UpdateRuleSection {
         val item = tableSection.getSelected()
         if (item.isEmpty) {
             Logger.warning("Duplicate button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
+            return
         }
         this.sessionSwitcher.updateRulesCollection.addRule(item.get().copy())
         tableSection.refreshTable()
@@ -46,6 +48,7 @@ object UpdateRuleSection {
         val oldRule = tableSection.getSelected()
         if (oldRule.isEmpty) {
             Logger.warning("Delete button clicked but no table item selected, row: ${tableSection.table.selectedRow}")
+            return
         }
         val newRule = UpdateRuleWindow(sessionSwitcher, oldRule).showDialog()
         if (newRule.isEmpty) return

@@ -9,7 +9,7 @@ import sessionswitcher.sessions.CookiesUpdateMode
 import sessionswitcher.sessions.HeadersUpdateMode
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
-import sessionswitcher.ui.maintab.tables.ConditionsTableModel
+import sessionswitcher.ui.tables.ConditionsTableModel
 import java.awt.Dimension
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout

@@ -47,8 +47,12 @@ class Cookies() {
        return this.cookies.entries.map { Pair(it.key, it.value) }
     }
 
-    private fun setPairs(pairs: Collection<Pair<String, String>>) {
+    public fun setPairs(pairs: Collection<Pair<String, String>>) {
         this.cookies.putAll(pairs)
+    }
+
+    public fun clear() {
+        this.cookies.clear()
     }
 
     /*

@@ -53,17 +53,11 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
         return s
     }
 
-    fun duplicateSession(name: String): Session {
-        // Find unused name
-        val oldSession = this.getSession(name)
-            ?: throw Exception("Session to duplicate not found: $name")
-        val newNameBase = oldSession.name + " Copy"
-        var newName = newNameBase
-        var copyNr = 1
-        while (this.hasSession(newName)) {
-            copyNr++
-            newName = "$newNameBase $copyNr"
+    fun duplicateSession(name: String, newName: String): Session {
+        if (this.hasSession(newName)) {
+            throw Exception("Trying to duplicate a session with a name that is already present in the collection: $newName")
         }
+        val oldSession = this.getSession(name) ?: throw Exception("Session to duplicate not found: $name")
         val newSession = Session(newName, oldSession)
         this.sessions[newName] = newSession
         this.updateChildObjectAsync(newSession)

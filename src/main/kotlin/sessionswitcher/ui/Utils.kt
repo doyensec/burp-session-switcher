@@ -408,3 +408,16 @@ class Table(columns: Array<String>, editable: Boolean = false): JTable() {
         return scrollPane
     }
 }
+
+class TextFieldWithPlaceholder(text: String, var placeholder: String): JTextField(text) {
+    override fun paintComponent(g: Graphics?) {
+        super.paintComponent(g)
+        if (this.placeholder.isEmpty()) return
+        if (this.text.isNotEmpty()) return
+
+        val g2d = g as Graphics2D
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g2d.color = disabledTextColor
+        g2d.drawString(this.placeholder, this.insets.left, this.getFontMetrics(font).maxAscent + insets.top)
+    }
+}

@@ -97,8 +97,9 @@ class Session private constructor(val name: String, private val id: String) : Ca
     /* Note: this map always holds lowercase header names to prevent issues
         with HTTP/2 requests. Burp should automatically fix the capitalization.
      */
-    private val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
-    private var cookies = Cookies()
+    val headers: MutableMap<String, String> = LinkedHashMap<String, String>()
+    var cookies = Cookies()
+        private set
 
     /*
     Some metadata about the last time this session was updated
@@ -128,6 +129,10 @@ class Session private constructor(val name: String, private val id: String) : Ca
 
     override fun toString(): String {
         return name
+    }
+
+    fun setHost(host: String) {
+        this.host = host.trim()
     }
 
     fun getHost(): String {

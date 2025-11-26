@@ -1,4 +1,4 @@
-package sessionswitcher.ui.maintab.tables
+package sessionswitcher.ui.tables
 
 import sessionswitcher.rules.conditions.Condition
 import java.util.*

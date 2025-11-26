@@ -2,7 +2,7 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.ui.Table
 import sessionswitcher.ui.UISection
-import sessionswitcher.ui.maintab.tables.ITableModel
+import sessionswitcher.ui.tables.ITableModel
 import java.awt.BorderLayout
 import java.util.*
 import javax.swing.*
