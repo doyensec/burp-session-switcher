@@ -58,7 +58,7 @@ class SessionsTableModel(private val sessionCollection: SessionCollection): Abst
     }
 
     private fun formatLastUpdatedBy(session: Session): String {
-        if (session.lastUpdatedBy == Session.LAST_UPDATE_TYPE.UPDATE_RULE) {
+        if (session.lastUpdatedBy == Session.LastUpdateType.UPDATE_RULE) {
             return "Rule ${session.lastUpdatedRuleId}"
         }
         return session.lastUpdatedBy.toString()

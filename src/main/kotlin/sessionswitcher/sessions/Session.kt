@@ -35,7 +35,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
                 // Last update info
                 if (obj.getLong("lastUpdatedAt") != null) {
                     session.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
-                    session.lastUpdatedBy = LAST_UPDATE_TYPE.entries[obj.getInteger("lastUpdatedFrom")]
+                    session.lastUpdatedBy = LastUpdateType.entries[obj.getInteger("lastUpdatedFrom")]
                     val lastUpdatedRuleId = obj.getInteger("lastUpdatedRuleId")
                     if (lastUpdatedRuleId != null && lastUpdatedRuleId != -1) {
                         session.lastUpdatedRuleId = lastUpdatedRuleId
@@ -104,7 +104,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
     /*
     Some metadata about the last time this session was updated
      */
-    public enum class LAST_UPDATE_TYPE(val description: String) {
+    public enum class LastUpdateType(val description: String) {
         CREATION("Creation"),
         MANUAL_EDIT("Manual (Edit Menu)"),
         MANUAL_REQUEST("Manual (From Request)"),
@@ -115,13 +115,13 @@ class Session private constructor(val name: String, private val id: String) : Ca
 
     public var lastUpdatedAt: Instant = Instant.now()
         private set
-    public var lastUpdatedBy: LAST_UPDATE_TYPE = LAST_UPDATE_TYPE.CREATION
+    public var lastUpdatedBy: LastUpdateType = LastUpdateType.CREATION
         private set
     public var lastUpdatedRuleId: Int? = null
         private set
 
-    public fun setLastUpdateReason(reason: LAST_UPDATE_TYPE, ruleId: Int? = null) {
-        if (reason != LAST_UPDATE_TYPE.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
+    public fun setLastUpdateReason(reason: LastUpdateType, ruleId: Int? = null) {
+        if (reason != LastUpdateType.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
         this.lastUpdatedBy = reason
         this.lastUpdatedRuleId = ruleId
         this.saveToProjectFileAsync()
@@ -234,7 +234,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
         this.updateCookies(r, cookiesUpdateMode)
 
         this.lastUpdatedAt = Instant.now()
-        this.lastUpdatedBy = LAST_UPDATE_TYPE.MANUAL_REQUEST
+        this.lastUpdatedBy = LastUpdateType.MANUAL_REQUEST
 
         this.saveToProjectFileAsync()
     }

@@ -351,7 +351,7 @@ class ErrorDialog(val msg: String) {
 }
 
 class UISection(val sectionTitle: String, val description: String?, vararg elements: Component?): JPanel() {
-    private val GAP = 10
+    private val gap = 10
     init {
         val innerBox = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
@@ -361,7 +361,7 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
             if (e != null) {
                 innerBox.add(JPanel(BorderLayout()).also{it.add(e)})
             } else {
-                innerBox.add(Box.createVerticalStrut(GAP))
+                innerBox.add(Box.createVerticalStrut(gap))
             }
         }
 
@@ -371,7 +371,7 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
         }
 
         this.layout = BorderLayout()
-        this.border = BorderFactory.createEmptyBorder(GAP, GAP, GAP, GAP)
+        this.border = BorderFactory.createEmptyBorder(gap, gap, gap, gap)
 
         // Add components
         outerBox.add(JPanel(BorderLayout()).also { it.add(Label(sectionTitle, big = true)) })
@@ -379,9 +379,9 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
             outerBox.add(Box.createVerticalStrut(4))
             outerBox.add(JPanel(BorderLayout()).also { it.add(Label(description)) })
         }
-        outerBox.add(Box.createVerticalStrut(GAP))
+        outerBox.add(Box.createVerticalStrut(gap))
         outerBox.add(JPanel(BorderLayout()).also{it.add(innerBox)})
-        outerBox.add(Box.createVerticalStrut(GAP))
+        outerBox.add(Box.createVerticalStrut(gap))
         this.add(outerBox)
     }
 }

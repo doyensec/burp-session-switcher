@@ -11,7 +11,7 @@ import java.awt.Component
     This class provides the Context Menu that is opened when the user Right-Clicks inside the request editor
     The autoupdate have associated Keyboard Shortcuts so that standard Burp shortcuts can be used from the editor
  */
-class ContextMenuProvider(protected val sessionSwitcher: SessionSwitcher) : ContextMenuItemsProvider {
+class ContextMenuProvider(private val sessionSwitcher: SessionSwitcher) : ContextMenuItemsProvider {
 
     private val saveNewSessionAction = MenuAction("New session from this request", null) {
         SaveSessionDialog(this.sessionSwitcher).newSessionDialog(this.request!!)

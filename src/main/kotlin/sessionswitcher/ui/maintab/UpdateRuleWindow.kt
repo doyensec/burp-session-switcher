@@ -240,7 +240,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
 
         updateSourceSelector.addItemListener { it ->
             if (it.stateChange == ItemEvent.SELECTED) {
-                val selectedItem = updateSourceSelector.getSelectedItem()
+                val selectedItem = updateSourceSelector.selectedItem
                 cookieModeSelector.removeAllItems()
                 if (selectedItem == "Request") {
                     cookieModeSelector.removeAllItems()

@@ -111,7 +111,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         return session
     }
 
-    public fun showDialog(): Optional<Session> {
+    fun showDialog(): Optional<Session> {
         // This will block until the window is closed
         this.isVisible = true
 
@@ -119,10 +119,10 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
         // Make sure to save any cell edits before closing the window
         if (headerTableSection.table.isEditing) {
-            headerTableSection.table.getCellEditor().stopCellEditing();
+            headerTableSection.table.getCellEditor().stopCellEditing()
         }
         if (cookieTableSection.table.isEditing) {
-            cookieTableSection.table.getCellEditor().stopCellEditing();
+            cookieTableSection.table.getCellEditor().stopCellEditing()
         }
 
         return if (this.shouldSave) {
@@ -237,7 +237,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
     private fun validateFields(): Pair<Boolean, String> {
         val sessionName = nameField.text.trim()
-        if (!Session.Companion.isValidName(sessionName)) {
+        if (!Session.isValidName(sessionName)) {
             return Pair(false, "Session name is invalid. Allowed characters: [A-Za-z0-9._-]")
         }
         if (initialSession.isEmpty && sessionSwitcher.sessions.hasSession(sessionName)) {
@@ -252,7 +252,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             if (uri.host != host) {
                 return Pair(false, "Invalid hostname")
             }
-        } catch (e: URISyntaxException) {
+        } catch (_: URISyntaxException) {
             return Pair(false, "Invalid hostname")
         }
 
@@ -294,16 +294,10 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
     }
 
     class DeleteButtonCell(val table: JTable, theme: Theme, val action: (Int) -> (Unit)): AbstractCellEditor(), TableCellEditor, TableCellRenderer, ActionListener, MouseListener {
-        companion object {
-            private fun getResizedIcon(path: String, w: Int, h: Int): ImageIcon {
-                val icon = ImageIcon(DeleteButtonCell::class.java.getResource(path))
-                val scaled = icon.image.getScaledInstance(w, h, java.awt.Image.SCALE_SMOOTH)
-                return ImageIcon(scaled)
-            }
-        }
-        val icon = getResizedIcon("/icons/${theme.name.lowercase()}/delete.png", 16, 16)
-        val renderButton: JButton = JButton(icon)
-        val editButton: JButton = JButton(icon)
+        val fullSizeIcon = ImageIcon(DeleteButtonCell::class.java.getResource("/icons/${theme.name.lowercase()}/delete.png"))
+        val icon = ImageIcon(fullSizeIcon.image.getScaledInstance(16, 16, java.awt.Image.SCALE_SMOOTH))
+        val renderButton = JButton(icon)
+        val editButton = JButton(icon)
         var isButtonColumnEditor = false
 
         init {
@@ -327,7 +321,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             return renderButton
         }
 
-        override fun getCellEditorValue(): Any? {
+        override fun getCellEditorValue(): Any {
             return "delete"
         }
 

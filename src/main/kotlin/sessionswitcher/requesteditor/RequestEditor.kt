@@ -276,7 +276,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         }
 
         rootContainer.also {
-            it.add(FlowPanel(FlowLayout.LEFT).also { it.add(JLabel("Switch Session:")) })
+            it.add(FlowPanel(FlowLayout.LEFT).also { p-> p.add(JLabel("Switch Session:")) })
             it.add(Box.createRigidArea(Dimension(0, 4)))
             it.add(sessionLabelPanel)
             it.add(Box.createRigidArea(Dimension(0, 10)))
@@ -320,7 +320,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     override fun onSessionsListUpdate() {
         try {
             this.updateSessionsList()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Logger.warning("Exception caught while updating sessions list")
         }
     }
