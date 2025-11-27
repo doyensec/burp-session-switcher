@@ -47,6 +47,5 @@ class SessionUpdaterHandler(private val sessionSwitcher: SessionSwitcher):  Sess
             settings.cookiesUpdateMode.get(),
             settings.headersUpdateMode.get(),
         )
-        // TODO: trigger session list update?
     }
 }

@@ -1,13 +1,21 @@
 package sessionswitcher.sessions
 
 import burp.api.montoya.persistence.PersistedObject
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.getSaveStateKeys
+import java.lang.ref.WeakReference
 
 class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAndLoadData {
+    companion object {
+        val updateEventCoroutineScope = CoroutineScope(Dispatchers.Default)
+    }
     private val sessions = LinkedHashMap<String, Session>()
+    private val updateListeners = mutableListOf<WeakReference<SessionsListUpdateListener>>()
 
     val size get() = this.sessions.size
 
@@ -40,6 +48,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
             // Delete session
             this.sessions.remove(key)
             this.deleteChildObject(session)
+            fireUpdateEvent()
         }
     }
 
@@ -50,6 +59,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
         val s = Session(name)
         this.sessions[s.name] = s
         this.updateChildObjectAsync(s)
+        fireUpdateEvent()
         return s
     }
 
@@ -61,12 +71,33 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
         val newSession = Session(newName, oldSession)
         this.sessions[newName] = newSession
         this.updateChildObjectAsync(newSession)
+        fireUpdateEvent()
         return newSession
     }
 
     fun deleteSession(p: Session) {
         this.deleteSession(p.name)
     }
+
+    // Update Listeners
+    public fun registerUpdateListener(listener: SessionsListUpdateListener) {
+        this.updateListeners.add(WeakReference(listener))
+    }
+
+    private fun fireUpdateEvent() {
+        updateEventCoroutineScope.launch {
+            for (ref in updateListeners) {
+                val listener = ref.get()
+                if (listener == null) {
+                    updateListeners.remove(ref)
+                    continue
+                }
+                listener.onSessionsListUpdate()
+            }
+        }
+    }
+
+    // Serialization stuff
 
     override val saveStateKey: String
         get() = "SessionCollection"

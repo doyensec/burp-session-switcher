@@ -10,10 +10,11 @@ import kotlinx.coroutines.launch
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 
-class AutoUpdateProxyListener(private val sessipnSwitcher: SessionSwitcher): ProxyRequestHandler, ProxyResponseHandler {
-    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher): ProxyRequestHandler, ProxyResponseHandler {
+    private val supervisor = SupervisorJob()
+    private val coroutineScope = CoroutineScope(supervisor + Dispatchers.Default)
     private val tasks = Channel<suspend () -> Unit>(UNLIMITED)
-    val stopAtFirstMatch = sessipnSwitcher.settings.stopAtFirstUpdateRule.get()
+    val stopAtFirstMatch = sessionSwitcher.settings.stopAtFirstUpdateRule.get()
 
     init {
         coroutineScope.launch {
@@ -30,7 +31,7 @@ class AutoUpdateProxyListener(private val sessipnSwitcher: SessionSwitcher): Pro
     override fun handleRequestReceived(interceptedRequest: InterceptedRequest): ProxyRequestReceivedAction {
         coroutineScope.launch {
             tasks.send {
-                for (rule in sessipnSwitcher.updateRulesCollection.getRequestMatchingRules()) {
+                for (rule in sessionSwitcher.updateRulesCollection.getRequestMatchingRules()) {
                     if (rule.updateIfRequestMatches(interceptedRequest)) {
                         Logger.info("Request ${interceptedRequest.messageId()} with URL ${interceptedRequest.url()} matched rule ${rule.ruleId}")
                         if (stopAtFirstMatch) return@send
@@ -48,7 +49,7 @@ class AutoUpdateProxyListener(private val sessipnSwitcher: SessionSwitcher): Pro
     override fun handleResponseReceived(interceptedResponse: InterceptedResponse): ProxyResponseReceivedAction {
         coroutineScope.launch {
             tasks.send {
-                for (rule in sessipnSwitcher.updateRulesCollection.getResponseMatchingRules()) {
+                for (rule in sessionSwitcher.updateRulesCollection.getResponseMatchingRules()) {
                     if (rule.updateIfResponseMatches(interceptedResponse)) {
                         Logger.info("Response ${interceptedResponse.messageId()} with URL ${interceptedResponse.request().url()} matched rule ${rule.ruleId}")
                         if (stopAtFirstMatch) return@send
@@ -61,5 +62,9 @@ class AutoUpdateProxyListener(private val sessipnSwitcher: SessionSwitcher): Pro
 
     override fun handleResponseToBeSent(interceptedResponse: InterceptedResponse): ProxyResponseToBeSentAction {
         return ProxyResponseToBeSentAction.continueWith(interceptedResponse)
+    }
+
+    public fun stop() {
+        supervisor.cancel()
     }
 }

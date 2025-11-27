@@ -114,7 +114,6 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
             settings.headersUpdateMode.get()
         )
 
-        // TODO: trigger global session list update?
         return session
     }
 }

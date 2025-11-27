@@ -100,7 +100,7 @@ class SessionSwitcher private constructor(
     }
 
     fun unload() = runBlocking {
-        //TODO: stop proxy interceptors
+        autoUpdateProxyListener.stop()
     }
 
     fun focus() {

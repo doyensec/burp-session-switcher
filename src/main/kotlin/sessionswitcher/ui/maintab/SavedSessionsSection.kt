@@ -3,13 +3,14 @@ package sessionswitcher.ui.maintab
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
+import sessionswitcher.sessions.SessionsListUpdateListener
 import sessionswitcher.ui.SaveSessionDialog
 import sessionswitcher.ui.SessionEditWindow
 import sessionswitcher.ui.tables.SessionsTableModel
 import java.util.*
 import javax.swing.JComponent
 
-object SavedSessionsSection
+object SavedSessionsSection: SessionsListUpdateListener
 {
     private lateinit var tableSection: TableSection<Session>
     private lateinit var sessionSwitcher: SessionSwitcher
@@ -65,5 +66,9 @@ object SavedSessionsSection
         if (session.isPresent) {
             tableSection.refreshTable()
         }
+    }
+
+    override fun onSessionsListUpdate() {
+        this.tableSection.refreshTable()
     }
 }

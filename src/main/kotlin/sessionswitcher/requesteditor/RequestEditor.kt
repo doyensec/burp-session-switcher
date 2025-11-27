@@ -10,6 +10,7 @@ import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
+import sessionswitcher.sessions.SessionsListUpdateListener
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsItem
 import sessionswitcher.ui.*
@@ -20,7 +21,7 @@ import java.util.*
 import javax.swing.*
 
 class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, val readOnly: Boolean) :
-    ExtensionProvidedHttpRequestEditor {
+    ExtensionProvidedHttpRequestEditor, SessionsListUpdateListener {
     companion object {
         class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
             override fun provideHttpRequestEditor(creationContext: EditorCreationContext): ExtensionProvidedHttpRequestEditor {
@@ -75,7 +76,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
                 this.originalRequestModified = true
             } else {
                 Logger.debug("Session is NULL")
-                this.httpRequest = this.originalRequest!!.withMethod(this.originalRequest!!.method())
+                this.httpRequest = this.originalRequest?.withMethod(this.originalRequest!!.method()) ?: return
                 this.editor.setRequest(this.httpRequest!!)
                 this.originalRequestModified = false
             }
@@ -116,6 +117,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     and it still matches the current request
      */
     private fun updateSessionsList() {
+        Logger.debug("UPDATING SESSIONS LIST!!")
         this.isUpdatingUI = true
         val oldSession = this.selectedSession
         this.sessionsComboBox.removeAllItems()
@@ -191,7 +193,6 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         // Apply the new session and refresh the list for good measure
         this.selectedSession = session
         this.updateSessionsList()
-        // TODO: trigger global session list update?
     }
 
     private fun newSessionHandler() {
@@ -279,6 +280,9 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
         // Add context menu handler
         this.contextMenu.addRightClickHandler(this.editor.textPane)
+
+        // Register for session list updates
+        this.sessionSwitcher.sessions.registerUpdateListener(this)
     }
 
     override fun setRequestResponse(requestResponse: HttpRequestResponse) {
@@ -304,4 +308,8 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     override fun isModified(): Boolean = this.originalRequestModified && !this.readOnly
 
     override fun getRequest(): HttpRequest = this.httpRequest!!
+
+    override fun onSessionsListUpdate() {
+        this.updateSessionsList()
+    }
 }
