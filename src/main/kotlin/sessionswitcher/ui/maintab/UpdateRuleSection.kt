@@ -67,7 +67,6 @@ object UpdateRuleSection {
 
     private fun selectionListener(e: ListSelectionEvent) {
         if (e.valueIsAdjusting) return
-        val item = tableSection.getSelected()
         val row = tableSection.table.selectedRow
         when (row) {
             -1 -> {

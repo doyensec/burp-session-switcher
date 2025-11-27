@@ -270,6 +270,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         saveButton.isEnabled = enable
     }
 
+    @Suppress("UNUSED_PARAMETER")
     fun tableEditListener(row: Int, column: Int) {
         checkEnableSaveButton()
     }

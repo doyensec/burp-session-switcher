@@ -12,7 +12,7 @@ import javax.swing.table.TableModel
 import kotlin.math.min
 
 @Suppress("UNCHECKED_CAST")
-class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, val tableHeight: Int = 15, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, showDeleteButtonIfSelected: Boolean = true, showDuplicateButtonIfSelected: Boolean = true, showRefreshButtonIfSelected: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
+class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, val tableHeight: Int = 15, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
     // Table model
     val table = JTable(tableModel as TableModel).also {
         it.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
@@ -82,7 +82,7 @@ class TableSection<T>(public val title: String, public val description: String?,
         return tableModel.getAt(row)
     }
 
-    open fun tableSelectionListener(e: ListSelectionEvent) {
+    fun tableSelectionListener(e: ListSelectionEvent) {
         if (e.valueIsAdjusting) return
         if (table.selectedRow == -1) {
             editButton.isEnabled = false
