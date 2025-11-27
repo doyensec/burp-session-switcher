@@ -293,7 +293,8 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         this.sessionSwitcher.sessions.registerUpdateListener(this)
     }
 
-    override fun setRequestResponse(requestResponse: HttpRequestResponse) {
+    override fun setRequestResponse(requestResponse: HttpRequestResponse?) {
+        if (requestResponse == null) return
         this.originalRequestModified = false
         this.originalRequest = requestResponse.request()
         this.httpRequest = this.originalRequest

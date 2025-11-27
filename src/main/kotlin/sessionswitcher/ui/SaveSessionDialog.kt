@@ -7,10 +7,10 @@ import javax.swing.JOptionPane
 
 class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
     fun newSessionDialog(httpRequest: HttpRequest): Session? {
-        var name: String?
+        var name: String
         var ok = false
         do {
-            name = JOptionPane.showInputDialog(
+            val output = JOptionPane.showInputDialog(
                 sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
                 "Choose a name for the new Session",
                 "New Session",
@@ -19,7 +19,8 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
                 null,
                 "",
             ) as String?
-            if (name == null) return null
+            if (output == null) return null
+            name = output
             if (!Session.isValidName(name)) {
                 JOptionPane.showMessageDialog(
                     sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
@@ -40,16 +41,16 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
             }
             ok = true
         } while (!ok)
-        val session = this.sessionSwitcher.sessions.createSession(name!!)
+        val session = this.sessionSwitcher.sessions.createSession(name)
         session.loadFromRequest(httpRequest)
         return session
     }
 
     fun duplicateSessionDialog(oldSession: Session): Session? {
-        var name: String?
+        var name: String
         var ok = false
         do {
-            name = JOptionPane.showInputDialog(
+            val output = JOptionPane.showInputDialog(
                 sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
                 "Choose a name for the new Session",
                 "Duplicate Session",
@@ -58,7 +59,8 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
                 null,
                 "",
             ) as String?
-            if (name == null) return null
+            if (output == null) return null
+            name = output
             if (!Session.isValidName(name)) {
                 JOptionPane.showMessageDialog(
                     sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
@@ -79,7 +81,7 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
             }
             ok = true
         } while (!ok)
-        val session = this.sessionSwitcher.sessions.duplicateSession(oldSession.name, name!!)
+        val session = this.sessionSwitcher.sessions.duplicateSession(oldSession.name, name)
         return session
     }
 
