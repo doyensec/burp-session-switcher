@@ -9,19 +9,19 @@
 
 ## :rocket: Introduction
 
-Session Switcher is a Burp Suite extensions that allows to easily switch the "session" (cookies and headers) of an HTTP request to a different one on the fly, tailored for manual authorization testing.
+Session Switcher is a Burp Suite extension that allows you to easily switch the "session" (cookies and headers) of an HTTP request to a different one on the fly, tailored for manual authorization testing.
 
 ## :star2: Features
 
-The typical use case for Session Switcher is to replace cookies and headers in a request, in the Repeater or in the Proxy, with only a couple clicks; the goal is to quickly check for vulnerabilities such as horizontal and vertical authorization issues or IDORs.
+The typical use case for Session Switcher is to replace cookies and headers in a request, in the Repeater or in the Proxy, with only a couple of clicks; the goal is to quickly check for vulnerabilities such as horizontal and vertical authorization issues or IDORs.
 
 ### Request Editor
 
 ![Request Editor](assets/request_editor.png)
 
-This is the main tool of the extension, and it has everything you need for manual testing.
+This is the main tool of the extension and it has everything you need for manual testing.
 
-Here you have the main session selector that swaps the request's session with the one you choose. The buttons just under it will allow you to quickly create, delete, modify, and update sessions.
+Here you have the main session selector, which swaps the request's session with the one you choose. The buttons just under it will allow you to quickly create, delete, modify, and update sessions.
 
 ### Sessions Tab
 
@@ -33,13 +33,13 @@ The Sessions tab lists all the sessions stored in the project file and allows yo
 
 ![Auto Update Rules](assets/autoupdate.png)
 
-The Auto Update rules will allow you to set some rules to make sure the sessions stay up to date automatically!
+The Auto Update feature allows you to set rules to make sure the sessions stay up to date automatically!
 
-For example, if you use [PwnFox](https://addons.mozilla.org/it/firefox/addon/pwnfox/), you could create rules that watch for requests with the specified `X-PwnFox-Color` header and automatically update the corresponding session. This way, you will never have to worry about manually updating the session when the cookies or authentication tokens expire.
+For example, if you use [PwnFox](https://addons.mozilla.org/it/firefox/addon/pwnfox/), you could create rules that watch for requests with the specified `X-PwnFox-Color` header and automatically update the corresponding session. This way, you will never have to worry about manually updating the session when cookies or authentication tokens expire.
 
 ### Customizable Behavior
 
-From the extension settings, you can control how it behaves in some situations, such as when updating or swapping sessions.
+In the extension settings, you can control how it behaves in some situations, such as when updating or swapping sessions.
 
 ## :mag_right: How to use it
 
@@ -52,15 +52,15 @@ Some terminology first:
 First of all, you need some Sessions.
 
 1. Start by selecting a request and clicking the "New" button to create a new Session; the extension will automatically copy all cookies and (uncommon) headers from the request.
-2. Once you have at least one session, you can use the selector to swap the session of any editable request, for example in the Repeater or while intercepting a request in the Proxy
+2. Once you have at least one session, you can use the selector to swap the session of any editable request, for example, in the Repeater or while intercepting a request in the Proxy
 
 By default, the switcher only lists the sessions for the request's domain. You can change this behavior in the settings.
 
 ![Demo](assets/demo.gif)
 
 The buttons in the request editor do the following:
-- **New**: (when no session is selected) creates a new session, copying cookies and headers of the current request
-- **Update**: (when a session is selected) copies cookies and headers of the current request **TO** the selected session
+- **New**: (when no session is selected) creates a new session, copying the cookies and headers from the current request
+- **Update**: (when a session is selected) copies the cookies and headers of the current request **TO** the selected session
 - **Edit**: opens the session edit window
 - **Delete**: deletes the selected session
 
@@ -72,14 +72,18 @@ You can also create sessions manually from the Session tab. From there, you can 
 
 ### Auto Update Rules
 
-You can use these rules to automatically update a session from a matching request received by the proxy. Read more on how to use them in [docs/auto_update_rules.md](docs/auto_update_rules.md).
+You can use these rules to automatically update a session from a matching request received by the proxy. Read more about how to use them in [docs/auto_update_rules.md](docs/auto_update_rules.md).
+
+### Settings
+
+You can use the settings to customize how the sessions are updated or injected. Read more about the available settings in [docs/settings.md](docs/settings.md).
 
 # :arrow_down: Installation
 You can simply download the latest `.jar` file release and import it in Burp.
 
 This extension needs at least Burp v2025.5. It will not work on older versions.
 
-## :computer: Building from git
+# :computer: Building from git
 
 1. Install Java 21+. For example, in Debian-based distros:
 
@@ -109,13 +113,10 @@ Load the file `SessionSwitcher.jar` into Burp as a Java extension.
 
 The Session Switcher Burp Extension thrives on community contributions. Whether you're a developer, researcher, designer, or bug hunter, your expertise is invaluable to us. We welcome bug reports, feedback, and pull requests. Your participation helps us continue to improve the extension, making it a stronger tool for the community.
 
-Interactions are best carried out through the GitHub issue tracker, but you can also reach us on social media ([@Doyensec](https://twitter.com/Doyensec)). We look forward to hearing from you!
+Communication is best handled through the GitHub issue tracker, but you can also reach us on social media ([@Doyensec](https://twitter.com/Doyensec)). We look forward to hearing from you!
 
 # :busts_in_silhouette: Contributors
 
-A special thanks to our contributors. Your dedication and commitment have been instrumental in making this extension what it is today.
-
-Current:
 - **Author:** Savio Sisco [@lokiuox (Github)](https://github.com/lokiuox)
 
 This project was made with the support of [Doyensec](https://doyensec.com/research.html).
