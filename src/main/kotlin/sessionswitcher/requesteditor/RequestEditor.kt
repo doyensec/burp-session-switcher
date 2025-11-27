@@ -7,6 +7,9 @@ import burp.api.montoya.ui.editor.extension.EditorCreationContext
 import burp.api.montoya.ui.editor.extension.EditorMode
 import burp.api.montoya.ui.editor.extension.ExtensionProvidedHttpRequestEditor
 import burp.api.montoya.ui.editor.extension.HttpRequestEditorProvider
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
@@ -54,31 +57,35 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Update"
         }
 
+    private val editorUpdateMutex = Mutex()
+    private val comboBoxUpdateMutex = Mutex()
     private var originalRequest: HttpRequest? = null
     private var originalRequestModified: Boolean = false
     private var isUpdatingUI: Boolean = false
     private var _selectedSession: Session? = null
     private var selectedSession: Session?
         get() = this._selectedSession
-        set(s) {
-            if (isUpdatingUI) return
-            Logger.info("Selected session set")
+        set(s) = runBlocking {
+            editorUpdateMutex.withLock {
+                if (isUpdatingUI) return@runBlocking
+                Logger.info("Selected session set")
 
-            val original = this.originalRequest ?: HttpRequest.httpRequest()
-            val request = original.withMethod(original.method())
-            this._selectedSession = s
-            this.editedLabel.text = ""
-            if (s != null) {
-                Logger.info("Session is ${s.name}")
-                val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, settings.cookiesInjectMode.get())
-                this.httpRequest = req
-                this.editor.setRequest(req, headersDiffInfo, cookiesDiffInfo)
-                this.originalRequestModified = true
-            } else {
-                Logger.debug("Session is NULL")
-                this.httpRequest = this.originalRequest?.withMethod(this.originalRequest!!.method()) ?: return
-                this.editor.setRequest(this.httpRequest!!)
-                this.originalRequestModified = false
+                val original = originalRequest ?: HttpRequest.httpRequest()
+                val request = original.withMethod(original.method())
+                _selectedSession = s
+                editedLabel.text = ""
+                if (s != null) {
+                    Logger.info("Session is ${s.name}")
+                    val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, settings.cookiesInjectMode.get())
+                    httpRequest = req
+                    editor.setRequest(req, headersDiffInfo, cookiesDiffInfo)
+                    originalRequestModified = true
+                } else {
+                    Logger.debug("Session is NULL")
+                    httpRequest = originalRequest?.withMethod(originalRequest!!.method()) ?: return@runBlocking
+                    editor.setRequest(httpRequest!!)
+                    originalRequestModified = false
+                }
             }
         }
     // END State-holding stuff
@@ -116,38 +123,39 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     Tries to restore the old selection if the old selected session still exists
     and it still matches the current request
      */
-    private fun updateSessionsList() {
-        Logger.debug("UPDATING SESSIONS LIST!!")
-        this.isUpdatingUI = true
-        val oldSession = this.selectedSession
-        this.sessionsComboBox.removeAllItems()
-        this.sessionsComboBox.addItem(SESSION_NONE)
+    private fun updateSessionsList() = runBlocking {
+        comboBoxUpdateMutex.withLock {
+            isUpdatingUI = true
+            val oldSession = selectedSession
 
-        val request = this.originalRequest
-        val hostFilter: String = if (request == null) {
-            // If request is null, do not filter
-            ""
-        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
-            // Filter by subdomain (entire host)
-            request.host()
-        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
-            // Filter by main domain
-            request.topDomain()
-        } else {
-            // No filter
-            ""
-        }
+            sessionsComboBox.removeAllItems()
+            sessionsComboBox.addItem(SESSION_NONE)
+            val request = originalRequest
+            val hostFilter: String = if (request == null) {
+                // If request is null, do not filter
+                ""
+            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
+                // Filter by subdomain (entire host)
+                request.host()
+            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
+                // Filter by main domain
+                request.topDomain()
+            } else {
+                // No filter
+                ""
+            }
+            sessionSwitcher.sessions.getSessions(hostFilter).forEach { sessionsComboBox.addItem(it) }
 
-        this.sessionSwitcher.sessions.getSessions(hostFilter).forEach { this.sessionsComboBox.addItem(it) }
-        val oldSessionRestored = this.tryRestoreOldSession(oldSession)
-        this.isUpdatingUI = false
-        if (!oldSessionRestored) {
-            this.sessionsComboBox.selectedIndex = 0
+            val oldSessionRestored = tryRestoreOldSession(oldSession)
+            isUpdatingUI = false
+            if (!oldSessionRestored) {
+                sessionsComboBox.selectedIndex = 0
+            }
         }
     }
 
     private fun editSelectedSession() {
-        val session = SessionEditWindow(sessionSwitcher, Optional.of(this.selectedSession as Session)).showDialog()
+        SessionEditWindow(sessionSwitcher, Optional.of(this.selectedSession as Session)).showDialog()
         this.updateSessionsList()
     }
 
@@ -199,7 +207,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         // New session
         val request = this.originalRequest ?: return
         val session = SaveSessionDialog(this.sessionSwitcher).newSessionDialog(request) ?: return
-        this.updateSessionsList()
+        //this.updateSessionsList()
         this.sessionsComboBox.selectedItem = session
     }
 
@@ -310,6 +318,10 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     override fun getRequest(): HttpRequest = this.httpRequest!!
 
     override fun onSessionsListUpdate() {
-        this.updateSessionsList()
+        try {
+            this.updateSessionsList()
+        } catch (e: Exception) {
+            Logger.warning("Exception caught while updating sessions list")
+        }
     }
 }
