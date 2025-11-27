@@ -318,7 +318,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             row: Int,
             column: Int
         ): Component? {
-            val row = table?.convertRowIndexToModel(row) ?: return editButton
+            if (table == null) return renderButton
             val lastRow = (table.rowCount - 1)
             if (row == lastRow) {
                 return null
@@ -337,7 +337,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             row: Int,
             column: Int
         ): Component? {
-            val row = table?.convertRowIndexToModel(row) ?: return editButton
+            if (table == null) return renderButton
             val lastRow = (table.rowCount - 1)
             if (row == lastRow) {
                 return null
