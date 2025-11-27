@@ -179,7 +179,8 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     private fun updateOptionsSection(): JPanel {
         val controls = arrayOf(
             Pair("Session to update:", sessionSelector),
-            Pair("Update from:", updateSourceSelector),
+            /* For now we only support updating from the request, no point in showing the selector */
+            // Pair("Update from:", updateSourceSelector),
             Pair("Cookie update mode:", cookieModeSelector),
             Pair("Headers update mode:", headersModeSelector),
         )
@@ -236,7 +237,6 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         sessions.forEach { this.sessionSelector.addItem(it) }
 
         sessionSelector.addItemListener { this.checkEnableSaveButton() }
-        tableSection.tableModel
 
         updateSourceSelector.addItemListener { it ->
             if (it.stateChange == ItemEvent.SELECTED) {
