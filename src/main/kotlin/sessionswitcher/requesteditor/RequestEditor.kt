@@ -239,6 +239,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         it.preferredSize = Dimension(300, it.preferredSize.height)
         it.toolTipText = "Select a session"
         it.addActionListener { this.selectedSessionChanged() }
+        it.isEnabled = !this.readOnly
     }
     private val newOrOverwriteBtn = JButton("New").also {
         it.isEnabled = true

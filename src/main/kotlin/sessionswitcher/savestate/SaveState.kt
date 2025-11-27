@@ -25,32 +25,34 @@ interface CanLoadData : BurpDeserializable {
             return persistence
         }
 
-    fun dataPresentInProjectFile(): Boolean {
-        val key = this.saveStateKey
-        val obj = persistenceStore.getChildObject(key)
-        return obj != null
+    fun dataPresentInProjectFile(): Boolean = runBlocking {
+        val key = saveStateKey
+        saveStateMutex.withLock {
+            return@runBlocking persistenceStore.getChildObject(key) != null
+        }
     }
 
     fun loadFromProjectFile(): Boolean = runBlocking {
+        val key = saveStateKey
+        Logger.debug("[$key] Trying to load data from project file")
+        val obj: PersistedObject?
         saveStateMutex.withLock {
-            val key = saveStateKey
-            Logger.debug("[$key] Trying to load data from project file")
-            val obj = persistenceStore.getChildObject(key)
-            if (obj == null) {
-                Logger.debug("[$key] No savestate with this key found in this project file")
-                return@runBlocking false
-            }
-            try {
-                Logger.debug("[$key] Found, deserializing...")
-                this@CanLoadData.burpDeserialize(obj)
-            } catch (e: Exception) {
-                Logger.error("[$key] Failed deserializing object's data")
-                Logger.error(e.stackTraceToString())
-                return@runBlocking false
-            }
-            Logger.info("[$key] Load from project completed")
-            return@runBlocking true
+            obj = persistenceStore.getChildObject(key)
         }
+        if (obj == null) {
+            Logger.debug("[$key] No savestate with this key found in this project file")
+            return@runBlocking false
+        }
+        try {
+            Logger.debug("[$key] Found, deserializing...")
+            this@CanLoadData.burpDeserialize(obj)
+        } catch (e: Exception) {
+            Logger.error("[$key] Failed deserializing object's data")
+            Logger.error(e.stackTraceToString())
+            return@runBlocking false
+        }
+        Logger.info("[$key] Load from project completed")
+        return@runBlocking true
     }
 
     fun loadFromProjectFileAsync() {
@@ -74,30 +76,30 @@ interface CanSaveData : BurpSerializable {
 
     val saveStateKey: String
     fun saveToProjectFile(processChildren: Boolean = true): String? = runBlocking {
-        saveStateMutex.withLock {
-            val key = saveStateKey
-            val obj: PersistedObject
-            Logger.debug("[$key] Saving data to project file (with children: $processChildren)")
-            try {
-                // Processing children in a separate step allows to do partial updates
-                // where for example a children is updated/created/deleted and saved independently of its parent.
-                // Then we can invoke saveToProjectFile(false) to update the parent's children list but not
-                // all the underlying children, saving some IO time
-                if (processChildren) {
-                    Logger.debug("[$key] Processing children first...")
-                    saveChildrenObjectsToProjectFile()
-                }
-                Logger.debug("[$key] Serializing data")
-                obj = burpSerialize()
-            } catch (e: Exception) {
-                Logger.error("[$key] Failed serializing the object's data")
-                Logger.error(e.stackTraceToString())
-                return@runBlocking null
+        val key = saveStateKey
+        val obj: PersistedObject
+        Logger.debug("[$key] Saving data to project file (with children: $processChildren)")
+        try {
+            // Processing children in a separate step allows to do partial updates
+            // where for example a children is updated/created/deleted and saved independently of its parent.
+            // Then we can invoke saveToProjectFile(false) to update the parent's children list but not
+            // all the underlying children, saving some IO time
+            if (processChildren) {
+                Logger.debug("[$key] Processing children first...")
+                saveChildrenObjectsToProjectFile()
             }
-            Logger.info("[$key] Serialization completed successfully")
-            persistenceStore.setChildObject(key, obj)
-            return@runBlocking key
+            Logger.debug("[$key] Serializing data")
+            obj = burpSerialize()
+        } catch (e: Exception) {
+            Logger.error("[$key] Failed serializing the object's data")
+            Logger.error(e.stackTraceToString())
+            return@runBlocking null
         }
+        Logger.info("[$key] Serialization completed successfully")
+        saveStateMutex.withLock {
+            persistenceStore.setChildObject(key, obj)
+        }
+        return@runBlocking key
     }
 
     fun saveToProjectFileAsync(processChildren: Boolean = true) {
@@ -127,11 +129,13 @@ interface CanSaveData : BurpSerializable {
         }
     }
 
-    fun deleteFromProjectFile(deleteChildren: Boolean = true) {
-        val key = this.saveStateKey
-        persistenceStore.deleteChildObject(key)
+    fun deleteFromProjectFile(deleteChildren: Boolean = true): Unit = runBlocking {
+        val key = saveStateKey
+        saveStateMutex.withLock {
+            persistenceStore.deleteChildObject(key)
+        }
         if (deleteChildren) {
-            val children = this.getChildrenObjectsToSave() ?: return
+            val children = getChildrenObjectsToSave() ?: return@runBlocking
             for (child in children) {
                 child.deleteFromProjectFile(true)
             }
