@@ -78,12 +78,12 @@ You can use these rules to automatically update a session from a matching reques
 
 You can use the settings to customize how the sessions are updated or injected. Read more about the available settings in [docs/settings.md](docs/settings.md).
 
-# :arrow_down: Installation
+## :arrow_down: Installation
 You can simply download the latest `.jar` file release and import it in Burp.
 
 This extension needs at least Burp v2025.5. It will not work on older versions.
 
-# :computer: Building from git
+## :computer: Building from git
 
 1. Install Java 21+. For example, in Debian-based distros:
 
@@ -109,13 +109,13 @@ $ ./gradlew build
 Load the file `SessionSwitcher.jar` into Burp as a Java extension.
 
 
-# :handshake: Contributing
+## :handshake: Contributing
 
 The Session Switcher Burp Extension thrives on community contributions. Whether you're a developer, researcher, designer, or bug hunter, your expertise is invaluable to us. We welcome bug reports, feedback, and pull requests. Your participation helps us continue to improve the extension, making it a stronger tool for the community.
 
 Communication is best handled through the GitHub issue tracker, but you can also reach us on social media ([@Doyensec](https://twitter.com/Doyensec)). We look forward to hearing from you!
 
-# :busts_in_silhouette: Contributors
+## :busts_in_silhouette: Contributors
 
 - **Author:** Savio Sisco [@lokiuox (Github)](https://github.com/lokiuox)
 
