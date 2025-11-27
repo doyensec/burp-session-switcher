@@ -75,9 +75,11 @@ You can also create sessions manually from the Session tab. From there, you can 
 You can use these rules to automatically update a session from a matching request received by the proxy. Read more on how to use them in [docs/auto_update_rules.md](docs/auto_update_rules.md).
 
 # :arrow_down: Installation
+You can simply download the latest `.jar` file release and import it in Burp.
+
 This extension needs at least Burp v2025.5. It will not work on older versions.
 
-# :computer: Building the Session Switcher extension from git
+## :computer: Building from git
 
 1. Install Java 21+. For example, in Debian-based distros:
 
