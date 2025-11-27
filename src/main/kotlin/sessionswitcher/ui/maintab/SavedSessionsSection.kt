@@ -18,7 +18,8 @@ object SavedSessionsSection: SessionsListUpdateListener
     public fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
         this.tableSection = TableSection("Sessions", "Saved sessions for this project",
-            SessionsTableModel(sessionSwitcher.sessions)
+            SessionsTableModel(sessionSwitcher.sessions),
+            tableHeight = 20
         )
         tableSection.refreshTable()
         tableSection.setNewButtonCallback(this::newButtonCallback)

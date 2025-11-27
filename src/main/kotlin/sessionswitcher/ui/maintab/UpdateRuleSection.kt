@@ -123,7 +123,7 @@ object UpdateRuleSection {
 
     public fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules), otherButtons = arrayOf(upButton, downButton))
+        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules), otherButtons = arrayOf(upButton, downButton), tableHeight = 15)
         tableSection.refreshTable()
         tableSection.setNewButtonCallback(this::newButtonCallback)
         tableSection.setEditButtonCallback(this::editButtonCallback)

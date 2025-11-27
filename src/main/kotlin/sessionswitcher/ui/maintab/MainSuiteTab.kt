@@ -19,20 +19,28 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         // Title section
         // |- Title
         val topPanel = JPanel(BorderLayout()).also { it.border = BorderFactory.createEmptyBorder(5,5, 5, 5) }
-        val title = Label("Sessions", bold = true, relativeSize = 12.0)
-        topPanel.add(title, BorderLayout.LINE_START)
-        // |- Settings button
+        val titlePanel = JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.X_AXIS)
+        }
 
+        val title = Label("Session Switcher", bold = true, relativeSize = 12.0)
+        val logo = ImageIcon(MainSuiteTab::class.java.getResource("/logo.png")).image.getScaledInstance(32,32, java.awt.Image.SCALE_SMOOTH)
+        titlePanel.add(JLabel(ImageIcon(logo)))
+        titlePanel.add(Box.createHorizontalStrut(10))
+        titlePanel.add(title)
+
+        topPanel.add(titlePanel, BorderLayout.LINE_START)
+
+        // Settings button
         val theme = sessionSwitcher.montoyaApi.userInterface().currentTheme()
         val fullImage = ImageIcon(MainSuiteTab::class.java.getResource("/icons/${theme.name.lowercase()}/settings.png"))
         val scaled = fullImage.image.getScaledInstance(24, 24, java.awt.Image.SCALE_SMOOTH)
         val icon = ImageIcon(scaled)
-
         val settingsButton = JButton(icon)
         settingsButton.addActionListener { SwingUtilities.invokeLater { settingsWindow.isVisible = true } }
-        topPanel.add(settingsButton, BorderLayout.LINE_END)
+        val settingsButtonPanel = JPanel().also { it.add(settingsButton) }
+        topPanel.add(settingsButtonPanel, BorderLayout.LINE_END)
         mainPanel.add(topPanel)
-        mainPanel.add(JSeparator())
 
         // Sessions Table Section
         val savedSessionsSection = SavedSessionsSection.make(sessionSwitcher)
@@ -42,7 +50,7 @@ class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderL
         // AutoUpdate Rules Section
         val autoUpdateRulesSection = UpdateRuleSection.make(sessionSwitcher)
         mainPanel.add(autoUpdateRulesSection)
-        mainPanel.add(JSeparator())
+        //mainPanel.add(JSeparator())
 
         // AutoInject Rules Section
         // val autoInjectRulesSection = makeAutoInjectRulesSection()

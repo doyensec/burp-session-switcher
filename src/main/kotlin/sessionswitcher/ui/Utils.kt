@@ -386,10 +386,12 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
     }
 }
 
-public fun JTable.withScrollPane(): JScrollPane {
+public fun JTable.withScrollPane(rows: Int = 15): JScrollPane {
     val scrollPane = PDControlScrollPane(this)
-    val tableHeight = this.rowHeight * 15 // 15 rows high
-    scrollPane.preferredSize = Dimension(scrollPane.preferredSize.width, tableHeight)
+    if (rows > 0) {
+        val tableHeight = this.rowHeight * rows
+        scrollPane.preferredSize = Dimension(scrollPane.preferredSize.width, tableHeight)
+    }
     this.fillsViewportHeight = true
     return scrollPane
 }
