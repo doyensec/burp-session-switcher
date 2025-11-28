@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.9.25"
+    id("org.jetbrains.kotlin.jvm") version "2.2.20"
 }
 
 java {
@@ -16,9 +16,9 @@ repositories {
 
 dependencies {
     implementation 'net.portswigger.burp.extensions:montoya-api:2025.5'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3'
-    implementation 'com.google.code.gson:gson:2.10.1'
-    implementation 'com.google.guava:guava:33.2.1-jre'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2'
+    implementation 'com.google.code.gson:gson:2.13.2'
+    implementation 'com.google.guava:guava:33.5.0-jre'
 }
 
 tasks.withType(KotlinCompile).configureEach {
@@ -28,7 +28,7 @@ tasks.withType(KotlinCompile).configureEach {
 compileKotlin {
     compilerOptions {
         // Configure the Kotlin compiler options
-        // allWarningsAsErrors = true
+        allWarningsAsErrors = true
     }
 }
 
