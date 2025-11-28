@@ -1,9 +1,7 @@
 package sessionswitcher.utils
 
-import burp.api.montoya.ui.editor.Editor
 import java.awt.Component
 import javax.swing.JComponent
-import javax.swing.JTextArea
 
 fun JComponent.findComponentWithName(name: String): Component? {
     for (c in this.components) {
@@ -16,6 +14,3 @@ fun JComponent.findComponentWithName(name: String): Component? {
     return null
 }
 
-fun Editor.getTextAreaComponent(): JTextArea {
-    return (this.uiComponent() as JComponent).findComponentWithName("syntaxTextArea") as JTextArea
-}

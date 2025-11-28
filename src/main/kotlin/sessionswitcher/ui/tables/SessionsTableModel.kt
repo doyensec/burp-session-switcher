@@ -31,7 +31,7 @@ class SessionsTableModel(private val sessionCollection: SessionCollection): Abst
         return String::class.java
     }
 
-    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? {
+    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
         val session = sessions[rowIndex]
         return when (columnIndex) {
             0 -> session.name

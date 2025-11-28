@@ -120,7 +120,7 @@ object UpdateRuleSection {
         sessionSwitcher.updateRulesCollection.saveToProjectFileAsync(false)
     }
 
-    public fun make(sessionSwitcher: SessionSwitcher): JComponent {
+    fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
         this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules), otherButtons = arrayOf(upButton, downButton), tableHeight = 15)
         tableSection.refreshTable()

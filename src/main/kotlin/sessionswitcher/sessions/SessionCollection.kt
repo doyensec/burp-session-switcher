@@ -80,7 +80,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
     }
 
     // Update Listeners
-    public fun registerUpdateListener(listener: SessionsListUpdateListener) {
+    fun registerUpdateListener(listener: SessionsListUpdateListener) {
         this.updateListeners.add(WeakReference(listener))
     }
 

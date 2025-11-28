@@ -44,9 +44,9 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     private val defaultHeadersUpdateOption = HeadersUpdateMode.UPDATE_EXISTING
     private val updateSourceOptions = UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }.toTypedArray() // Disable response parsing for now
 
-    val updateSourceSelector = JComboBox<UpdateConfig.UpdateSource>(updateSourceOptions)
-    val cookieModeSelector = JComboBox<CookiesUpdateMode>(requestCookiesUpdateOptions)
-    val headersModeSelector = JComboBox<HeadersUpdateMode>(headersUpdateOptions)
+    val updateSourceSelector = JComboBox(updateSourceOptions)
+    val cookieModeSelector = JComboBox(requestCookiesUpdateOptions)
+    val headersModeSelector = JComboBox(headersUpdateOptions)
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
@@ -116,7 +116,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
         }
     }
 
-    public fun showDialog(): Optional<UpdateRule> {
+    fun showDialog(): Optional<UpdateRule> {
         this.isVisible = true
         return if (this.shouldSave) {
             Optional.of(makeRule())
@@ -238,7 +238,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
 
         sessionSelector.addItemListener { this.checkEnableSaveButton() }
 
-        updateSourceSelector.addItemListener { it ->
+        updateSourceSelector.addItemListener {
             if (it.stateChange == ItemEvent.SELECTED) {
                 val selectedItem = updateSourceSelector.selectedItem
                 cookieModeSelector.removeAllItems()

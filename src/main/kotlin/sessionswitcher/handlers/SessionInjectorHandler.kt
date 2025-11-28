@@ -23,7 +23,7 @@ class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher): Sess
         val sessionName = request.getHeaderValue(HEADER_NAME)
 
         if (sessionName == null) {
-            Logger.debug("Session injector header ${HEADER_NAME} not found in request")
+            Logger.debug("Session injector header $HEADER_NAME not found in request")
             return ActionResult.actionResult(request)
         }
 

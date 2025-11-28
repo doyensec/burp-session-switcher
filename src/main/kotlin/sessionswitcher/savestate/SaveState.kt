@@ -22,13 +22,6 @@ interface CanLoadData : BurpDeserializable {
             return persistence
         }
 
-    fun dataPresentInProjectFile(): Boolean = runBlocking {
-        val key = saveStateKey
-        saveStateMutex.withLock {
-            return@runBlocking persistenceStore.getChildObject(key) != null
-        }
-    }
-
     suspend fun loadFromProjectFile(): Boolean {
         val key = saveStateKey
         Logger.debug("[$key] Trying to load data from project file")
@@ -52,18 +45,13 @@ interface CanLoadData : BurpDeserializable {
         return true
     }
 
-    fun loadFromProjectFileAsync() {
-        coroutineScope.launch {
-            this@CanLoadData.loadFromProjectFile()
-        }
-    }
 }
 
 interface CanSaveData : BurpSerializable {
     companion object {
         private val coroutineScope = CoroutineScope(Dispatchers.IO)
         private val jobs = mutableListOf<Job>()
-        fun joinAll() = runBlocking { jobs.joinAll() }
+        suspend fun joinAll() = jobs.joinAll()
     }
 
     private val persistenceStore: PersistedObject
@@ -128,7 +116,7 @@ interface CanSaveData : BurpSerializable {
         }
     }
 
-    suspend fun deleteFromProjectFile(deleteChildren: Boolean = true): Unit {
+    suspend fun deleteFromProjectFile(deleteChildren: Boolean = true) {
         val key = saveStateKey
         saveStateMutex.withLock {
             persistenceStore.deleteChildObject(key)

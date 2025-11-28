@@ -24,7 +24,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     val cancelButton = JButton("Cancel")
 
     // Condition selection
-    val conditionTypesSelector = JComboBox<ConditionTypeInstance>(Condition.ConditionType.instances)
+    val conditionTypesSelector = JComboBox(ConditionType.instances)
     val operationSelector = JComboBox<String>()
     val patternTextBox =  JTextField().also {
         it.isEnabled = false
@@ -52,7 +52,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
         this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
     }
 
-    public fun showDialog(): Optional<Condition> {
+    fun showDialog(): Optional<Condition> {
         this.isVisible = true
         return if (this.shouldSave) {
             Optional.of(Condition.make(ConditionType.fromInstance(this.selectedConditionType), this.configuration))
@@ -74,7 +74,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
         // Set UI properties
         this.isResizable = true
         this.isAutoRequestFocus = true
-        this.modalityType = Dialog.ModalityType.APPLICATION_MODAL
+        this.modalityType = ModalityType.APPLICATION_MODAL
 
         saveButton.isEnabled = false
 

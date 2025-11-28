@@ -5,10 +5,9 @@ import java.awt.Dimension
 import javax.swing.*
 import javax.swing.JOptionPane.*
 
-class ConfirmationDialog(private val sessionSwitcher: SessionSwitcher, private val text: String, private val title: String, private val showSavePreferenceBtn: Boolean = true) {
+class ConfirmationDialog(private val sessionSwitcher: SessionSwitcher, private val text: String, private val title: String) {
     private var savePreference = false
     private var answer = false
-    private var shown = false
 
     fun show(): Boolean {
         val frame = sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame()
@@ -23,14 +22,12 @@ class ConfirmationDialog(private val sessionSwitcher: SessionSwitcher, private v
         panel.add(Box.createRigidArea(Dimension(0, 5)))
         panel.add(checkBox)
 
-        answer = JOptionPane.showConfirmDialog(frame, panel, title, YES_NO_OPTION, WARNING_MESSAGE) == YES_OPTION
-        shown = true
+        answer = showConfirmDialog(frame, panel, title, YES_NO_OPTION, WARNING_MESSAGE) == YES_OPTION
 
         savePreference = checkBox.isSelected
         return answer
     }
 
     fun shouldSavePreference(): Boolean = savePreference
-    fun wasShown(): Boolean = shown
     fun getAnswer(): Boolean = answer
 }

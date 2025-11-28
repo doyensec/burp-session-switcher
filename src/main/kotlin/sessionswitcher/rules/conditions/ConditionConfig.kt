@@ -6,7 +6,7 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import java.util.*
 
-class ConditionConfig private constructor(public val operation: String, public val pattern: Optional<String>, public val negativeMatch: Boolean, private val saveStateId: UUID): CanSaveData {
+class ConditionConfig private constructor(val operation: String, val pattern: Optional<String>, val negativeMatch: Boolean, private val saveStateId: UUID): CanSaveData {
     constructor(operation: String, pattern: Optional<String>,negativeMatch: Boolean) : this(operation, pattern, negativeMatch, UUID.randomUUID())
 
     companion object {

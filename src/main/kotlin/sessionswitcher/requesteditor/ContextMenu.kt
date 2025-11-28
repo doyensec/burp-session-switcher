@@ -41,7 +41,7 @@ class ContextMenu(private val editor: RequestEditor) : MouseAdapter() {
         right-clicks something that is not actually a GraphQL item, e.g. a point of interest in the scanner results.
      - Provide Keyboard Shortcuts (CTRL+R, CTRL+I, etc)
      */
-    private val sendFromPluginActions = mutableListOf<MenuAction>(
+    private val sendFromPluginActions = mutableListOf(
         sendToIntruderAction,
         sendToRepeaterAction,
         sendToOrganizerAction

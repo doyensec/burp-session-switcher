@@ -16,7 +16,7 @@ import kotlin.math.max
 
 class UpdateRule private constructor(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig, val ruleId: Int, private val saveStateId: UUID) : CanSaveData {
     companion object {
-        private var currentId = 1;
+        private var currentId = 1
         private fun generateId(): Int {
             return currentId++
         }
@@ -79,7 +79,7 @@ class UpdateRule private constructor(val conditions: Array<Condition>, val sessi
         this.session.setLastUpdateReason(Session.LastUpdateType.UPDATE_RULE, this.ruleId)
     }
 
-    public fun copy(): UpdateRule {
+    fun copy(): UpdateRule {
         return UpdateRule(conditions.map { it.copy() }.toTypedArray(), session, config.copy())
     }
 

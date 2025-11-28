@@ -106,8 +106,4 @@ class SessionSwitcher private constructor(
         autoUpdateProxyListener.stop()
         CanSaveData.joinAll()
     }
-
-    fun focus() {
-        this.mainSuiteTab?.focus()
-    }
 }

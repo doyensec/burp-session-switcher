@@ -23,7 +23,7 @@ class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>): AbstractTa
         return String::class.java
     }
 
-    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? {
+    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
         val rule = rules[rowIndex]
         val conditionsDescription = rule.conditions.joinToString(", ") { it.describe() }
         return when (columnIndex) {

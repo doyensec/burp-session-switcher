@@ -7,7 +7,7 @@ import sessionswitcher.ui.Label
 import java.awt.BorderLayout
 import javax.swing.*
 
-class MainSuiteTab(private val sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
+class MainSuiteTab(sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
     private val settingsWindow = SettingsWindow(sessionSwitcher.settings)
 
     private val mainPanel = JPanel().also {

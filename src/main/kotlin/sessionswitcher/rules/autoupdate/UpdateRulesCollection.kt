@@ -11,10 +11,6 @@ import sessionswitcher.sessions.Session
 class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAndLoadData {
     val updateRules = ArrayList<UpdateRule>()
 
-    fun getRules(): ArrayList<UpdateRule> {
-        return updateRules
-    }
-
     fun getRequestMatchingRules(): List<UpdateRule> {
         return updateRules.filterNot { it.needsResponse() }
     }
@@ -66,7 +62,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSa
     override val saveStateKey: String
         get() = "UpdateRulesCollection"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? {
+    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
         return this.updateRules
     }
 

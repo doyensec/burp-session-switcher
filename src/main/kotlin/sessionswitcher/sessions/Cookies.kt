@@ -47,11 +47,11 @@ class Cookies() {
        return this.cookies.entries.map { Pair(it.key, it.value) }
     }
 
-    public fun setPairs(pairs: Collection<Pair<String, String>>) {
+    fun setPairs(pairs: Collection<Pair<String, String>>) {
         this.cookies.putAll(pairs)
     }
 
-    public fun clear() {
+    fun clear() {
         this.cookies.clear()
     }
 
@@ -101,7 +101,7 @@ class Cookies() {
     }
 
     fun update(otherHeaderValue: String): Pair<List<String>, List<String>> {
-        val other = Cookies.fromHeaderValue(otherHeaderValue)
+        val other = fromHeaderValue(otherHeaderValue)
         return this.update(other)
     }
 

@@ -14,7 +14,7 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
             return name.split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } }
         }
     }
-    val commonHeaderPrefixes = setOf<String>(
+    val commonHeaderPrefixes = setOf(
         "connection",
         "sec-",
         "user-agent",

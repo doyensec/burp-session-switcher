@@ -16,7 +16,9 @@ import sessionswitcher.sessions.Session
 import sessionswitcher.sessions.SessionsListUpdateListener
 import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsItem
-import sessionswitcher.ui.*
+import sessionswitcher.ui.ConfirmationDialog
+import sessionswitcher.ui.SaveSessionDialog
+import sessionswitcher.ui.SessionEditWindow
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
 import java.awt.*
@@ -173,7 +175,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             // Ask confirmation dialog if needed
             val doNotAskOverwrite = this.sessionSwitcher.settings.editorDoNotAskOverwriteConfirmation
             if (!doNotAskOverwrite.get()) {
-                val dialog = ConfirmationDialog(sessionSwitcher, "Do you want to overwrite the selected session with the data from the original request?", "Confirm Overwrite", true)
+                val dialog = ConfirmationDialog(sessionSwitcher, "Do you want to overwrite the selected session with the data from the original request?", "Confirm Overwrite")
                 dialog.show()
                 if (!dialog.getAnswer()) {
                     // User canceled
@@ -228,8 +230,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
     // END Session stuff
 
-    private var component = BorderPanel(0)
-
+    private var component = JPanel(BorderLayout())
     private val editedLabel = JLabel("").also {
         it.font = it.font.deriveFont(Font.BOLD)
     }
@@ -263,28 +264,39 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     // End UI Stuff
 
     init {
-        val rootContainer = BoxPanel(BoxLayout.Y_AXIS)
-
-        val sessionLabelPanel = FlowPanel(FlowLayout.LEFT).also {
+        val sessionLabelPanel = JPanel().also {
+            it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
             it.add(this.sessionsComboBox)
             it.add(editedLabel)
         }
 
-        val buttonPanel = FlowPanel(FlowLayout.LEFT).also {
+        val buttonPanel = JPanel().also {
+            it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
             it.add(this.newOrOverwriteBtn)
             it.add(this.editSessionBtn)
             it.add(this.deleteSessionBtn)
         }
 
-        rootContainer.also {
-            it.add(FlowPanel(FlowLayout.LEFT).also { p-> p.add(JLabel("Switch Session:")) })
+        val switchSessionLabelPanel = JPanel().also {
+            it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
+            it.add(JLabel("Switch Session:"))
+        }
+
+        val rootContainer = JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            it.add(switchSessionLabelPanel)
             it.add(Box.createRigidArea(Dimension(0, 4)))
             it.add(sessionLabelPanel)
             it.add(Box.createRigidArea(Dimension(0, 10)))
             it.add(buttonPanel)
         }
 
-        this.component.add(BorderLayout.PAGE_START, BorderPanel(10).also { it.add(rootContainer) })
+        val borderPanel = JPanel(BorderLayout()).also {
+            it.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            it.add(rootContainer)
+        }
+
+        this.component.add(BorderLayout.PAGE_START, borderPanel)
         this.component.add(BorderLayout.CENTER, this.editor)
 
         // Add context menu handler

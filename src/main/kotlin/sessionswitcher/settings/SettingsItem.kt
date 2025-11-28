@@ -20,19 +20,19 @@ abstract class SettingsItem<T>(val provider: SettingsProvider, val key: String, 
         PROJECT
     }
     abstract fun getType(): String
-    abstract fun _get(key: String, store: Store): T?
-    abstract fun _set(key: String, value: T, store: Store)
+    abstract fun getImpl(key: String, store: Store): T?
+    abstract fun setImpl(key: String, value: T, store: Store)
 
-    public fun get(scope: Scope = Scope.EFFECTIVE): T {
+    fun get(scope: Scope = Scope.EFFECTIVE): T {
         var output: T? = null
         var scopeLog: Scope = Scope.DEFAULT
 
         if (scope == Scope.PROJECT || scope == Scope.EFFECTIVE) {
-            output = this._get(key, Store.PROJECT)
+            output = this.getImpl(key, Store.PROJECT)
             scopeLog = Scope.PROJECT
         }
         if (output == null && (scope == Scope.GLOBAL || scope == Scope.EFFECTIVE || scope == Scope.EFFECTIVE_GLOBAL)) {
-            output = this._get(key, Store.GLOBAL)
+            output = this.getImpl(key, Store.GLOBAL)
             scopeLog = Scope.GLOBAL
         }
         if (output == null) {
@@ -52,7 +52,7 @@ abstract class SettingsItem<T>(val provider: SettingsProvider, val key: String, 
 
     fun set(value: T, store: Store = Store.PROJECT) {
         Logger.debug("Setting config value: $key=$value (store: $store)")
-        this._set(key, value, store)
+        this.setImpl(key, value, store)
     }
 
     fun clear(key: String, store: Store = Store.PROJECT) {
@@ -64,8 +64,8 @@ abstract class SettingsItem<T>(val provider: SettingsProvider, val key: String, 
 
 class BooleanSetting(provider: SettingsProvider, key: String, description: String, default: Boolean): SettingsItem<Boolean>(provider, key, description, default) {
     override fun getType(): String = "Boolean"
-    override fun _get(key: String, store: Store): Boolean? = this.provider.getBoolean(key)
-    override fun _set(key: String, value: Boolean, store: Store) = this.provider.setBoolean(key, value)
+    override fun getImpl(key: String, store: Store): Boolean? = this.provider.getBoolean(key)
+    override fun setImpl(key: String, value: Boolean, store: Store) = this.provider.setBoolean(key, value)
     fun drawCheckbox(): JCheckBox {
         val checkbox = JCheckBox(this.description, this.get(Scope.EFFECTIVE_GLOBAL))
         checkbox.addItemListener{ this.set(checkbox.isSelected, Store.GLOBAL) }
@@ -75,8 +75,8 @@ class BooleanSetting(provider: SettingsProvider, key: String, description: Strin
 
 class IntSetting(provider: SettingsProvider, key: String, description: String, default: Int, val min: Int? = null, val max: Int? = null): SettingsItem<Int>(provider, key, description, default) {
     override fun getType(): String = "Int"
-    override fun _get(key: String, store: Store): Int? = this.provider.getInt(key)
-    override fun _set(key: String, value: Int, store: Store) {
+    override fun getImpl(key: String, store: Store): Int? = this.provider.getInt(key)
+    override fun setImpl(key: String, value: Int, store: Store) {
         if (min != null && value < min) {
             throw Exception("Tried to set a value ($value) less than the min ($min) for field $key")
         }
@@ -103,11 +103,11 @@ class IntSetting(provider: SettingsProvider, key: String, description: String, d
 
 class EnumSetting<T: Enum<T>>(provider: SettingsProvider, key: String, description: String, private val enum: Class<T>, default: T): SettingsItem<T>(provider, key, description, default) {
     override fun getType(): String = "Enum"
-    override fun _get(key: String, store: Store): T? {
+    override fun getImpl(key: String, store: Store): T? {
         val strValue = this.provider.getString(key)?: return null
         return java.lang.Enum.valueOf(enum, strValue)
     }
-    override fun _set(key: String, value: T, store: Store) {
+    override fun setImpl(key: String, value: T, store: Store) {
         this.provider.setString(key, value.name)
     }
 
@@ -131,8 +131,8 @@ class EnumSetting<T: Enum<T>>(provider: SettingsProvider, key: String, descripti
 
 class StringSetting(provider: SettingsProvider, key: String, description: String, default: String, val allowedChoices: Array<String>? = null): SettingsItem<String>(provider, key, description, default) {
     override fun getType(): String = "String"
-    override fun _get(key: String, store: Store): String? = this.provider.getString(key)
-    override fun _set(key: String, value: String, store: Store) {
+    override fun getImpl(key: String, store: Store): String? = this.provider.getString(key)
+    override fun setImpl(key: String, value: String, store: Store) {
         if (allowedChoices != null && !allowedChoices.contains(value)) {
             throw Exception("Tried to set a value ($value) which is not among the allowed choices: [${allowedChoices.joinToString(",")}] for field $key")
         }

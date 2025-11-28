@@ -8,9 +8,9 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import java.util.*
 
-class Condition private constructor(public val typeInstance: ConditionTypeInstance, public val configuration: ConditionConfig, private val saveStateId: UUID = UUID.randomUUID()) : CanSaveData {
+class Condition private constructor(val typeInstance: ConditionTypeInstance, val configuration: ConditionConfig, private val saveStateId: UUID = UUID.randomUUID()) : CanSaveData {
     companion object {
-        public fun make(type: ConditionType, configuration: ConditionConfig): Condition {
+        fun make(type: ConditionType, configuration: ConditionConfig): Condition {
             val validationResult = type.instance.validateConfiguration(configuration)
             if (!validationResult.first) {
                 throw IllegalArgumentException("Invalid configuration for selected type: ${validationResult.second}")
@@ -18,7 +18,7 @@ class Condition private constructor(public val typeInstance: ConditionTypeInstan
             return Condition(type.instance, configuration)
         }
 
-        public fun make(type: ConditionType, operation: String, pattern: Optional<String>, negativeMatch: Boolean): Condition {
+        fun make(type: ConditionType, operation: String, pattern: Optional<String>, negativeMatch: Boolean): Condition {
             val configuration = ConditionConfig(operation, pattern, negativeMatch)
             return this.make(type, configuration)
         }
@@ -36,7 +36,7 @@ class Condition private constructor(public val typeInstance: ConditionTypeInstan
         }
     }
 
-    public enum class ConditionType(val instance: ConditionTypeInstance) {
+    enum class ConditionType(val instance: ConditionTypeInstance) {
         IN_SCOPE(InScopeConditionType),
         DOMAIN_NAME(DomainNameConditionType),
         URL(UrlConditionType),
@@ -74,7 +74,7 @@ class Condition private constructor(public val typeInstance: ConditionTypeInstan
         return this.typeInstance.describe(this.configuration)
     }
 
-    public fun copy(): Condition {
+    fun copy(): Condition {
         return Condition(this.typeInstance, this.configuration.copy())
     }
 

@@ -4,7 +4,7 @@ import burp.api.montoya.MontoyaApi
 import burp.api.montoya.persistence.PersistedObject
 import burp.api.montoya.persistence.Preferences
 
-class BurpSettingsProvider(val montoyaApi: MontoyaApi): SettingsProvider {
+class BurpSettingsProvider(montoyaApi: MontoyaApi): SettingsProvider {
 
     val globalStore: Preferences = montoyaApi.persistence().preferences()
     val projectStore: PersistedObject = montoyaApi.persistence().extensionData()

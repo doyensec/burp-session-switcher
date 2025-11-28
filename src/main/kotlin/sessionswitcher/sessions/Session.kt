@@ -104,7 +104,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
     /*
     Some metadata about the last time this session was updated
      */
-    public enum class LastUpdateType(val description: String) {
+    enum class LastUpdateType(val description: String) {
         CREATION("Creation"),
         MANUAL_EDIT("Manual (Edit Menu)"),
         MANUAL_REQUEST("Manual (From Request)"),
@@ -113,14 +113,14 @@ class Session private constructor(val name: String, private val id: String) : Ca
         override fun toString(): String = description
     }
 
-    public var lastUpdatedAt: Instant = Instant.now()
+    var lastUpdatedAt: Instant = Instant.now()
         private set
-    public var lastUpdatedBy: LastUpdateType = LastUpdateType.CREATION
+    var lastUpdatedBy: LastUpdateType = LastUpdateType.CREATION
         private set
-    public var lastUpdatedRuleId: Int? = null
+    var lastUpdatedRuleId: Int? = null
         private set
 
-    public fun setLastUpdateReason(reason: LastUpdateType, ruleId: Int? = null) {
+    fun setLastUpdateReason(reason: LastUpdateType, ruleId: Int? = null) {
         if (reason != LastUpdateType.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
         this.lastUpdatedBy = reason
         this.lastUpdatedRuleId = ruleId

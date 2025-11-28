@@ -295,7 +295,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
     class DeleteButtonCell(val table: JTable, theme: Theme, val action: (Int) -> (Unit)): AbstractCellEditor(), TableCellEditor, TableCellRenderer, ActionListener, MouseListener {
         val fullSizeIcon = ImageIcon(DeleteButtonCell::class.java.getResource("/icons/${theme.name.lowercase()}/delete.png"))
-        val icon = ImageIcon(fullSizeIcon.image.getScaledInstance(16, 16, java.awt.Image.SCALE_SMOOTH))
+        val icon = ImageIcon(fullSizeIcon.image.getScaledInstance(16, 16, Image.SCALE_SMOOTH))
         val renderButton = JButton(icon)
         val editButton = JButton(icon)
         var isButtonColumnEditor = false

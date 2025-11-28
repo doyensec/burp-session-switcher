@@ -12,7 +12,7 @@ import javax.swing.table.TableModel
 import kotlin.math.min
 
 @Suppress("UNCHECKED_CAST")
-class TableSection<T>(public val title: String, public val description: String?, public val tableModel: ITableModel<T>, val tableHeight: Int = 15, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
+class TableSection<T>(val title: String, val description: String?, val tableModel: ITableModel<T>, val tableHeight: Int = 15, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
     // Table model
     val table = JTable(tableModel as TableModel).also {
         it.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
@@ -43,7 +43,7 @@ class TableSection<T>(public val title: String, public val description: String?,
         this.refreshTable()
     }
 
-    public fun refreshTable() {
+    fun refreshTable() {
         // Save current selected row
         var selectedRow = this.table.selectedRow
 
@@ -57,27 +57,27 @@ class TableSection<T>(public val title: String, public val description: String?,
         }
     }
 
-    public fun setNewButtonCallback(callback: () -> Unit) {
+    fun setNewButtonCallback(callback: () -> Unit) {
         this.newButton.addActionListener { callback() }
     }
 
-    public fun setEditButtonCallback(callback: () -> Unit) {
+    fun setEditButtonCallback(callback: () -> Unit) {
         this.editButton.addActionListener { callback() }
     }
 
-    public fun setDeleteButtonCallback(callback: () -> Unit) {
+    fun setDeleteButtonCallback(callback: () -> Unit) {
         this.deleteButton.addActionListener { callback() }
     }
 
-    public fun setDuplicateButtonCallback(callback: () -> Unit) {
+    fun setDuplicateButtonCallback(callback: () -> Unit) {
         this.duplicateButton.addActionListener { callback() }
     }
 
-    public fun setRefreshButtonCallback(callback: () -> Unit) {
+    fun setRefreshButtonCallback(callback: () -> Unit) {
         this.refreshButton.addActionListener { callback() }
     }
 
-    public fun getSelected(): Optional<T> {
+    fun getSelected(): Optional<T> {
         val row = this.table.selectedRow
         return tableModel.getAt(row)
     }
@@ -96,7 +96,7 @@ class TableSection<T>(public val title: String, public val description: String?,
     }
 
     init {
-        val buttonsPanel = JPanel().also { it ->
+        val buttonsPanel = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
             if (showNewButton) {
@@ -136,7 +136,7 @@ class TableSection<T>(public val title: String, public val description: String?,
         mainPanel.add(table.withScrollPane(tableHeight), BorderLayout.CENTER)
     }
 
-    public fun getComponent(): JPanel {
+    fun getComponent(): JPanel {
         return UISection(title, description, mainPanel)
     }
 }

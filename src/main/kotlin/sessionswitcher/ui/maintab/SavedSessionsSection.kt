@@ -15,7 +15,7 @@ object SavedSessionsSection: SessionsListUpdateListener
     private lateinit var tableSection: TableSection<Session>
     private lateinit var sessionSwitcher: SessionSwitcher
 
-    public fun make(sessionSwitcher: SessionSwitcher): JComponent {
+    fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
         this.tableSection = TableSection("Sessions", "Saved sessions for this project",
             SessionsTableModel(sessionSwitcher.sessions),

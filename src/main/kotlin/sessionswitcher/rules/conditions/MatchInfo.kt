@@ -1,3 +1,3 @@
 package sessionswitcher.rules.conditions
 
-data class MatchInfo(public val matchedCookies: List<Pair<String, String>> = listOf(), public val matchedHeaders: List<Pair<String, String>> = listOf())
+data class MatchInfo(val matchedCookies: List<Pair<String, String>> = listOf(), val matchedHeaders: List<Pair<String, String>> = listOf())

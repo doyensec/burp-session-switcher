@@ -1,18 +1,9 @@
 package sessionswitcher.ui
 
 import burp.api.montoya.ui.Theme
-import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import java.awt.*
-import java.awt.event.ItemListener
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.*
-import javax.swing.event.ChangeListener
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
-import javax.swing.table.DefaultTableCellRenderer
-import javax.swing.table.DefaultTableModel
 import kotlin.math.min
 
 
@@ -29,208 +20,10 @@ class Label(text: String, bold: Boolean = false, big: Boolean = false, relativeS
             this.font = this.font.deriveFont(this.font.size + relativeSize.toFloat())
         }
     }
-
-    fun withPanel(border: Int = 0): JPanel {
-        return JPanel(BorderLayout()).also {
-            it.border = BorderFactory.createEmptyBorder(border, border, border, border);
-            it.add(this)
-        }
-    }
-}
-
-class MultilineLabel(text: String) : JTextArea(text) {
-    init {
-        isEditable = false
-        isOpaque = false
-        lineWrap = true
-        wrapStyleWord = true
-    }
-}
-
-open class BorderPanel(val top: Int, val left: Int, val bottom: Int, val right: Int) : JPanel(BorderLayout()) {
-    init {
-        this.border = BorderFactory.createEmptyBorder(top, left, bottom, right)
-    }
-
-    constructor() : this(5, 5, 5, 5)
-    constructor(border: Int) : this(border, border, border, border)
-    constructor(vertical: Int, horizontal: Int) : this(vertical, horizontal, vertical, horizontal)
-}
-
-open class FlowPanel(val alignment: Int, val gap: Int = 5) : JPanel() {
-    init {
-        if (alignment < FlowLayout.LEFT || alignment > FlowLayout.TRAILING) throw Exception("FlowPanel called with wrong alignment value: $alignment")
-        val hgap = if (alignment < FlowLayout.LEADING) gap else 0
-        val vgap = if (alignment >= FlowLayout.LEADING || alignment == FlowLayout.CENTER) gap else 0
-        this.layout = FlowLayout(alignment, hgap, vgap)
-    }
-}
-
-class BoxPanel(val axis: Int, val gap: Int = 5, vararg components: Component) : JPanel() {
-    init {
-        if (axis < BoxLayout.X_AXIS || axis > BoxLayout.PAGE_AXIS) throw Exception("BoxPanel called with wrong axis value: $axis")
-        this.layout = BoxLayout(this, axis)
-        components.forEach { c ->
-            this.add(c)
-            this.add(
-                if (axis == BoxLayout.X_AXIS) {
-                    Box.createHorizontalStrut(gap)
-                } else {
-                    Box.createVerticalStrut(gap)
-                },
-            )
-        }
-    }
-}
-
-open class Input<out T : JComponent>(val component: T, val description: String = "") :
-    FlowPanel(FlowLayout.LEFT, gap = 5) {
-    init {
-        if (description != "") {
-            this.add(JLabel("$description:"))
-        }
-        this.add(component)
-    }
-
-    override fun isEnabled(): Boolean = this.component.isEnabled
-    override fun setEnabled(enabled: Boolean) {
-        this.component.isEnabled = enabled
-    }
-}
-
-open class CheckBox(description: String, selected: Boolean = false, disabled: Boolean = false) :
-    Input<JCheckBox>(JCheckBox(description, selected), "") {
-    init {
-        this.component.isEnabled = !disabled
-    }
-
-    fun isSelected(): Boolean = this.component.isSelected
-    fun setSelected(selected: Boolean) {
-        this.component.isSelected = selected
-    }
-
-    fun addItemListener(il: ItemListener) = this.component.addItemListener(il)
-}
-
-open class ComboBox(description: String, vararg items: String) :
-    Input<JComboBox<String>>(JComboBox<String>(items), description) {
-
-    fun getSelectedItem(): String = this.component.selectedItem as String
-    fun getSelectedIndex(): Int = this.component.selectedIndex
-    fun setSelectedItem(item: String) {
-        this.component.selectedItem = item
-    }
-
-    fun setSelectedIndex(index: Int) {
-        this.component.selectedIndex = index
-    }
-
-    fun addItemListener(il: ItemListener) = this.component.addItemListener(il)
-}
-
-open class Spinner(description: String, min: Int, val max: Int, val step: Int = 1) :
-    Input<JSpinner>(JSpinner(SpinnerNumberModel(min, min, max, step)), description) {
-
-    fun getValue(): Int = this.component.value as Int
-    fun setValue(value: Int) {
-        this.component.value = value
-    }
-
-    fun addChangeListener(cl: ChangeListener) = this.component.addChangeListener(cl)
-}
-
-open class TextField(description: String, val columns: Int = 20) :
-    Input<JTextField>(JTextField(columns), description) {
-
-    var changeListener: (() -> Unit)? = null
-
-    init {
-        val listener = SimpleDocumentListener { this.changeHandler() }
-        this.component.document.addDocumentListener(listener)
-    }
-
-    fun getText(): String = this.component.text
-    fun setText(text: String) {
-        this.component.text = text
-    }
-
-    class SimpleDocumentListener(val callback: () -> Unit) : DocumentListener {
-        override fun insertUpdate(e: DocumentEvent?) = this.callback()
-        override fun removeUpdate(e: DocumentEvent?) = this.callback()
-        override fun changedUpdate(e: DocumentEvent?) = this.callback()
-    }
-
-    private fun changeHandler() {
-        if (this.changeListener != null) this.changeListener!!()
-    }
-}
-
-open class TextArea(description: String, val rows: Int, val cols: Int) :
-    FlowPanel(FlowLayout.LEFT, gap = 5) {
-
-    val component = JTextArea(rows, cols)
-    var changeListener: (() -> Unit)? = null
-
-    init {
-        this.component.isEditable = true
-        this.component.isOpaque = true
-
-        this.component.lineWrap = true
-        this.component.wrapStyleWord = true
-
-        val listener = SimpleDocumentListener { this.changeHandler() }
-        this.component.document.addDocumentListener(listener)
-
-        val scrollable = JScrollPane(this.component)
-        scrollable.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
-        scrollable.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
-
-        if (description != "") {
-            val label = BorderPanel(0).also { it.add(JLabel(description)) }
-            val bordered = BorderPanel(0, 10).add(scrollable)
-            val boxed = BoxPanel(BoxLayout.Y_AXIS, gap = 5, label, bordered)
-            this.add(boxed)
-        } else {
-            this.add(scrollable)
-        }
-    }
-
-    fun getText(): String = this.component.text
-    fun setText(text: String) {
-        this.component.text = text
-    }
-
-    override fun isEnabled(): Boolean = this.component.isEnabled
-    override fun setEnabled(enabled: Boolean) {
-        this.component.isEnabled = enabled
-    }
-
-    class SimpleDocumentListener(val callback: () -> Unit) : DocumentListener {
-        override fun insertUpdate(e: DocumentEvent?) = this.callback()
-        override fun removeUpdate(e: DocumentEvent?) = this.callback()
-        override fun changedUpdate(e: DocumentEvent?) = this.callback()
-    }
-
-    private fun changeHandler() {
-        if (this.component.lineCount > this.rows) this.component.rows = this.rows
-        if (this.changeListener != null) this.changeListener!!()
-    }
-}
-
-open class TabbedPane : BorderPanel() {
-    val tabbedPane = JTabbedPane()
-
-    init {
-        this.add(this.tabbedPane)
-    }
-
-    open fun addTab(title: String, component: JComponent) {
-        this.tabbedPane.addTab(title, component)
-    }
 }
 
 /* Create a window (JFrame) with reasonable defaults. */
-open class Window(val windowTitle: String) : JFrame(windowTitle) {
+open class Window(windowTitle: String) : JFrame(windowTitle) {
     init {
         this.defaultCloseOperation = DISPOSE_ON_CLOSE
         this.layout = BorderLayout()
@@ -255,8 +48,6 @@ open class Window(val windowTitle: String) : JFrame(windowTitle) {
     }
 }
 
-class Icon(val normal: Image, val hover: Image?, val selected: Image?)
-
 class ButtonPrimary(label: String): JButton(label) {
     init {
         this.foreground = Color.WHITE
@@ -271,82 +62,6 @@ class ButtonPrimary(label: String): JButton(label) {
         } else {
             Color(236, 98, 43)
         }
-    }
-}
-
-class ImgButton(val fallback: String, displayIcon: Icon?) : JButton() {
-    private var normalIcon: ImageIcon? = null
-    private var hoverIcon: ImageIcon? = null
-    private var selectedIcon: ImageIcon? = null
-
-    init {
-        this.border = BorderFactory.createEmptyBorder()
-        this.text = fallback
-        if (displayIcon?.normal != null) {
-            this.normalIcon = ImageIcon(autoResize(displayIcon.normal))
-            this.icon = normalIcon
-            this.text = null
-            if (displayIcon.hover != null) {
-                this.hoverIcon = ImageIcon(autoResize(displayIcon.hover))
-                this.addMouseListener(ImageHoverListener(this))
-            }
-            if (displayIcon.selected != null) {
-                this.selectedIcon = ImageIcon(autoResize(displayIcon.selected))
-                this.addMouseListener(ImageClickListener(this))
-            }
-        }
-    }
-
-    fun hover(active: Boolean) {
-        if (active) {
-            this.icon = this.hoverIcon
-        } else {
-            this.icon = this.normalIcon
-        }
-    }
-
-    fun selected(active: Boolean) {
-        if (active) {
-            this.icon = this.selectedIcon
-        } else {
-            this.icon = this.normalIcon
-        }
-    }
-
-    private fun autoResize(src: Image): Image {
-        val sz = this.preferredSize.height - this.insets.top
-        return src.getScaledInstance(sz, sz, Image.SCALE_SMOOTH)
-    }
-
-    class ImageHoverListener(private val btn: ImgButton) : MouseAdapter() {
-        override fun mouseEntered(e: MouseEvent?) {
-            super.mouseEntered(e)
-            btn.hover(true)
-        }
-
-        override fun mouseExited(e: MouseEvent?) {
-            super.mouseExited(e)
-            btn.hover(false)
-        }
-    }
-
-    class ImageClickListener(private val btn: ImgButton) : MouseAdapter() {
-        override fun mousePressed(e: MouseEvent?) {
-            super.mousePressed(e)
-            btn.selected(true)
-        }
-
-        override fun mouseReleased(e: MouseEvent?) {
-            super.mouseReleased(e)
-            btn.selected(false)
-        }
-    }
-}
-
-class ErrorDialog(val msg: String) {
-    init {
-        Logger.error(msg)
-        JOptionPane.showMessageDialog(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame(), msg, "BurpSessions Error", JOptionPane.ERROR_MESSAGE)
     }
 }
 
@@ -386,7 +101,7 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
     }
 }
 
-public fun JTable.withScrollPane(rows: Int = 15): JScrollPane {
+fun JTable.withScrollPane(rows: Int = 15): JScrollPane {
     val scrollPane = PDControlScrollPane(this)
     if (rows > 0) {
         val tableHeight = this.rowHeight * rows
@@ -396,20 +111,6 @@ public fun JTable.withScrollPane(rows: Int = 15): JScrollPane {
     return scrollPane
 }
 
-class Table(columns: Array<String>, editable: Boolean = false): JTable() {
-    class TableModel(columns: Array<String>, val editable: Boolean = false): DefaultTableModel(emptyArray(), columns) {
-        override fun isCellEditable(row: Int, column: Int): Boolean {
-            return editable
-        }
-    }
-    init {
-        this.model = TableModel(columns, editable)
-        this.autoCreateRowSorter = true
-        this.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
-        val headerRenderer = this.tableHeader.defaultRenderer as DefaultTableCellRenderer
-        headerRenderer.horizontalAlignment = JLabel.LEFT
-    }
-}
 
 class TextFieldWithPlaceholder(text: String, var placeholder: String): JTextField(text) {
     override fun paintComponent(g: Graphics?) {

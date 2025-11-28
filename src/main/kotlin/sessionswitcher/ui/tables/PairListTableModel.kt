@@ -25,7 +25,7 @@ class PairListTableModel(private val list: MutableList<Pair<String, String>>): A
         return String::class.java
     }
 
-    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any? {
+    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
         if (rowIndex == list.size) return ""
         return when (columnIndex) {
             0 -> list[rowIndex].first
@@ -73,7 +73,7 @@ class PairListTableModel(private val list: MutableList<Pair<String, String>>): A
     }
     override fun refresh() = this.fireTableDataChanged()
 
-    public fun addEditListener(listener: (Int, Int) -> Unit) {
+    fun addEditListener(listener: (Int, Int) -> Unit) {
         this.editListeners.add(listener)
     }
 
