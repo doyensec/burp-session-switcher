@@ -8,12 +8,13 @@ import sessionswitcher.sessions.Cookies
 import sessionswitcher.settings.Settings
 import sessionswitcher.utils.JsonPrettifier
 
-class DiffHighlightRequestEditor: StyledTextEditor() {
+class DiffHighlightRequestEditor : StyledTextEditor() {
     companion object {
         fun normalizeHeaderName(name: String): String {
             return name.split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } }
         }
     }
+
     val commonHeaderPrefixes = setOf(
         "connection",
         "sec-",
@@ -59,7 +60,11 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
         }
     }
 
-    fun setRequest(httpRequest: HttpRequest, headersDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList()), cookiesDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList())) {
+    fun setRequest(
+        httpRequest: HttpRequest,
+        headersDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList()),
+        cookiesDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList())
+    ) {
         Logger.debug("setRequest, styled")
         val requestLines = httpRequest.toString().split("\r\n")
 
@@ -111,9 +116,9 @@ class DiffHighlightRequestEditor: StyledTextEditor() {
                 Logger.debug("Header added: $headerName")
                 this.appendText("$headerName: $headerValue", EditorColors.addedElement.asAttributeSet())
             } else if (
-                    hideHeadersMode == Settings.HideHeadersMode.SHOW_ALL ||
-                    (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && !isCommonHeader)
-                    ) {
+                hideHeadersMode == Settings.HideHeadersMode.SHOW_ALL ||
+                (hideHeadersMode == Settings.HideHeadersMode.HIDE_COMMON && !isCommonHeader)
+            ) {
                 this.appendText("$headerName: ", EditorColors.headerName.asAttributeSet())
                 this.appendText(headerValue)
                 Logger.debug("Header noop: $headerName")

@@ -2,7 +2,7 @@ package sessionswitcher.requesteditor
 
 import javax.swing.text.*
 
-class WrapEditorKit: StyledEditorKit() {
+class WrapEditorKit : StyledEditorKit() {
     private val defaultFactory = WrapFactory()
 
     override fun getViewFactory(): ViewFactory {
@@ -19,7 +19,7 @@ class WrapEditorKit: StyledEditorKit() {
         }
     }
 
-    class WrapFactory: ViewFactory {
+    class WrapFactory : ViewFactory {
         override fun create(elem: Element?): View {
             val kind = elem!!.name
             if (kind != null) {
@@ -27,15 +27,19 @@ class WrapEditorKit: StyledEditorKit() {
                     AbstractDocument.ContentElementName -> {
                         return WrapLabelView(elem)
                     }
+
                     AbstractDocument.ParagraphElementName -> {
                         return ParagraphView(elem)
                     }
+
                     AbstractDocument.SectionElementName -> {
                         return BoxView(elem, View.Y_AXIS)
                     }
+
                     StyleConstants.ComponentElementName -> {
                         return ComponentView(elem)
                     }
+
                     StyleConstants.IconElementName -> {
                         return IconView(elem)
                     }

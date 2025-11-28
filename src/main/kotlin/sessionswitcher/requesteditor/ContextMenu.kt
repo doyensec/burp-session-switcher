@@ -46,6 +46,7 @@ class ContextMenu(private val editor: RequestEditor) : MouseAdapter() {
         sendToRepeaterAction,
         sendToOrganizerAction
     )
+
     private fun getRequest() = editor.request
     override fun mousePressed(e: MouseEvent) {
         if (e.button == MouseEvent.BUTTON3) {    // Right Click only

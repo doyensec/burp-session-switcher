@@ -8,12 +8,13 @@ import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.sessions.Session
 
-class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAndLoadData {
+class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveAndLoadData {
     val updateRules = ArrayList<UpdateRule>()
 
     fun getRequestMatchingRules(): List<UpdateRule> {
         return updateRules.filterNot { it.needsResponse() }
     }
+
     fun getResponseMatchingRules(): List<UpdateRule> {
         return updateRules.filter { it.needsResponse() }
     }
@@ -55,7 +56,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSa
     }
 
     fun duplicateRule(id: Int) {
-        val rule = getRuleWithId(id)?: return
+        val rule = getRuleWithId(id) ?: return
         addRule(rule.copy())
     }
 

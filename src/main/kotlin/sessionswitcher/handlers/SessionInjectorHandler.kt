@@ -10,10 +10,11 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getHeaderValue
 
-class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher): SessionHandlingAction {
+class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher) : SessionHandlingAction {
     companion object {
         const val HEADER_NAME = "X-SessionSwitcher-Inject"
     }
+
     override fun name(): String {
         return "Inject SessionSwitcher Session"
     }
@@ -40,7 +41,7 @@ class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher): Sess
         val highlightColor = settings.injectorHighlightColor.get()
         var annotations = Annotations.annotations(highlightColor)
         if (settings.injectorAnnotateRequest.get()) {
-           annotations = annotations.withNotes("SessionSwitcher: injected session $sessionName")
+            annotations = annotations.withNotes("SessionSwitcher: injected session $sessionName")
         }
 
         // Inject session

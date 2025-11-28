@@ -29,12 +29,14 @@ class SessionSwitcher private constructor(
             }
             return this.montoyaApi
         }
+
         fun getInstance(): SessionSwitcher {
             if (!this::instance.isInitialized) {
                 throw Exception("SessionSwitcher not initialized yet.")
             }
             return this.instance
         }
+
         private lateinit var instance: SessionSwitcher
         fun init(
             montoyaApi: MontoyaApi,

@@ -73,14 +73,17 @@ object UpdateRuleSection {
                 upButton.isEnabled = false
                 downButton.isEnabled = false
             }
+
             0 -> {
                 upButton.isEnabled = false
                 downButton.isEnabled = true
             }
+
             tableSection.table.rowCount - 1 -> {
                 upButton.isEnabled = true
                 downButton.isEnabled = false
             }
+
             else -> {
                 upButton.isEnabled = true
                 downButton.isEnabled = true
@@ -122,7 +125,13 @@ object UpdateRuleSection {
 
     fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection("Auto Update Rules", "Automatically update sessions from matching requests and responses",  UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules), otherButtons = arrayOf(upButton, downButton), tableHeight = 15)
+        this.tableSection = TableSection(
+            "Auto Update Rules",
+            "Automatically update sessions from matching requests and responses",
+            UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules),
+            otherButtons = arrayOf(upButton, downButton),
+            tableHeight = 15
+        )
         tableSection.refreshTable()
         tableSection.setNewButtonCallback(this::newButtonCallback)
         tableSection.setEditButtonCallback(this::editButtonCallback)

@@ -34,9 +34,9 @@ class PDControlScrollPane(view: Component?) : JScrollPane(view) {
         override fun mouseWheelMoved(e: MouseWheelEvent) {
             val parent = parentScrollPane
             if (parent != null) {
-             /*
-             * Only dispatch if we have reached top/bottom on previous scroll
-             */
+                /*
+                * Only dispatch if we have reached top/bottom on previous scroll
+                */
                 if (e.wheelRotation < 0) {
                     if (bar.value == 0 && previousValue == 0) {
                         parent.dispatchEvent(cloneEvent(e))

@@ -153,7 +153,7 @@ interface CanSaveAndLoadData : CanSaveData, CanLoadData
 // of data from the project file, instead of creating the object first and then loading data into it
 abstract class DeserializerFactory<T> {
     fun deserialize(id: String): T? {
-        val deserializer = object: CanLoadData {
+        val deserializer = object : CanLoadData {
             var deserialized: T? = null
             override val saveStateKey: String
                 get() = id

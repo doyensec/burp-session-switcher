@@ -48,7 +48,7 @@ open class Window(windowTitle: String) : JFrame(windowTitle) {
     }
 }
 
-class ButtonPrimary(label: String): JButton(label) {
+class ButtonPrimary(label: String) : JButton(label) {
     init {
         this.foreground = Color.WHITE
         this.background = getAccentColor()
@@ -65,8 +65,9 @@ class ButtonPrimary(label: String): JButton(label) {
     }
 }
 
-class UISection(val sectionTitle: String, val description: String?, vararg elements: Component?): JPanel() {
+class UISection(val sectionTitle: String, val description: String?, vararg elements: Component?) : JPanel() {
     private val gap = 10
+
     init {
         val innerBox = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
@@ -74,7 +75,7 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
 
         for (e in elements) {
             if (e != null) {
-                innerBox.add(JPanel(BorderLayout()).also{it.add(e)})
+                innerBox.add(JPanel(BorderLayout()).also { it.add(e) })
             } else {
                 innerBox.add(Box.createVerticalStrut(gap))
             }
@@ -95,7 +96,7 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
             outerBox.add(JPanel(BorderLayout()).also { it.add(Label(description)) })
         }
         outerBox.add(Box.createVerticalStrut(gap))
-        outerBox.add(JPanel(BorderLayout()).also{it.add(innerBox)})
+        outerBox.add(JPanel(BorderLayout()).also { it.add(innerBox) })
         outerBox.add(Box.createVerticalStrut(gap))
         this.add(outerBox)
     }
@@ -112,7 +113,7 @@ fun JTable.withScrollPane(rows: Int = 15): JScrollPane {
 }
 
 
-class TextFieldWithPlaceholder(text: String, var placeholder: String): JTextField(text) {
+class TextFieldWithPlaceholder(text: String, var placeholder: String) : JTextField(text) {
     override fun paintComponent(g: Graphics?) {
         super.paintComponent(g)
         if (this.placeholder.isEmpty()) return

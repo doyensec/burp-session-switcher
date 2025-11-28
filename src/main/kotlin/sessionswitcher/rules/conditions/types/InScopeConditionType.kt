@@ -5,11 +5,17 @@ import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionTypeInstance
 import sessionswitcher.rules.conditions.MatchInfo
 
-object InScopeConditionType: ConditionTypeInstance(matchOn = "Scope", matchesOnResponse = false, availableOperations = listOf("Request is in scope"), canSetPattern = false) {
+object InScopeConditionType : ConditionTypeInstance(
+    matchOn = "Scope",
+    matchesOnResponse = false,
+    availableOperations = listOf("Request is in scope"),
+    canSetPattern = false
+) {
     override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
         return request.isInScope xor configuration.negativeMatch
     }
-    override fun  validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> = Pair(true, "")
+
+    override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> = Pair(true, "")
 
     override fun describe(configuration: ConditionConfig): String {
         return "Request is ${if (configuration.negativeMatch) "not in" else "in"} scope"

@@ -5,15 +5,16 @@ import sessionswitcher.utils.headersMap
 
 class Cookies() {
     private val cookies = LinkedHashMap<String, String>()
+
     companion object {
         fun fromHeaderValue(headerValue: String): Cookies {
             val cookieValueString = headerValue.trim()
             val output = Cookies()
             val pairs = cookieValueString
-                    .split(';') // Separate different key=value pairs
-                    .map { it.trim().split('=', limit = 2) } // Split pair in key and value
-                    .filter { it.size == 2 } // Just a sanity check
-                    .map { Pair(it[0], it[1]) } // Make it a Pair
+                .split(';') // Separate different key=value pairs
+                .map { it.trim().split('=', limit = 2) } // Split pair in key and value
+                .filter { it.size == 2 } // Just a sanity check
+                .map { Pair(it[0], it[1]) } // Make it a Pair
             for (pair in pairs) {
                 output.set(pair.first, pair.second)
             }
@@ -44,7 +45,7 @@ class Cookies() {
     fun get(key: String): String? = this.cookies[key]
 
     fun getPairs(): List<Pair<String, String>> {
-       return this.cookies.entries.map { Pair(it.key, it.value) }
+        return this.cookies.entries.map { Pair(it.key, it.value) }
     }
 
     fun setPairs(pairs: Collection<Pair<String, String>>) {

@@ -8,18 +8,43 @@ import sessionswitcher.sessions.CookiesUpdateMode
 import sessionswitcher.sessions.HeadersUpdateMode
 import java.util.*
 
-class UpdateConfig private constructor(val updateSource: UpdateSource, val cookiesUpdateMode: CookiesUpdateMode, val headersUpdateMode: HeadersUpdateMode, val cookiesToUpdate: Set<String> = emptySet(), val headersToUpdate: Set<String> = emptySet(), private val saveStateId: UUID = UUID.randomUUID()):
+class UpdateConfig private constructor(
+    val updateSource: UpdateSource,
+    val cookiesUpdateMode: CookiesUpdateMode,
+    val headersUpdateMode: HeadersUpdateMode,
+    val cookiesToUpdate: Set<String> = emptySet(),
+    val headersToUpdate: Set<String> = emptySet(),
+    private val saveStateId: UUID = UUID.randomUUID()
+) :
     CanSaveData {
     companion object {
-        fun make(updateSource: UpdateSource, cookiesUpdateMode: CookiesUpdateMode, headersUpdateMode: HeadersUpdateMode, cookiesToUpdate: Set<String> = emptySet(), headersToUpdate: Set<String> = emptySet()): UpdateConfig {
+        fun make(
+            updateSource: UpdateSource,
+            cookiesUpdateMode: CookiesUpdateMode,
+            headersUpdateMode: HeadersUpdateMode,
+            cookiesToUpdate: Set<String> = emptySet(),
+            headersToUpdate: Set<String> = emptySet()
+        ): UpdateConfig {
             if (updateSource == UpdateSource.RESPONSE && cookiesUpdateMode == CookiesUpdateMode.MIRROR) {
                 throw IllegalArgumentException("Cannot use MIRROR cookie update mode when updating from a response")
             }
             return UpdateConfig(updateSource, cookiesUpdateMode, headersUpdateMode, cookiesToUpdate, headersToUpdate)
         }
 
-        fun make(updateSource: String, cookiesUpdateMode: String, headersUpdateMode: String, cookiesToUpdate: Set<String> = emptySet(), headersToUpdate: Set<String> = emptySet()): UpdateConfig {
-            return this.make(UpdateSource.valueOf(updateSource.uppercase()), CookiesUpdateMode.valueOf(cookiesUpdateMode.uppercase()), HeadersUpdateMode.valueOf(headersUpdateMode.uppercase()), cookiesToUpdate, headersToUpdate)
+        fun make(
+            updateSource: String,
+            cookiesUpdateMode: String,
+            headersUpdateMode: String,
+            cookiesToUpdate: Set<String> = emptySet(),
+            headersToUpdate: Set<String> = emptySet()
+        ): UpdateConfig {
+            return this.make(
+                UpdateSource.valueOf(updateSource.uppercase()),
+                CookiesUpdateMode.valueOf(cookiesUpdateMode.uppercase()),
+                HeadersUpdateMode.valueOf(headersUpdateMode.uppercase()),
+                cookiesToUpdate,
+                headersToUpdate
+            )
         }
 
         val Deserializer = object : DeserializerFactory<UpdateConfig>() {
@@ -31,7 +56,14 @@ class UpdateConfig private constructor(val updateSource: UpdateSource, val cooki
                 val cookiesToUpdate = obj.getStringList("cookies_to_update")
                 val headersToUpdate = obj.getStringList("headers_to_update")
 
-                return UpdateConfig(updateSource, cookiesUpdateMode, headersUpdateMode, cookiesToUpdate.toSet(), headersToUpdate.toSet(), id)
+                return UpdateConfig(
+                    updateSource,
+                    cookiesUpdateMode,
+                    headersUpdateMode,
+                    cookiesToUpdate.toSet(),
+                    headersToUpdate.toSet(),
+                    id
+                )
             }
         }
     }
@@ -52,12 +84,19 @@ class UpdateConfig private constructor(val updateSource: UpdateSource, val cooki
     }
 
     fun describe(name: String): String {
-        return name.split(" ").joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
+        return name.split(" ")
+            .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
     }
 
     // Copy constructor
-    fun copy(): UpdateConfig{
-        return UpdateConfig(this.updateSource, this.cookiesUpdateMode, this.headersUpdateMode, this.cookiesToUpdate.toSet(), this.headersToUpdate.toSet())
+    fun copy(): UpdateConfig {
+        return UpdateConfig(
+            this.updateSource,
+            this.cookiesUpdateMode,
+            this.headersUpdateMode,
+            this.cookiesToUpdate.toSet(),
+            this.headersToUpdate.toSet()
+        )
     }
 
     override val saveStateKey: String

@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object StatusCodeConditionType :
     StringConditionType(matchOn = "Response Status Code", matchesOnResponse = true) {
-    override fun matchesResponse(configuration: ConditionConfig, response: HttpResponse, matchInfo: MatchInfo): Boolean {
+    override fun matchesResponse(
+        configuration: ConditionConfig,
+        response: HttpResponse,
+        matchInfo: MatchInfo
+    ): Boolean {
         return this.stringMatches(configuration, response.statusCode().toString())
     }
 }

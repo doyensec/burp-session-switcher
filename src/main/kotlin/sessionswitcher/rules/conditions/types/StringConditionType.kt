@@ -3,9 +3,13 @@ package sessionswitcher.rules.conditions.types
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.ConditionTypeInstance
 
-abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
-    ConditionTypeInstance(matchOn, matchesOnResponse, availableOperations = OPERATORS.entries.map { it.description }, canSetPattern = true)
-    {
+abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) :
+    ConditionTypeInstance(
+        matchOn,
+        matchesOnResponse,
+        availableOperations = OPERATORS.entries.map { it.description },
+        canSetPattern = true
+    ) {
     enum class OPERATORS(val description: String) {
         EXACT_MATCH("Matches exactly"),
         CONTAINS("Contains"),
@@ -14,26 +18,35 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
         REGEX_MATCH("Matches Regex"),
     }
 
-    protected fun stringMatches(configuration: ConditionConfig, value: String, negativeMatch: Boolean = configuration.negativeMatch): Boolean {
+    protected fun stringMatches(
+        configuration: ConditionConfig,
+        value: String,
+        negativeMatch: Boolean = configuration.negativeMatch
+    ): Boolean {
         val match = when (configuration.operation) {
             OPERATORS.STARTS_WITH.description -> {
                 value.lowercase().startsWith(configuration.pattern.get().lowercase())
             }
+
             OPERATORS.CONTAINS.description -> {
                 value.lowercase().contains(configuration.pattern.get().lowercase())
             }
+
             OPERATORS.ENDS_WITH.description -> {
                 value.lowercase().endsWith(configuration.pattern.get().lowercase())
             }
+
             OPERATORS.EXACT_MATCH.description -> {
                 value.equals(configuration.pattern.get(), ignoreCase = true)
             }
+
             OPERATORS.REGEX_MATCH.description -> {
                 value.matches(configuration.pattern.get().toRegex())
             }
+
             else -> throw IllegalArgumentException("Unknown operation: ${configuration.operation}")
         }
-       return match xor negativeMatch
+        return match xor negativeMatch
     }
 
     override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> {
@@ -47,7 +60,7 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
             try {
                 Regex(configuration.pattern.get())
             } catch (e: Exception) {
-                return Pair(false, e.message?: "Invalid Regex")
+                return Pair(false, e.message ?: "Invalid Regex")
             }
         }
         return Pair(true, "")
@@ -55,13 +68,15 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean):
 
     override fun describe(configuration: ConditionConfig): String {
         val operation = if (configuration.negativeMatch) {
-             when (configuration.operation) {
+            when (configuration.operation) {
                 OPERATORS.EXACT_MATCH.description -> "does NOT match exactly"
                 OPERATORS.CONTAINS.description -> "does NOT contain"
                 OPERATORS.STARTS_WITH.description -> "does NOT start with"
                 OPERATORS.ENDS_WITH.description -> "does NOT end with"
                 OPERATORS.REGEX_MATCH.description -> "does NOT match Regex"
-                else -> {configuration.operation}
+                else -> {
+                    configuration.operation
+                }
             }
         } else {
             configuration.operation.lowercase()

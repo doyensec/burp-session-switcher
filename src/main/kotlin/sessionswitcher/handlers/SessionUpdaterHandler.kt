@@ -9,10 +9,11 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getHeaderValue
 
-class SessionUpdaterHandler(private val sessionSwitcher: SessionSwitcher):  SessionHandlingAction {
+class SessionUpdaterHandler(private val sessionSwitcher: SessionSwitcher) : SessionHandlingAction {
     companion object {
         const val HEADER_NAME = "X-SessionSwitcher-Update"
     }
+
     override fun name(): String {
         return "Update SessionSwitcher Session"
     }

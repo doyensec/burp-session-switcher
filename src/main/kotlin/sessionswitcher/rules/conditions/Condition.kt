@@ -8,7 +8,11 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import java.util.*
 
-class Condition private constructor(val typeInstance: ConditionTypeInstance, val configuration: ConditionConfig, private val saveStateId: UUID = UUID.randomUUID()) : CanSaveData {
+class Condition private constructor(
+    val typeInstance: ConditionTypeInstance,
+    val configuration: ConditionConfig,
+    private val saveStateId: UUID = UUID.randomUUID()
+) : CanSaveData {
     companion object {
         fun make(type: ConditionType, configuration: ConditionConfig): Condition {
             val validationResult = type.instance.validateConfiguration(configuration)
@@ -23,7 +27,7 @@ class Condition private constructor(val typeInstance: ConditionTypeInstance, val
             return this.make(type, configuration)
         }
 
-        val Deserializer = object: DeserializerFactory<Condition>() {
+        val Deserializer = object : DeserializerFactory<Condition>() {
             override fun deserializeObject(obj: PersistedObject): Condition {
                 val id = UUID.fromString(obj.getString("id"))
                 val type = ConditionType.valueOf(obj.getString("type"))
@@ -54,8 +58,10 @@ class Condition private constructor(val typeInstance: ConditionTypeInstance, val
 
         companion object {
             fun fromInstance(type: ConditionTypeInstance): ConditionType {
-                return entries.find { it.instance == type } ?: throw IllegalArgumentException("Unknown condition type: $type")
+                return entries.find { it.instance == type }
+                    ?: throw IllegalArgumentException("Unknown condition type: $type")
             }
+
             val instances = entries.map { it.instance }.toTypedArray()
         }
     }

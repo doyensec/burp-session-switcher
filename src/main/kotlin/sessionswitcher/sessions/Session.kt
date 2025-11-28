@@ -15,7 +15,7 @@ import java.util.*
 
 class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
-        val Deserializer = object: DeserializerFactory<Session>() {
+        val Deserializer = object : DeserializerFactory<Session>() {
             override fun deserializeObject(obj: PersistedObject): Session {
                 // Basic data
                 val session = Session(obj.getString("name"), obj.getString("id"))
@@ -143,7 +143,10 @@ class Session private constructor(val name: String, private val id: String) : Ca
         return apply(r, SessionSwitcher.getInstance().settings.cookiesInjectMode.get())
     }
 
-    fun apply(r: HttpRequest, cookiesInjectMode: CookiesInjectMode): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
+    fun apply(
+        r: HttpRequest,
+        cookiesInjectMode: CookiesInjectMode
+    ): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.debug("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withHeaders(this.headers)
 
@@ -194,7 +197,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
 
             // Filter useless headers
             val filtered = r.mergedHeaders()
-                .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) }  }
+                .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) } }
 
             // Add the filtered headers
             this.headers.putAll(filtered.map { Pair(it.name().lowercase(), it.value()) })
@@ -218,12 +221,15 @@ class Session private constructor(val name: String, private val id: String) : Ca
             CookiesUpdateMode.MIRROR -> {
                 this.cookies = Cookies.fromHttpRequest(r)
             }
+
             CookiesUpdateMode.ADD_ALL -> {
                 this.cookies.update(Cookies.fromHttpRequest(r), onlyUpdateExisting = false)
             }
+
             CookiesUpdateMode.UPDATE_EXISTING -> {
                 this.cookies.update(Cookies.fromHttpRequest(r), onlyUpdateExisting = true)
             }
+
             CookiesUpdateMode.NOOP -> return
         }
     }

@@ -7,7 +7,7 @@ import sessionswitcher.ui.Label
 import java.awt.BorderLayout
 import javax.swing.*
 
-class MainSuiteTab(sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
+class MainSuiteTab(sessionSwitcher: SessionSwitcher) : JPanel(BorderLayout()) {
     private val settingsWindow = SettingsWindow(sessionSwitcher.settings)
 
     private val mainPanel = JPanel().also {
@@ -18,13 +18,17 @@ class MainSuiteTab(sessionSwitcher: SessionSwitcher): JPanel(BorderLayout()) {
     init {
         // Title section
         // |- Title
-        val topPanel = JPanel(BorderLayout()).also { it.border = BorderFactory.createEmptyBorder(5,5, 5, 5) }
+        val topPanel = JPanel(BorderLayout()).also { it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5) }
         val titlePanel = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.X_AXIS)
         }
 
         val title = Label("Session Switcher", bold = true, relativeSize = 12.0)
-        val logo = ImageIcon(MainSuiteTab::class.java.getResource("/logo.png")).image.getScaledInstance(32,32, java.awt.Image.SCALE_SMOOTH)
+        val logo = ImageIcon(MainSuiteTab::class.java.getResource("/logo.png")).image.getScaledInstance(
+            32,
+            32,
+            java.awt.Image.SCALE_SMOOTH
+        )
         titlePanel.add(JLabel(ImageIcon(logo)))
         titlePanel.add(Box.createHorizontalStrut(10))
         titlePanel.add(title)

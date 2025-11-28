@@ -82,6 +82,7 @@ fun HttpRequest.mergedHeaders(): List<HttpHeader> {
     newHeaders.add(originalCookieIndex, HttpHeader.httpHeader("cookie", uncompressedCookies))
     return newHeaders
 }
+
 fun HttpRequest.headersMap(): Map<String, String> {
     val map = mutableMapOf<String, String>()
     this.mergedHeaders().forEach { map[it.name().lowercase()] = it.value() }
@@ -89,7 +90,7 @@ fun HttpRequest.headersMap(): Map<String, String> {
 }
 
 fun HttpRequest.getHeaderValue(name: String): String? {
-    return this.mergedHeaders().find { it.name().equals(name, ignoreCase = true)}?.value()
+    return this.mergedHeaders().find { it.name().equals(name, ignoreCase = true) }?.value()
 }
 
 fun HttpRequest.host(): String {

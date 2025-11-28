@@ -6,11 +6,21 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import java.util.*
 
-class ConditionConfig private constructor(val operation: String, val pattern: Optional<String>, val negativeMatch: Boolean, private val saveStateId: UUID): CanSaveData {
-    constructor(operation: String, pattern: Optional<String>,negativeMatch: Boolean) : this(operation, pattern, negativeMatch, UUID.randomUUID())
+class ConditionConfig private constructor(
+    val operation: String,
+    val pattern: Optional<String>,
+    val negativeMatch: Boolean,
+    private val saveStateId: UUID
+) : CanSaveData {
+    constructor(operation: String, pattern: Optional<String>, negativeMatch: Boolean) : this(
+        operation,
+        pattern,
+        negativeMatch,
+        UUID.randomUUID()
+    )
 
     companion object {
-        val Deserializer = object: DeserializerFactory<ConditionConfig>() {
+        val Deserializer = object : DeserializerFactory<ConditionConfig>() {
             override fun deserializeObject(obj: PersistedObject): ConditionConfig {
                 Logger.debug("Deserializing ConditionConfig: $obj")
                 val id = UUID.fromString(obj.getString("id"))

@@ -12,7 +12,18 @@ import javax.swing.table.TableModel
 import kotlin.math.min
 
 @Suppress("UNCHECKED_CAST")
-class TableSection<T>(val title: String, val description: String?, val tableModel: ITableModel<T>, val tableHeight: Int = 15, showNewButton: Boolean = true, showEditButton: Boolean = true, showDeleteButton: Boolean = true, showDuplicateButton: Boolean = true, showRefreshButton: Boolean = true, val otherButtons: Array<JButton> = emptyArray<JButton>()) {
+class TableSection<T>(
+    val title: String,
+    val description: String?,
+    val tableModel: ITableModel<T>,
+    val tableHeight: Int = 15,
+    showNewButton: Boolean = true,
+    showEditButton: Boolean = true,
+    showDeleteButton: Boolean = true,
+    showDuplicateButton: Boolean = true,
+    showRefreshButton: Boolean = true,
+    val otherButtons: Array<JButton> = emptyArray<JButton>()
+) {
     // Table model
     val table = JTable(tableModel as TableModel).also {
         it.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
@@ -100,27 +111,27 @@ class TableSection<T>(val title: String, val description: String?, val tableMode
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.border = BorderFactory.createEmptyBorder(0, 0, 0, 5)
             if (showNewButton) {
-                it.add(JPanel(BorderLayout()).also{p-> p.add(newButton, BorderLayout.PAGE_START)})
+                it.add(JPanel(BorderLayout()).also { p -> p.add(newButton, BorderLayout.PAGE_START) })
                 it.add(Box.createVerticalStrut(5))
             }
             if (showEditButton) {
-                it.add(JPanel(BorderLayout()).also{p-> p.add(editButton, BorderLayout.PAGE_START)})
+                it.add(JPanel(BorderLayout()).also { p -> p.add(editButton, BorderLayout.PAGE_START) })
                 it.add(Box.createVerticalStrut(5))
             }
             if (showDeleteButton) {
-                it.add(JPanel(BorderLayout()).also{p-> p.add(deleteButton, BorderLayout.PAGE_START)})
+                it.add(JPanel(BorderLayout()).also { p -> p.add(deleteButton, BorderLayout.PAGE_START) })
                 it.add(Box.createVerticalStrut(5))
             }
             if (showDuplicateButton) {
-                it.add(JPanel(BorderLayout()).also{p-> p.add(duplicateButton, BorderLayout.PAGE_START)})
+                it.add(JPanel(BorderLayout()).also { p -> p.add(duplicateButton, BorderLayout.PAGE_START) })
                 it.add(Box.createVerticalStrut(5))
             }
             if (showRefreshButton) {
-                it.add(JPanel(BorderLayout()).also{p-> p.add(refreshButton, BorderLayout.PAGE_START)})
+                it.add(JPanel(BorderLayout()).also { p -> p.add(refreshButton, BorderLayout.PAGE_START) })
                 it.add(Box.createVerticalStrut(5))
             }
             for (button in otherButtons) {
-                it.add(JPanel(BorderLayout()).also{p-> p.add(button, BorderLayout.PAGE_START)})
+                it.add(JPanel(BorderLayout()).also { p -> p.add(button, BorderLayout.PAGE_START) })
                 it.add(Box.createVerticalStrut(5))
             }
         }

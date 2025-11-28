@@ -39,10 +39,12 @@ class ContextMenuProvider(private val sessionSwitcher: SessionSwitcher) : Contex
         }
         return null
     }
+
     override fun provideMenuItems(event: ContextMenuEvent): List<Component> {
         this.request = this.requestFromContext(event) ?: return emptyList()
         return menuItems
     }
+
     override fun provideMenuItems(event: AuditIssueContextMenuEvent): List<Component> {
         val issues = event.selectedIssues()
         if (issues.size != 1) return emptyList()

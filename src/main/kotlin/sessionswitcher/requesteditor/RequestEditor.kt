@@ -175,7 +175,11 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             // Ask confirmation dialog if needed
             val doNotAskOverwrite = this.sessionSwitcher.settings.editorDoNotAskOverwriteConfirmation
             if (!doNotAskOverwrite.get()) {
-                val dialog = ConfirmationDialog(sessionSwitcher, "Do you want to overwrite the selected session with the data from the original request?", "Confirm Overwrite")
+                val dialog = ConfirmationDialog(
+                    sessionSwitcher,
+                    "Do you want to overwrite the selected session with the data from the original request?",
+                    "Confirm Overwrite"
+                )
                 dialog.show()
                 if (!dialog.getAnswer()) {
                     // User canceled
@@ -221,6 +225,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
                 Logger.info("Selected session null")
                 this.selectedSession = null
             }
+
             else -> {
                 Logger.info("Selected session NOT null")
                 this.selectedSession = selected

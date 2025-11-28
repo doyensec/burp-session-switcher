@@ -10,14 +10,14 @@ import sessionswitcher.ui.tables.SessionsTableModel
 import java.util.*
 import javax.swing.JComponent
 
-object SavedSessionsSection: SessionsListUpdateListener
-{
+object SavedSessionsSection : SessionsListUpdateListener {
     private lateinit var tableSection: TableSection<Session>
     private lateinit var sessionSwitcher: SessionSwitcher
 
     fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection("Sessions", "Saved sessions for this project",
+        this.tableSection = TableSection(
+            "Sessions", "Saved sessions for this project",
             SessionsTableModel(sessionSwitcher.sessions),
             tableHeight = 20
         )

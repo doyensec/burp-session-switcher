@@ -25,7 +25,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             Box.createVerticalStrut(6),
             settings.cookiesInjectMode.drawComboBox(true),
             Box.createVerticalStrut(6),
-            )
+        )
 
         /*
         val autoInjectorSections = UISection(
@@ -51,15 +51,17 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
         val deleteSessionsButton = JButton("Delete All Sessions From Project File").also {
             it.addActionListener {
                 val data = SessionSwitcher.getApi().persistence().extensionData()
-                data.childObjectKeys().filter { s -> s.startsWith("Session.")}.forEach { s -> data.deleteChildObject(s) }
+                data.childObjectKeys().filter { s -> s.startsWith("Session.") }
+                    .forEach { s -> data.deleteChildObject(s) }
                 data.deleteChildObject("SessionCollection")
-                }
             }
+        }
 
         val deleteUpdateRulesButton = JButton("Delete All Update Rules").also {
             it.addActionListener {
                 val data = SessionSwitcher.getApi().persistence().extensionData()
-                data.childObjectKeys().filter { s -> s.startsWith("UpdateRule.")}.forEach { s -> data.deleteChildObject(s) }
+                data.childObjectKeys().filter { s -> s.startsWith("UpdateRule.") }
+                    .forEach { s -> data.deleteChildObject(s) }
                 data.deleteChildObject("UpdateRulesCollection")
             }
         }
@@ -70,7 +72,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             deleteSessionsButton,
             Box.createVerticalStrut(6),
             deleteUpdateRulesButton
-            )
+        )
 
         // Build the main window
         val panel = JPanel().also {

@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object ResponseBodyConditionType :
     StringConditionType(matchOn = "Response Body", matchesOnResponse = true) {
-    override fun matchesResponse(configuration: ConditionConfig, response: HttpResponse, matchInfo: MatchInfo): Boolean {
+    override fun matchesResponse(
+        configuration: ConditionConfig,
+        response: HttpResponse,
+        matchInfo: MatchInfo
+    ): Boolean {
         val body = response.bodyToString()
         if (body.isNullOrBlank()) {
             return false

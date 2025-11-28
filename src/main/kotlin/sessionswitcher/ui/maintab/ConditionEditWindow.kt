@@ -26,23 +26,25 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     // Condition selection
     val conditionTypesSelector = JComboBox(ConditionType.instances)
     val operationSelector = JComboBox<String>()
-    val patternTextBox =  JTextField().also {
+    val patternTextBox = JTextField().also {
         it.isEnabled = false
         it.font = SessionSwitcher.getApi().userInterface().currentEditorFont()
     }
     val negativeMatchCheckBox = JCheckBox("Negative match")
     val validationMessageLabel = JLabel("")
 
-    val selectedConditionType: ConditionTypeInstance get() {
-        return conditionTypesSelector.selectedItem as ConditionTypeInstance
-    }
+    val selectedConditionType: ConditionTypeInstance
+        get() {
+            return conditionTypesSelector.selectedItem as ConditionTypeInstance
+        }
 
-    val configuration: ConditionConfig get() {
-        val operation = operationSelector.selectedItem as String
-        val pattern = if (patternTextBox.isEnabled) Optional.of(patternTextBox.text) else Optional.empty<String>()
-        val negativeMatch = this.negativeMatchCheckBox.isSelected
-        return ConditionConfig(operation, pattern, negativeMatch)
-    }
+    val configuration: ConditionConfig
+        get() {
+            val operation = operationSelector.selectedItem as String
+            val pattern = if (patternTextBox.isEnabled) Optional.of(patternTextBox.text) else Optional.empty<String>()
+            val negativeMatch = this.negativeMatchCheckBox.isSelected
+            return ConditionConfig(operation, pattern, negativeMatch)
+        }
 
     fun autoSize() {
         // Pack the window to fit its content
@@ -84,7 +86,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             Pair("Pattern", patternTextBox),
             Pair("Negative match", negativeMatchCheckBox),
             Pair("Validation", validationMessageLabel)
-            )
+        )
 
         val panel = JPanel(GridBagLayout())
         val c = GridBagConstraints()

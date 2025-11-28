@@ -5,7 +5,11 @@ import java.awt.Dimension
 import javax.swing.*
 import javax.swing.JOptionPane.*
 
-class ConfirmationDialog(private val sessionSwitcher: SessionSwitcher, private val text: String, private val title: String) {
+class ConfirmationDialog(
+    private val sessionSwitcher: SessionSwitcher,
+    private val text: String,
+    private val title: String
+) {
     private var savePreference = false
     private var answer = false
 

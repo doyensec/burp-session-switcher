@@ -19,8 +19,15 @@ import java.util.*
 import javax.swing.*
 import kotlin.math.min
 
-class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val initialUpdateRule: Optional<UpdateRule>) :
-    JDialog(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(), if (initialUpdateRule.isEmpty) "New Update Rule" else "Edit Update Rule", true) {
+class UpdateRuleWindow(
+    private val sessionSwitcher: SessionSwitcher,
+    private val initialUpdateRule: Optional<UpdateRule>
+) :
+    JDialog(
+        sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+        if (initialUpdateRule.isEmpty) "New Update Rule" else "Edit Update Rule",
+        true
+    ) {
 
     // Flags
     var shouldSave = false
@@ -31,18 +38,26 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     // UI elements
     val saveButton = ButtonPrimary("Save")
     val cancelButton = JButton("Cancel")
-    val tableSection = TableSection("Conditions", "Conditions in this list are evaluated with a logical AND", ConditionsTableModel(conditions), showRefreshButton = false)
+    val tableSection = TableSection(
+        "Conditions",
+        "Conditions in this list are evaluated with a logical AND",
+        ConditionsTableModel(conditions),
+        showRefreshButton = false
+    )
 
     val sessionSelector = JComboBox<String>()
 
     // Combo box valid options
     private val requestCookiesUpdateOptions = CookiesUpdateMode.entries.toTypedArray()
-    private val responseCookiesUpdateOptions = CookiesUpdateMode.entries.filterNot { it == CookiesUpdateMode.MIRROR }.toTypedArray()
+    private val responseCookiesUpdateOptions =
+        CookiesUpdateMode.entries.filterNot { it == CookiesUpdateMode.MIRROR }.toTypedArray()
     private val defaultRequestCookieUpdateOption = CookiesUpdateMode.MIRROR
     private val defaultResponseCookieUpdateOption = CookiesUpdateMode.ADD_ALL
     private val headersUpdateOptions = HeadersUpdateMode.entries.toTypedArray()
     private val defaultHeadersUpdateOption = HeadersUpdateMode.UPDATE_EXISTING
-    private val updateSourceOptions = UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }.toTypedArray() // Disable response parsing for now
+    private val updateSourceOptions =
+        UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }
+            .toTypedArray() // Disable response parsing for now
 
     val updateSourceSelector = JComboBox(updateSourceOptions)
     val cookieModeSelector = JComboBox(requestCookiesUpdateOptions)
@@ -50,7 +65,8 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
-        val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame().graphicsConfiguration.device.displayMode
+        val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils()
+            .suiteFrame().graphicsConfiguration.device.displayMode
 
         val reasonableHeight = min(this.preferredSize.height, screenSize.height - 50)
         //this.preferredSize = Dimension(reasonableWidth, reasonableHeight)
@@ -263,7 +279,7 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
 
         // Build the main window
         val panel = JPanel().also {
-            it.border = BorderFactory.createEmptyBorder(5,5, 5, 5)
+            it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(tableSection.getComponent())
             it.add(updateConfigSection)
@@ -298,7 +314,8 @@ class UpdateRuleWindow(private val sessionSwitcher: SessionSwitcher, private val
     }
 
     fun checkEnableSaveButton() {
-        val enable = tableSection.table.rowCount > 0 && sessionSelector.selectedItem != "(No sessions)" && sessionSelector.selectedItem != ""
+        val enable =
+            tableSection.table.rowCount > 0 && sessionSelector.selectedItem != "(No sessions)" && sessionSelector.selectedItem != ""
         saveButton.isEnabled = enable
     }
 }

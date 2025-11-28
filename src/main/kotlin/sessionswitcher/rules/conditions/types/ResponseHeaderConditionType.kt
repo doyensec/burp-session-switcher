@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object ResponseHeaderConditionType :
     StringConditionType(matchOn = "Response Header", matchesOnResponse = true) {
-    override fun matchesResponse(configuration: ConditionConfig, response: HttpResponse, matchInfo: MatchInfo): Boolean {
+    override fun matchesResponse(
+        configuration: ConditionConfig,
+        response: HttpResponse,
+        matchInfo: MatchInfo
+    ): Boolean {
         val headers = response.headers().map { it.toString() }
         return if (configuration.negativeMatch) {
             headers.none { this.stringMatches(configuration, it, false) }

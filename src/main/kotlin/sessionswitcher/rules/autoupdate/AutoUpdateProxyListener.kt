@@ -10,7 +10,8 @@ import kotlinx.coroutines.launch
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 
-class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher): ProxyRequestHandler, ProxyResponseHandler {
+class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher) : ProxyRequestHandler,
+    ProxyResponseHandler {
     private val supervisor = SupervisorJob()
     private val coroutineScope = CoroutineScope(supervisor + Dispatchers.Default)
     private val tasks = Channel<suspend () -> Unit>(UNLIMITED)
@@ -19,7 +20,9 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher): Pro
     init {
         coroutineScope.launch {
             for (task in tasks) {
-                try { task() } catch (t: Throwable) {
+                try {
+                    task()
+                } catch (t: Throwable) {
                     Logger.error("Error in worker: ${t.message}")
                 }
             }
@@ -51,7 +54,11 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher): Pro
             tasks.send {
                 for (rule in sessionSwitcher.updateRulesCollection.getResponseMatchingRules()) {
                     if (rule.updateIfResponseMatches(interceptedResponse)) {
-                        Logger.info("Response ${interceptedResponse.messageId()} with URL ${interceptedResponse.request().url()} matched rule ${rule.ruleId}")
+                        Logger.info(
+                            "Response ${interceptedResponse.messageId()} with URL ${
+                                interceptedResponse.request().url()
+                            } matched rule ${rule.ruleId}"
+                        )
                         if (stopAtFirstMatch) return@send
                     }
                 }

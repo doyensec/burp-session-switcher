@@ -14,7 +14,13 @@ import sessionswitcher.sessions.Session
 import java.util.*
 import kotlin.math.max
 
-class UpdateRule private constructor(val conditions: Array<Condition>, val session: Session, val config: UpdateConfig, val ruleId: Int, private val saveStateId: UUID) : CanSaveData {
+class UpdateRule private constructor(
+    val conditions: Array<Condition>,
+    val session: Session,
+    val config: UpdateConfig,
+    val ruleId: Int,
+    private val saveStateId: UUID
+) : CanSaveData {
     companion object {
         private var currentId = 1
         private fun generateId(): Int {
@@ -22,7 +28,12 @@ class UpdateRule private constructor(val conditions: Array<Condition>, val sessi
         }
     }
 
-    constructor(conditions: Array<Condition>, session: Session, config: UpdateConfig, ruleId: Int = generateId()): this(conditions, session, config, ruleId, UUID.randomUUID())
+    constructor(
+        conditions: Array<Condition>,
+        session: Session,
+        config: UpdateConfig,
+        ruleId: Int = generateId()
+    ) : this(conditions, session, config, ruleId, UUID.randomUUID())
 
     init {
         // Update the stored ID counter in case the ID was set externally
@@ -30,7 +41,7 @@ class UpdateRule private constructor(val conditions: Array<Condition>, val sessi
     }
 
     fun needsResponse(): Boolean {
-        return config.updateSource == UpdateConfig.UpdateSource.RESPONSE || conditions.any{ it.typeInstance.matchesOnResponse }
+        return config.updateSource == UpdateConfig.UpdateSource.RESPONSE || conditions.any { it.typeInstance.matchesOnResponse }
     }
 
     fun matchesRequest(httpRequest: InterceptedRequest): Boolean {
@@ -112,7 +123,7 @@ class UpdateRule private constructor(val conditions: Array<Condition>, val sessi
         return obj
     }
 
-    class Deserializer(val sessionSwitcher: SessionSwitcher): DeserializerFactory<UpdateRule>() {
+    class Deserializer(val sessionSwitcher: SessionSwitcher) : DeserializerFactory<UpdateRule>() {
         override fun deserializeObject(obj: PersistedObject): UpdateRule {
             val saveStateId = UUID.fromString(obj.getString("id"))
             val ruleId = obj.getInteger("ruleId")

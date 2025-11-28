@@ -4,7 +4,8 @@ import sessionswitcher.rules.conditions.Condition
 import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class ConditionsTableModel(private val conditions: ArrayList<Condition>): AbstractTableModel(), ITableModel<Condition> {
+class ConditionsTableModel(private val conditions: ArrayList<Condition>) : AbstractTableModel(),
+    ITableModel<Condition> {
     private val columnNames = arrayOf("Type", "Operation", "Pattern", "Negative")
 
     override fun getRowCount(): Int {
@@ -41,5 +42,6 @@ class ConditionsTableModel(private val conditions: ArrayList<Condition>): Abstra
             Optional.empty()
         }
     }
+
     override fun refresh() = this.fireTableDataChanged()
 }

@@ -4,7 +4,8 @@ import sessionswitcher.Logger
 import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class PairListTableModel(private val list: MutableList<Pair<String, String>>): AbstractTableModel(), ITableModel<Pair<String, String>> {
+class PairListTableModel(private val list: MutableList<Pair<String, String>>) : AbstractTableModel(),
+    ITableModel<Pair<String, String>> {
     private val columnNames = arrayOf("Name", "Value", "Delete")
     private val editListeners = mutableListOf<(Int, Int) -> Unit>()
 
@@ -46,12 +47,15 @@ class PairListTableModel(private val list: MutableList<Pair<String, String>>): A
                 0 -> {
                     list[rowIndex] = Pair(newValue, list[rowIndex].second)
                 }
+
                 1 -> {
                     list[rowIndex] = Pair(list[rowIndex].first, newValue)
                 }
+
                 2 -> {
                     // Do nothing
                 }
+
                 else -> {
                     Logger.error("Trying to set value at invalid column: $columnIndex")
                 }
@@ -71,6 +75,7 @@ class PairListTableModel(private val list: MutableList<Pair<String, String>>): A
             Optional.empty()
         }
     }
+
     override fun refresh() = this.fireTableDataChanged()
 
     fun addEditListener(listener: (Int, Int) -> Unit) {

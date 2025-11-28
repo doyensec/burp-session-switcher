@@ -9,7 +9,7 @@ import javax.swing.*
 import javax.swing.text.SimpleAttributeSet
 
 
-open class StyledTextEditor: JPanel(BorderLayout()) {
+open class StyledTextEditor : JPanel(BorderLayout()) {
 
     val normalTextStyle = SimpleAttributeSet()
 
@@ -30,9 +30,9 @@ open class StyledTextEditor: JPanel(BorderLayout()) {
         it.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
     }
 
-    class TextPaneComponentAdapter(val callback: ()->Unit): ComponentAdapter() {
+    class TextPaneComponentAdapter(val callback: () -> Unit) : ComponentAdapter() {
         override fun componentResized(e: ComponentEvent?) {
-           callback()
+            callback()
         }
     }
 

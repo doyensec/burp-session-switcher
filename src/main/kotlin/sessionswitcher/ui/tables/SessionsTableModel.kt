@@ -9,11 +9,13 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class SessionsTableModel(private val sessionCollection: SessionCollection): AbstractTableModel(), ITableModel<Session> {
+class SessionsTableModel(private val sessionCollection: SessionCollection) : AbstractTableModel(),
+    ITableModel<Session> {
     private val columnNames = arrayOf("Name", "Host", "Last Updated At", "Last Updated By")
-    private val sessions: ArrayList<Session> get() {
-        return sessionCollection.getSessions().toTypedArray().toCollection(ArrayList())
-    }
+    private val sessions: ArrayList<Session>
+        get() {
+            return sessionCollection.getSessions().toTypedArray().toCollection(ArrayList())
+        }
 
     override fun getRowCount(): Int {
         return sessions.size
@@ -70,5 +72,7 @@ class SessionsTableModel(private val sessionCollection: SessionCollection): Abst
         } catch (e: IndexOutOfBoundsException) {
             Optional.empty()
         }
-    }    override fun refresh() = this.fireTableDataChanged()
+    }
+
+    override fun refresh() = this.fireTableDataChanged()
 }

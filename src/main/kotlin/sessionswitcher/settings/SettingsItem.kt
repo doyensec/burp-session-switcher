@@ -7,7 +7,12 @@ import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-abstract class SettingsItem<T>(val provider: SettingsProvider, val key: String, val description: String, val default: T) {
+abstract class SettingsItem<T>(
+    val provider: SettingsProvider,
+    val key: String,
+    val description: String,
+    val default: T
+) {
     enum class Scope {
         DEFAULT,
         GLOBAL,
@@ -15,10 +20,12 @@ abstract class SettingsItem<T>(val provider: SettingsProvider, val key: String, 
         EFFECTIVE_GLOBAL, // always match except project
         EFFECTIVE, // always match
     }
+
     enum class Store {
         GLOBAL,
         PROJECT
     }
+
     abstract fun getType(): String
     abstract fun getImpl(key: String, store: Store): T?
     abstract fun setImpl(key: String, value: T, store: Store)
@@ -62,18 +69,26 @@ abstract class SettingsItem<T>(val provider: SettingsProvider, val key: String, 
     }
 }
 
-class BooleanSetting(provider: SettingsProvider, key: String, description: String, default: Boolean): SettingsItem<Boolean>(provider, key, description, default) {
+class BooleanSetting(provider: SettingsProvider, key: String, description: String, default: Boolean) :
+    SettingsItem<Boolean>(provider, key, description, default) {
     override fun getType(): String = "Boolean"
     override fun getImpl(key: String, store: Store): Boolean? = this.provider.getBoolean(key)
     override fun setImpl(key: String, value: Boolean, store: Store) = this.provider.setBoolean(key, value)
     fun drawCheckbox(): JCheckBox {
         val checkbox = JCheckBox(this.description, this.get(Scope.EFFECTIVE_GLOBAL))
-        checkbox.addItemListener{ this.set(checkbox.isSelected, Store.GLOBAL) }
+        checkbox.addItemListener { this.set(checkbox.isSelected, Store.GLOBAL) }
         return checkbox
     }
 }
 
-class IntSetting(provider: SettingsProvider, key: String, description: String, default: Int, val min: Int? = null, val max: Int? = null): SettingsItem<Int>(provider, key, description, default) {
+class IntSetting(
+    provider: SettingsProvider,
+    key: String,
+    description: String,
+    default: Int,
+    val min: Int? = null,
+    val max: Int? = null
+) : SettingsItem<Int>(provider, key, description, default) {
     override fun getType(): String = "Int"
     override fun getImpl(key: String, store: Store): Int? = this.provider.getInt(key)
     override fun setImpl(key: String, value: Int, store: Store) {
@@ -85,10 +100,11 @@ class IntSetting(provider: SettingsProvider, key: String, description: String, d
         }
         this.provider.setInt(key, value)
     }
+
     fun drawSpinner(withPanel: Boolean = false): JComponent {
         val spinner = JSpinner(SpinnerNumberModel(this.get(Scope.EFFECTIVE_GLOBAL), this.min, this.max, 1))
         spinner.value = this.get(Scope.EFFECTIVE_GLOBAL)
-        spinner.addChangeListener{ this.set(spinner.value as Int, Store.GLOBAL) }
+        spinner.addChangeListener { this.set(spinner.value as Int, Store.GLOBAL) }
         if (!withPanel) {
             return spinner
         }
@@ -101,12 +117,19 @@ class IntSetting(provider: SettingsProvider, key: String, description: String, d
     }
 }
 
-class EnumSetting<T: Enum<T>>(provider: SettingsProvider, key: String, description: String, private val enum: Class<T>, default: T): SettingsItem<T>(provider, key, description, default) {
+class EnumSetting<T : Enum<T>>(
+    provider: SettingsProvider,
+    key: String,
+    description: String,
+    private val enum: Class<T>,
+    default: T
+) : SettingsItem<T>(provider, key, description, default) {
     override fun getType(): String = "Enum"
     override fun getImpl(key: String, store: Store): T? {
-        val strValue = this.provider.getString(key)?: return null
+        val strValue = this.provider.getString(key) ?: return null
         return java.lang.Enum.valueOf(enum, strValue)
     }
+
     override fun setImpl(key: String, value: T, store: Store) {
         this.provider.setString(key, value.name)
     }
@@ -129,12 +152,24 @@ class EnumSetting<T: Enum<T>>(provider: SettingsProvider, key: String, descripti
     }
 }
 
-class StringSetting(provider: SettingsProvider, key: String, description: String, default: String, val allowedChoices: Array<String>? = null): SettingsItem<String>(provider, key, description, default) {
+class StringSetting(
+    provider: SettingsProvider,
+    key: String,
+    description: String,
+    default: String,
+    val allowedChoices: Array<String>? = null
+) : SettingsItem<String>(provider, key, description, default) {
     override fun getType(): String = "String"
     override fun getImpl(key: String, store: Store): String? = this.provider.getString(key)
     override fun setImpl(key: String, value: String, store: Store) {
         if (allowedChoices != null && !allowedChoices.contains(value)) {
-            throw Exception("Tried to set a value ($value) which is not among the allowed choices: [${allowedChoices.joinToString(",")}] for field $key")
+            throw Exception(
+                "Tried to set a value ($value) which is not among the allowed choices: [${
+                    allowedChoices.joinToString(
+                        ","
+                    )
+                }] for field $key"
+            )
         }
         this.provider.setString(key, value)
     }

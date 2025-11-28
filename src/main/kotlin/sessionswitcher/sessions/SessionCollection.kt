@@ -10,10 +10,11 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.getSaveStateKeys
 import java.lang.ref.WeakReference
 
-class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAndLoadData {
+class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveAndLoadData {
     companion object {
         val updateEventCoroutineScope = CoroutineScope(Dispatchers.Default)
     }
+
     private val sessions = LinkedHashMap<String, Session>()
     private val updateListeners = mutableListOf<WeakReference<SessionsListUpdateListener>>()
 

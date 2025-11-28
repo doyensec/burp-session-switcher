@@ -4,7 +4,7 @@ import sessionswitcher.rules.autoupdate.UpdateRule
 import java.util.*
 import javax.swing.table.AbstractTableModel
 
-class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>): AbstractTableModel(), ITableModel<UpdateRule> {
+class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>) : AbstractTableModel(), ITableModel<UpdateRule> {
     private val columnNames = arrayOf("ID", "Conditions", "Session")
 
     override fun getRowCount(): Int {
@@ -40,5 +40,7 @@ class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>): AbstractTa
         } catch (e: IndexOutOfBoundsException) {
             Optional.empty()
         }
-    }    override fun refresh() = this.fireTableDataChanged()
+    }
+
+    override fun refresh() = this.fireTableDataChanged()
 }
