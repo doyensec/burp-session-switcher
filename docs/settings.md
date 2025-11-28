@@ -13,7 +13,7 @@ These options affect how the request editor displays requests and how it behaves
 
 - In the Switcher menu, show only sessions matching:
     - The request's subdomain - A request with host `foo.acme.com` will only list sessions that have their host set exactly to `foo.acme.com`
-    - The request's main domain (default) - A request with host `foo.acme.com` will also list sessions with host `bar.acme.com`, `acme.com`, etc.
+    - The request's top domain (default) - A request with host `foo.acme.com` will also list sessions with host `bar.acme.com`, `acme.com`, etc.
     - Show all Sessions - No filtering is performed, all stored sessions are listed in every request.
 
 - When **updating cookies** from a request: - what to do when the "Update" button is pressed in the editor, regarding which cookies to copy.

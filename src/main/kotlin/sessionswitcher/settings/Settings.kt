@@ -10,7 +10,7 @@ class Settings(val provider: SettingsProvider) {
 
     enum class FilterSessionMode(val readable: String) {
         BY_SUBDOMAIN("The request's subdomain"),
-        BY_DOMAIN("The request's main domain"),
+        BY_DOMAIN("The request's top domain"),
         NO_FILTER("Show all Sessions");
 
         override fun toString(): String {
