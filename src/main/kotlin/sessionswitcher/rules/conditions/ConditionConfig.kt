@@ -6,7 +6,7 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import java.util.*
 
-data class ConditionConfig private constructor(public val operation: String, public val pattern: Optional<String>, public val negativeMatch: Boolean, private val saveStateId: UUID): CanSaveData {
+class ConditionConfig private constructor(public val operation: String, public val pattern: Optional<String>, public val negativeMatch: Boolean, private val saveStateId: UUID): CanSaveData {
     constructor(operation: String, pattern: Optional<String>,negativeMatch: Boolean) : this(operation, pattern, negativeMatch, UUID.randomUUID())
 
     companion object {
@@ -23,7 +23,6 @@ data class ConditionConfig private constructor(public val operation: String, pub
         }
     }
 
-
     override val saveStateKey: String = "UpdateRule.Condition.Config.${saveStateId}"
 
     override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
@@ -36,5 +35,9 @@ data class ConditionConfig private constructor(public val operation: String, pub
         obj.setString("pattern", pattern.orElse(""))
         obj.setBoolean("negativeMatch", negativeMatch)
         return obj
+    }
+
+    fun copy(): ConditionConfig {
+        return ConditionConfig(operation, pattern, negativeMatch)
     }
 }
