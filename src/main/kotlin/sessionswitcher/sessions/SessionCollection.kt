@@ -47,7 +47,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher): CanSaveAn
 
             // Delete session
             this.sessions.remove(key)
-            this.deleteChildObject(session)
+            this.deleteChildObjectAsync(session)
             fireUpdateEvent()
         }
     }

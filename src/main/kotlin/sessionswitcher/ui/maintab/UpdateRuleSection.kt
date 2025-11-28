@@ -101,7 +101,7 @@ object UpdateRuleSection {
         rules[index - 1] = item.get()
         rules[index] = itemBefore
         tableSection.refreshTable()
-        sessionSwitcher.updateRulesCollection.saveToProjectFile(false)
+        sessionSwitcher.updateRulesCollection.saveToProjectFileAsync(false)
     }
 
     private fun downButtonCallback() {
@@ -117,7 +117,7 @@ object UpdateRuleSection {
         rules[index + 1] = item.get()
         rules[index] = itemAfter
         tableSection.refreshTable()
-        sessionSwitcher.updateRulesCollection.saveToProjectFile(false)
+        sessionSwitcher.updateRulesCollection.saveToProjectFileAsync(false)
     }
 
     public fun make(sessionSwitcher: SessionSwitcher): JComponent {

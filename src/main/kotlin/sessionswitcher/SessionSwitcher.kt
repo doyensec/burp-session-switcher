@@ -7,6 +7,7 @@ import sessionswitcher.handlers.SessionUpdaterHandler
 import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.rules.autoupdate.AutoUpdateProxyListener
 import sessionswitcher.rules.autoupdate.UpdateRulesCollection
+import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.sessions.SessionCollection
 import sessionswitcher.settings.BurpSettingsProvider
 import sessionswitcher.settings.Settings
@@ -89,8 +90,10 @@ class SessionSwitcher private constructor(
         montoyaApi.proxy().registerResponseHandler(autoUpdateProxyListener)
 
         // Reload data from the project file
-        this.sessions.loadFromProjectFile()
-        this.updateRulesCollection.loadFromProjectFile()
+        runBlocking {
+            this@SessionSwitcher.sessions.loadFromProjectFile()
+            this@SessionSwitcher.updateRulesCollection.loadFromProjectFile()
+        }
 
         // Register the extension main tab
         if (settings.displayExtensionMainTab.get()) {
@@ -101,6 +104,7 @@ class SessionSwitcher private constructor(
 
     fun unload() = runBlocking {
         autoUpdateProxyListener.stop()
+        CanSaveData.joinAll()
     }
 
     fun focus() {

@@ -1,10 +1,7 @@
 package sessionswitcher.savestate
 
 import burp.api.montoya.persistence.PersistedObject
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import sessionswitcher.Logger
@@ -14,7 +11,7 @@ val saveStateMutex = Mutex()
 
 interface CanLoadData : BurpDeserializable {
     companion object {
-        val coroutineScope = CoroutineScope(Dispatchers.IO)
+        private val coroutineScope = CoroutineScope(Dispatchers.IO)
     }
 
     val saveStateKey: String
@@ -32,7 +29,7 @@ interface CanLoadData : BurpDeserializable {
         }
     }
 
-    fun loadFromProjectFile(): Boolean = runBlocking {
+    suspend fun loadFromProjectFile(): Boolean {
         val key = saveStateKey
         Logger.debug("[$key] Trying to load data from project file")
         val obj: PersistedObject?
@@ -41,7 +38,7 @@ interface CanLoadData : BurpDeserializable {
         }
         if (obj == null) {
             Logger.debug("[$key] No savestate with this key found in this project file")
-            return@runBlocking false
+            return false
         }
         try {
             Logger.debug("[$key] Found, deserializing...")
@@ -49,10 +46,10 @@ interface CanLoadData : BurpDeserializable {
         } catch (e: Exception) {
             Logger.error("[$key] Failed deserializing object's data")
             Logger.error(e.stackTraceToString())
-            return@runBlocking false
+            return false
         }
         Logger.info("[$key] Load from project completed")
-        return@runBlocking true
+        return true
     }
 
     fun loadFromProjectFileAsync() {
@@ -64,7 +61,9 @@ interface CanLoadData : BurpDeserializable {
 
 interface CanSaveData : BurpSerializable {
     companion object {
-        val coroutineScope = CoroutineScope(Dispatchers.IO)
+        private val coroutineScope = CoroutineScope(Dispatchers.IO)
+        private val jobs = mutableListOf<Job>()
+        fun joinAll() = runBlocking { jobs.joinAll() }
     }
 
     private val persistenceStore: PersistedObject
@@ -75,7 +74,7 @@ interface CanSaveData : BurpSerializable {
         }
 
     val saveStateKey: String
-    fun saveToProjectFile(processChildren: Boolean = true): String? = runBlocking {
+    suspend fun saveToProjectFile(processChildren: Boolean = true): String? {
         val key = saveStateKey
         val obj: PersistedObject
         Logger.debug("[$key] Saving data to project file (with children: $processChildren)")
@@ -93,13 +92,13 @@ interface CanSaveData : BurpSerializable {
         } catch (e: Exception) {
             Logger.error("[$key] Failed serializing the object's data")
             Logger.error(e.stackTraceToString())
-            return@runBlocking null
+            return null
         }
         Logger.info("[$key] Serialization completed successfully")
         saveStateMutex.withLock {
             persistenceStore.setChildObject(key, obj)
         }
-        return@runBlocking key
+        return key
     }
 
     fun saveToProjectFileAsync(processChildren: Boolean = true) {
@@ -108,7 +107,7 @@ interface CanSaveData : BurpSerializable {
         }
     }
 
-    fun saveChildrenObjectsToProjectFile() {
+    suspend fun saveChildrenObjectsToProjectFile() {
         val children = this.getChildrenObjectsToSave() ?: return
         for (child in children) {
             child.saveToProjectFile()
@@ -117,7 +116,7 @@ interface CanSaveData : BurpSerializable {
 
     fun getChildrenObjectsToSave(): Collection<CanSaveData>?
 
-    fun updateChildObject(obj: CanSaveData) {
+    suspend fun updateChildObject(obj: CanSaveData) {
         Logger.info("[${this.saveStateKey}] Updating child object: ${obj.saveStateKey}")
         obj.saveToProjectFile()
         this.saveToProjectFile(false)
@@ -129,13 +128,13 @@ interface CanSaveData : BurpSerializable {
         }
     }
 
-    fun deleteFromProjectFile(deleteChildren: Boolean = true): Unit = runBlocking {
+    suspend fun deleteFromProjectFile(deleteChildren: Boolean = true): Unit {
         val key = saveStateKey
         saveStateMutex.withLock {
             persistenceStore.deleteChildObject(key)
         }
         if (deleteChildren) {
-            val children = getChildrenObjectsToSave() ?: return@runBlocking
+            val children = getChildrenObjectsToSave() ?: return
             for (child in children) {
                 child.deleteFromProjectFile(true)
             }
@@ -143,20 +142,20 @@ interface CanSaveData : BurpSerializable {
     }
 
     fun deleteFromProjectFileAsync(deleteChildren: Boolean = true) {
-        coroutineScope.launch {
+        jobs.add(coroutineScope.launch {
             this@CanSaveData.deleteFromProjectFile(deleteChildren)
-        }
+        })
     }
 
-    fun deleteChildObject(obj: CanSaveData) {
+    suspend fun deleteChildObject(obj: CanSaveData) {
         obj.deleteFromProjectFile()
         this.saveToProjectFile(false)
     }
 
     fun deleteChildObjectAsync(obj: CanSaveData) {
-        coroutineScope.launch {
+        jobs.add(coroutineScope.launch {
             this@CanSaveData.deleteChildObject(obj)
-        }
+        })
     }
 }
 
@@ -175,9 +174,9 @@ abstract class DeserializerFactory<T> {
                 this.deserialized = deserializeObject(obj)
             }
 
-            fun deserialize(): T? {
-                this.loadFromProjectFile()
-                return this.deserialized
+            fun deserialize(): T? = runBlocking {
+                loadFromProjectFile()
+                return@runBlocking deserialized
             }
         }
         return deserializer.deserialize()

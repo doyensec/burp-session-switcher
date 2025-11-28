@@ -47,7 +47,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher): CanSa
 
     fun deleteRule(rule: UpdateRule) {
         updateRules.remove(rule)
-        this.deleteChildObject(rule)
+        this.deleteChildObjectAsync(rule)
     }
 
     fun deleteRulesForSession(session: Session) {
