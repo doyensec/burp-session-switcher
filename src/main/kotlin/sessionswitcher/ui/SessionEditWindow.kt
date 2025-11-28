@@ -341,7 +341,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         }
 
         override fun actionPerformed(e: ActionEvent?) {
-            val row = table.convertRowIndexToModel(table.editingRow)
+            val row = table.editingRow
             fireEditingStopped()
             action(row)
         }

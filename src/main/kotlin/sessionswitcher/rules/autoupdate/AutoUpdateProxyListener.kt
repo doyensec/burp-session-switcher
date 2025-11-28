@@ -64,7 +64,11 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher): Pro
         return ProxyResponseToBeSentAction.continueWith(interceptedResponse)
     }
 
-    public fun stop() {
-        supervisor.cancel()
+    fun stop() {
+        try {
+            supervisor.cancel()
+        } catch (_: Exception) {
+            // Ignore
+        }
     }
 }
