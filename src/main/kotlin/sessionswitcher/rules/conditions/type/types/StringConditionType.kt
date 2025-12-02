@@ -86,6 +86,6 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) 
         } else {
             configuration.operation.lowercase()
         }
-        return "${this.matchOn} $operation \"$pattern}\""
+        return "${this.matchOn} $operation \"$pattern\""
     }
 }

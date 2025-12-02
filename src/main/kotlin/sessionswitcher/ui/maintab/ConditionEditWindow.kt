@@ -86,20 +86,19 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             this.negativeMatchCheckBox.isSelected = configuration.negativeMatch
             for (fieldDefinition in condition.typeInstance.extraFields) {
                 val value = configuration.extraFields[fieldDefinition.name] ?: throw IllegalStateException("Missing extra field value for ${fieldDefinition.name}")
-                val component = when (fieldDefinition.type) {
-                    ConditionField.FieldType.TEXT -> {
-                        JTextField(value)
+                val component = this.extraFields[fieldDefinition.name]
+                    ?: throw IllegalStateException("Missing extra field component for ${fieldDefinition.name}")
+                when (component) {
+                    is JTextField -> {
+                        component.text = value
                     }
-                    ConditionField.FieldType.MULTIPLE_CHOICE -> {
-                        JComboBox(arrayOf(fieldDefinition.choices)).also {
-                            it.selectedItem = value
-                        }
+                    is JComboBox<*> -> {
+                        component.selectedItem = value
                     }
-                    ConditionField.FieldType.BOOLEAN -> {
-                        JCheckBox(value).also { it.isSelected = value.toBoolean() }
+                    is JCheckBox -> {
+                        component.isSelected = value.toBoolean()
                     }
                 }
-                this.extraFields[fieldDefinition.name] = component
             }
         }
     }
