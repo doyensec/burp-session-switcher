@@ -1,4 +1,4 @@
-package sessionswitcher.rules.conditions.types
+package sessionswitcher.rules.conditions.type.types
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
@@ -22,6 +22,6 @@ object QueryStringConditionType :
     }
 
     override fun describe(configuration: ConditionConfig): String {
-        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.pattern.get()}\""
+        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
     }
 }

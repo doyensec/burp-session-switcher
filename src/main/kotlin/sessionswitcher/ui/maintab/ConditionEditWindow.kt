@@ -4,7 +4,7 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
 import sessionswitcher.rules.conditions.Condition.ConditionType
 import sessionswitcher.rules.conditions.ConditionConfig
-import sessionswitcher.rules.conditions.ConditionTypeInstance
+import sessionswitcher.rules.conditions.type.types.ConditionField
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
 import java.awt.*
@@ -26,24 +26,38 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     // Condition selection
     val conditionTypesSelector = JComboBox(ConditionType.instances)
     val operationSelector = JComboBox<String>()
-    val patternTextBox = JTextField().also {
-        it.isEnabled = false
-        it.font = SessionSwitcher.getApi().userInterface().currentEditorFont()
-    }
+    val extraFields = LinkedHashMap<String, JComponent>()
     val negativeMatchCheckBox = JCheckBox("Negative match")
     val validationMessageLabel = JLabel("")
 
-    val selectedConditionType: ConditionTypeInstance
+    val selectedConditionType: sessionswitcher.rules.conditions.type.ConditionType
         get() {
-            return conditionTypesSelector.selectedItem as ConditionTypeInstance
+            return conditionTypesSelector.selectedItem as sessionswitcher.rules.conditions.type.ConditionType
         }
 
     val configuration: ConditionConfig
         get() {
             val operation = operationSelector.selectedItem as String
-            val pattern = if (patternTextBox.isEnabled) Optional.of(patternTextBox.text) else Optional.empty<String>()
             val negativeMatch = this.negativeMatchCheckBox.isSelected
-            return ConditionConfig(operation, pattern, negativeMatch)
+
+            val extraFieldsMap = HashMap<String, String>()
+            for ((name, field) in this.extraFields) {
+                val value = when (field) {
+                    is JTextField -> {
+                        field.text
+                    }
+                    is JComboBox<*> -> {
+                        field.selectedItem as String
+                    }
+                    is JCheckBox -> {
+                        field.isSelected.toString()
+                    }
+                    else -> throw IllegalStateException("Unexpected field type: ${field.javaClass}")
+                }
+                extraFieldsMap[name] = value
+            }
+
+            return ConditionConfig(operation, negativeMatch, extraFieldsMap)
         }
 
     fun autoSize() {
@@ -65,30 +79,77 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
     private fun loadInitialCondition() {
         if (this.initialCondition.isPresent) {
-            this.conditionTypesSelector.selectedItem = this.initialCondition.get().typeInstance
-            this.operationSelector.selectedItem = this.initialCondition.get().configuration.operation
-            this.patternTextBox.text = this.initialCondition.get().configuration.pattern.orElse("")
-            this.negativeMatchCheckBox.isSelected = this.initialCondition.get().configuration.negativeMatch
+            val condition = this.initialCondition.get()
+            val configuration = condition.configuration
+            this.conditionTypesSelector.selectedItem = condition.typeInstance
+            this.operationSelector.selectedItem = configuration.operation
+            this.negativeMatchCheckBox.isSelected = configuration.negativeMatch
+            for (fieldDefinition in condition.typeInstance.extraFields) {
+                val value = configuration.extraFields[fieldDefinition.name] ?: throw IllegalStateException("Missing extra field value for ${fieldDefinition.name}")
+                val component = when (fieldDefinition.type) {
+                    ConditionField.FieldType.TEXT -> {
+                        JTextField(value)
+                    }
+                    ConditionField.FieldType.MULTIPLE_CHOICE -> {
+                        JComboBox(arrayOf(fieldDefinition.choices)).also {
+                            it.selectedItem = value
+                        }
+                    }
+                    ConditionField.FieldType.BOOLEAN -> {
+                        JCheckBox(value).also { it.isSelected = value.toBoolean() }
+                    }
+                }
+                this.extraFields[fieldDefinition.name] = component
+            }
         }
     }
 
-    init {
-        // Set UI properties
-        this.isResizable = true
-        this.isAutoRequestFocus = true
-        this.modalityType = ModalityType.APPLICATION_MODAL
+    private fun generateExtraFieldsComponents() {
+        this.extraFields.clear()
+        for (field in this.selectedConditionType.extraFields) {
+            val component = when (field.type) {
+                ConditionField.FieldType.TEXT -> {
+                    val defaultText = field.defaultText?: ""
+                    JTextField(defaultText).also {
+                        it.document.addDocumentListener(object : DocumentListener {
+                            override fun insertUpdate(e: DocumentEvent) = validateConfiguration()
+                            override fun removeUpdate(e: DocumentEvent) = validateConfiguration()
+                            override fun changedUpdate(e: DocumentEvent) = validateConfiguration()
+                        })
+                    }
+                }
+                ConditionField.FieldType.MULTIPLE_CHOICE -> {
+                    val defaultChoice = field.defaultChoice
+                    val comboBox = JComboBox(field.choices)
+                    if (defaultChoice != null) {
+                        comboBox.selectedItem = defaultChoice
+                    }
+                    comboBox.addActionListener { validateConfiguration() }
+                    comboBox
+                }
+                ConditionField.FieldType.BOOLEAN -> {
+                    JCheckBox().also {
+                        it.isSelected = field.defaultBoolean
+                        it.addActionListener { validateConfiguration() }
+                    }
+                }
+            }
+            this.extraFields[field.name] = component
+        }
+    }
 
-        saveButton.isEnabled = false
+    val controlsPanel = JPanel(GridBagLayout())
+    private fun redrawControls() {
+        controlsPanel.removeAll()
 
         val controls = arrayOf(
             Pair("Type", conditionTypesSelector),
             Pair("Operation", operationSelector),
-            Pair("Pattern", patternTextBox),
+            *this.extraFields.map { (name, component) -> Pair(name, component) }.toTypedArray(),
             Pair("Negative match", negativeMatchCheckBox),
             Pair("Validation", validationMessageLabel)
         )
 
-        val panel = JPanel(GridBagLayout())
         val c = GridBagConstraints()
         c.insets = Insets(5, 5, 5, 5)
 
@@ -104,7 +165,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             c.weightx = 0.0
             c.gridwidth = 1
             val label = JLabel(text)
-            panel.add(label, c)
+            controlsPanel.add(label, c)
 
             // Add combo box
             c.anchor = GridBagConstraints.LINE_END
@@ -113,7 +174,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             c.ipadx = 100
             c.weightx = 1.0
             c.gridwidth = 2
-            panel.add(control, c)
+            controlsPanel.add(control, c)
 
             // Next row
             index++
@@ -132,9 +193,20 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             it.add(saveButton)
             it.add(cancelButton)
         }
-        panel.add(buttonPanel, c)
+        controlsPanel.add(buttonPanel, c)
+    }
 
-        val section = UISection("Condition Details", "Specify the match condition", panel)
+    init {
+        // Set UI properties
+        this.isResizable = true
+        this.isAutoRequestFocus = true
+        this.modalityType = ModalityType.APPLICATION_MODAL
+
+        saveButton.isEnabled = false
+        generateExtraFieldsComponents()
+        redrawControls()
+
+        val section = UISection("Condition Details", "Specify the match condition", controlsPanel)
 
         this.add(section)
         this.autoSize()
@@ -154,19 +226,13 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             this.selectedConditionType.availableOperations.forEach { this.operationSelector.addItem(it) }
             this.operationSelector.selectedIndex = 0
 
-            // Reset pattern
-            this.patternTextBox.isEnabled = this.selectedConditionType.canSetPattern
-            this.patternTextBox.text = ""
+            this.generateExtraFieldsComponents()
+            this.redrawControls()
 
             // Validate configuration
             this.validateConfiguration()
         }
         this.operationSelector.addActionListener { this.validateConfiguration() }
-        this.patternTextBox.document.addDocumentListener(object : DocumentListener {
-            override fun insertUpdate(e: DocumentEvent) = validateConfiguration()
-            override fun removeUpdate(e: DocumentEvent) = validateConfiguration()
-            override fun changedUpdate(e: DocumentEvent) = validateConfiguration()
-        })
 
         // Populate operations for the first condition type
         this.selectedConditionType.availableOperations.forEach { this.operationSelector.addItem(it) }

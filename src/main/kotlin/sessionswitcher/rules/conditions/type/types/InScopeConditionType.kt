@@ -1,15 +1,14 @@
-package sessionswitcher.rules.conditions.types
+package sessionswitcher.rules.conditions.type.types
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
-import sessionswitcher.rules.conditions.ConditionTypeInstance
 import sessionswitcher.rules.conditions.MatchInfo
+import sessionswitcher.rules.conditions.type.ConditionType
 
-object InScopeConditionType : ConditionTypeInstance(
+object InScopeConditionType : ConditionType(
     matchOn = "Scope",
     matchesOnResponse = false,
-    availableOperations = listOf("Request is in scope"),
-    canSetPattern = false
+    availableOperations = listOf("Request is in scope")
 ) {
     override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
         return request.isInScope xor configuration.negativeMatch

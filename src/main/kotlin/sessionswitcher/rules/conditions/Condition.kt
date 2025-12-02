@@ -3,13 +3,13 @@ package sessionswitcher.rules.conditions
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
 import burp.api.montoya.persistence.PersistedObject
-import sessionswitcher.rules.conditions.types.*
+import sessionswitcher.rules.conditions.type.types.*
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import java.util.*
 
 class Condition private constructor(
-    val typeInstance: ConditionTypeInstance,
+    val typeInstance: sessionswitcher.rules.conditions.type.ConditionType,
     val configuration: ConditionConfig,
     private val saveStateId: UUID = UUID.randomUUID()
 ) : CanSaveData {
@@ -22,8 +22,8 @@ class Condition private constructor(
             return Condition(type.instance, configuration)
         }
 
-        fun make(type: ConditionType, operation: String, pattern: Optional<String>, negativeMatch: Boolean): Condition {
-            val configuration = ConditionConfig(operation, pattern, negativeMatch)
+        fun make(type: ConditionType, operation: String, negativeMatch: Boolean, extraFields: Map<String, String>): Condition {
+            val configuration = ConditionConfig(operation, negativeMatch, extraFields)
             return this.make(type, configuration)
         }
 
@@ -40,7 +40,7 @@ class Condition private constructor(
         }
     }
 
-    enum class ConditionType(val instance: ConditionTypeInstance) {
+    enum class ConditionType(val instance: sessionswitcher.rules.conditions.type.ConditionType) {
         IN_SCOPE(InScopeConditionType),
         DOMAIN_NAME(DomainNameConditionType),
         URL(UrlConditionType),
@@ -57,7 +57,7 @@ class Condition private constructor(
         RESPONSE_BODY(ResponseBodyConditionType);
 
         companion object {
-            fun fromInstance(type: ConditionTypeInstance): ConditionType {
+            fun fromInstance(type: sessionswitcher.rules.conditions.type.ConditionType): ConditionType {
                 return entries.find { it.instance == type }
                     ?: throw IllegalArgumentException("Unknown condition type: $type")
             }

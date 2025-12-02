@@ -1,13 +1,16 @@
-package sessionswitcher.rules.conditions
+package sessionswitcher.rules.conditions.type
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
+import sessionswitcher.rules.conditions.ConditionConfig
+import sessionswitcher.rules.conditions.MatchInfo
+import sessionswitcher.rules.conditions.type.types.ConditionField
 
-abstract class ConditionTypeInstance(
+abstract class ConditionType(
     val matchOn: String,
     val matchesOnResponse: Boolean,
     val availableOperations: List<String>,
-    val canSetPattern: Boolean
+    val extraFields: List<ConditionField> = listOf(),
 ) {
     // Main functions called during evaluation
 

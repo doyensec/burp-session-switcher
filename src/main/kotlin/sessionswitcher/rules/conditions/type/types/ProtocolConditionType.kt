@@ -1,16 +1,15 @@
-package sessionswitcher.rules.conditions.types
+package sessionswitcher.rules.conditions.type.types
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig
-import sessionswitcher.rules.conditions.ConditionTypeInstance
 import sessionswitcher.rules.conditions.MatchInfo
+import sessionswitcher.rules.conditions.type.ConditionType
 
 object ProtocolConditionType :
-    ConditionTypeInstance(
+    ConditionType(
         matchOn = "Protocol",
         matchesOnResponse = false,
-        availableOperations = listOf("HTTP", "HTTPS"),
-        canSetPattern = false
+        availableOperations = listOf("HTTP", "HTTPS")
     ) {
     override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
         return (request.httpService().secure() && configuration.operation == "HTTPS") || (!request.httpService()

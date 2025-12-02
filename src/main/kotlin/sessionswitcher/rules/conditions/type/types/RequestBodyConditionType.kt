@@ -1,4 +1,4 @@
-package sessionswitcher.rules.conditions.types
+package sessionswitcher.rules.conditions.type.types
 
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.rules.conditions.ConditionConfig

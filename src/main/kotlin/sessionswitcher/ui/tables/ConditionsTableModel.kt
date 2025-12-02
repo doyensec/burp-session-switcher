@@ -29,7 +29,7 @@ class ConditionsTableModel(private val conditions: ArrayList<Condition>) : Abstr
         return when (columnIndex) {
             0 -> condition.typeInstance.toString()
             1 -> condition.configuration.operation
-            2 -> condition.configuration.pattern.orElse("")
+            2 -> condition.configuration.extraFields["Pattern"]?: ""
             3 -> if (condition.configuration.negativeMatch) "Yes" else "No"
             else -> "N/A"
         }

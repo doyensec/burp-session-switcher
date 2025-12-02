@@ -1,5 +1,6 @@
 package sessionswitcher.rules.conditions
 
+import burp.api.montoya.persistence.PersistedList
 import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
 import sessionswitcher.savestate.CanSaveData
@@ -8,14 +9,14 @@ import java.util.*
 
 class ConditionConfig private constructor(
     val operation: String,
-    val pattern: Optional<String>,
     val negativeMatch: Boolean,
+    val extraFields: Map<String, String>,
     private val saveStateId: UUID
 ) : CanSaveData {
-    constructor(operation: String, pattern: Optional<String>, negativeMatch: Boolean) : this(
+    constructor(operation: String, negativeMatch: Boolean, extraFields: Map<String, String>) : this(
         operation,
-        pattern,
         negativeMatch,
+        extraFields.toMap(),
         UUID.randomUUID()
     )
 
@@ -25,10 +26,14 @@ class ConditionConfig private constructor(
                 Logger.debug("Deserializing ConditionConfig: $obj")
                 val id = UUID.fromString(obj.getString("id"))
                 val operation = obj.getString("operation")
-                val patternSet = obj.getBoolean("patternSet")
-                val pattern = if (patternSet) Optional.of(obj.getString("pattern")) else Optional.empty()
                 val negativeMatch = obj.getBoolean("negativeMatch")
-                return ConditionConfig(operation, pattern, negativeMatch, id)
+                val extraFieldsKeys = obj.getStringList("extraFieldsKeys")
+                val extraFields = HashMap<String, String>()
+                for (key in extraFieldsKeys) {
+                    val value = obj.getString("extraField.$key") ?: continue
+                    extraFields[key] = value
+                }
+                return ConditionConfig(operation, negativeMatch, extraFields.toMap(), id)
             }
         }
     }
@@ -41,13 +46,17 @@ class ConditionConfig private constructor(
         val obj = PersistedObject.persistedObject()
         obj.setString("id", saveStateId.toString())
         obj.setString("operation", operation)
-        obj.setBoolean("patternSet", pattern.isPresent)
-        obj.setString("pattern", pattern.orElse(""))
         obj.setBoolean("negativeMatch", negativeMatch)
+
+        val extraFieldsKeys = PersistedList.persistedStringList()
+        extraFieldsKeys.addAll(extraFields.keys)
+        obj.setStringList("extraFieldsKeys", extraFieldsKeys)
+        extraFields.forEach { (k, v) -> obj.setString("extraField.$k", v) }
+
         return obj
     }
 
     fun copy(): ConditionConfig {
-        return ConditionConfig(operation, pattern, negativeMatch)
+        return ConditionConfig(operation, negativeMatch, extraFields.toMap())
     }
 }
