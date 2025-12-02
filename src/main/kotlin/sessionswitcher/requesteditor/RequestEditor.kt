@@ -68,26 +68,28 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     private var selectedSession: Session?
         get() = this._selectedSession
         set(s) = runBlocking {
-            editorUpdateMutex.withLock {
-                if (isUpdatingUI) return@runBlocking
-                Logger.info("Selected session set")
+            if (isUpdatingUI) return@runBlocking
+            Logger.info("Selected session set")
 
-                val original = originalRequest ?: HttpRequest.httpRequest()
-                val request = original.withMethod(original.method())
-                _selectedSession = s
-                editedLabel.text = ""
-                if (s != null) {
-                    Logger.info("Session is ${s.name}")
-                    val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, settings.cookiesInjectMode.get())
-                    httpRequest = req
+            val original = originalRequest ?: HttpRequest.httpRequest()
+            val request = original.withMethod(original.method())
+            _selectedSession = s
+            editedLabel.text = ""
+            if (s != null) {
+                Logger.info("Session is ${s.name}")
+                val (req, headersDiffInfo, cookiesDiffInfo) = s.apply(request, settings.cookiesInjectMode.get())
+                httpRequest = req
+                editorUpdateMutex.withLock {
                     editor.setRequest(req, headersDiffInfo, cookiesDiffInfo)
-                    originalRequestModified = true
-                } else {
-                    Logger.debug("Session is NULL")
-                    httpRequest = originalRequest?.withMethod(originalRequest!!.method()) ?: return@runBlocking
-                    editor.setRequest(httpRequest!!)
-                    originalRequestModified = false
                 }
+                originalRequestModified = true
+            } else {
+                Logger.debug("Session is NULL")
+                httpRequest = originalRequest?.withMethod(originalRequest!!.method()) ?: return@runBlocking
+                editorUpdateMutex.withLock {
+                    editor.setRequest(httpRequest!!)
+                }
+                originalRequestModified = false
             }
         }
     // END State-holding stuff
@@ -126,7 +128,6 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     and it still matches the current request
      */
     private suspend fun updateSessionsList() {
-        isUpdatingUI = true
         val oldSession = selectedSession
 
         val request = originalRequest
@@ -144,14 +145,15 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             ""
         }
         comboBoxUpdateMutex.withLock {
+            isUpdatingUI = true
             sessionsComboBox.removeAllItems()
             sessionsComboBox.addItem(SESSION_NONE)
             sessionSwitcher.sessions.getSessions(hostFilter).forEach { sessionsComboBox.addItem(it) }
-        }
-        val oldSessionRestored = tryRestoreOldSession(oldSession)
-        isUpdatingUI = false
-        if (!oldSessionRestored) {
-            sessionsComboBox.selectedIndex = 0
+            isUpdatingUI = false
+            val oldSessionRestored = tryRestoreOldSession(oldSession)
+            if (!oldSessionRestored) {
+                sessionsComboBox.selectedIndex = 0
+            }
         }
     }
 
@@ -215,6 +217,9 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         // New session
         val request = this.originalRequest ?: return
         val session = SaveSessionDialog(this.sessionSwitcher).newSessionDialog(request) ?: return
+        runBlocking {
+            updateSessionsList()
+        }
         this.sessionsComboBox.selectedItem = session
     }
 
