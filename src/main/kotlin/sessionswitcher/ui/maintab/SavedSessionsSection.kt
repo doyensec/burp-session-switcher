@@ -69,7 +69,7 @@ object SavedSessionsSection : SessionsListUpdateListener {
         }
     }
 
-    override fun onSessionsListUpdate() {
+    override suspend fun onSessionsListUpdate() {
         this.tableSection.refreshTable()
     }
 }

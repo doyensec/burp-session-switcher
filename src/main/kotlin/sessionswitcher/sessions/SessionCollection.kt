@@ -4,6 +4,8 @@ import burp.api.montoya.persistence.PersistedObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
@@ -13,6 +15,7 @@ import java.lang.ref.WeakReference
 class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveAndLoadData {
     companion object {
         val updateEventCoroutineScope = CoroutineScope(Dispatchers.Default)
+        val updateMutex = Mutex()
     }
 
     private val sessions = LinkedHashMap<String, Session>()
@@ -87,13 +90,16 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
 
     private fun fireUpdateEvent() {
         updateEventCoroutineScope.launch {
-            for (ref in updateListeners) {
-                val listener = ref.get()
-                if (listener == null) {
-                    updateListeners.remove(ref)
-                    continue
+            updateMutex.withLock {
+                val removeList = mutableListOf<WeakReference<SessionsListUpdateListener>>()
+                for (ref in updateListeners) {
+                    val listener = ref.get()
+                    if (listener == null) {
+                        removeList.add(ref)
+                        continue
+                    }
+                    listener.onSessionsListUpdate()
                 }
-                listener.onSessionsListUpdate()
             }
         }
     }

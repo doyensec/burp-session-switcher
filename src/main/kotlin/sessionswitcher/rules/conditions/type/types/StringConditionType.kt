@@ -59,6 +59,7 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) 
     fun stringMatches(configuration: ConditionConfig, value: String, negativeMatch: Boolean = false): Boolean {
         val operation = OPERATORS.fromDescription(configuration.operation)
         val pattern = configuration.extraFields["Pattern"] ?: throw IllegalArgumentException("Pattern is null!")
+
         return StringConditionType.stringMatches(pattern, operation, value, negativeMatch)
     }
 

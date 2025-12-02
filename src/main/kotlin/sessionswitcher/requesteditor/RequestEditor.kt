@@ -125,45 +125,45 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     Tries to restore the old selection if the old selected session still exists
     and it still matches the current request
      */
-    private fun updateSessionsList() = runBlocking {
-        comboBoxUpdateMutex.withLock {
-            isUpdatingUI = true
-            val oldSession = selectedSession
+    private suspend fun updateSessionsList() {
+        isUpdatingUI = true
+        val oldSession = selectedSession
 
+        val request = originalRequest
+        val hostFilter: String = if (request == null) {
+            // If request is null, do not filter
+            ""
+        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
+            // Filter by subdomain (entire host)
+            request.host()
+        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
+            // Filter by main domain
+            request.topDomain()
+        } else {
+            // No filter
+            ""
+        }
+        comboBoxUpdateMutex.withLock {
             sessionsComboBox.removeAllItems()
             sessionsComboBox.addItem(SESSION_NONE)
-            val request = originalRequest
-            val hostFilter: String = if (request == null) {
-                // If request is null, do not filter
-                ""
-            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
-                // Filter by subdomain (entire host)
-                request.host()
-            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
-                // Filter by main domain
-                request.topDomain()
-            } else {
-                // No filter
-                ""
-            }
             sessionSwitcher.sessions.getSessions(hostFilter).forEach { sessionsComboBox.addItem(it) }
-
-            val oldSessionRestored = tryRestoreOldSession(oldSession)
-            isUpdatingUI = false
-            if (!oldSessionRestored) {
-                sessionsComboBox.selectedIndex = 0
-            }
+        }
+        val oldSessionRestored = tryRestoreOldSession(oldSession)
+        isUpdatingUI = false
+        if (!oldSessionRestored) {
+            sessionsComboBox.selectedIndex = 0
         }
     }
 
     private fun editSelectedSession() {
         SessionEditWindow(sessionSwitcher, Optional.of(this.selectedSession as Session)).showDialog()
-        this.updateSessionsList()
     }
 
     private fun deleteSelectedSession() {
         this.sessionSwitcher.sessions.deleteSession(this.sessionsComboBox.selectedItem as Session)
-        this.updateSessionsList()
+        runBlocking {
+            updateSessionsList()
+        }
     }
 
     private fun newOrUpdateBtnHandler() {
@@ -206,14 +206,15 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
         // Apply the new session and refresh the list for good measure
         this.selectedSession = session
-        this.updateSessionsList()
+        runBlocking {
+            updateSessionsList()
+        }
     }
 
     private fun newSessionHandler() {
         // New session
         val request = this.originalRequest ?: return
         val session = SaveSessionDialog(this.sessionSwitcher).newSessionDialog(request) ?: return
-        //this.updateSessionsList()
         this.sessionsComboBox.selectedItem = session
     }
 
@@ -317,7 +318,9 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         this.originalRequest = requestResponse.request()
         this.httpRequest = this.originalRequest
         this.editor.setRequest(this.httpRequest!!)
-        this.updateSessionsList()
+        runBlocking {
+            updateSessionsList()
+        }
     }
 
     override fun isEnabledFor(requestResponse: HttpRequestResponse): Boolean = true
@@ -336,7 +339,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
     override fun getRequest(): HttpRequest = this.httpRequest!!
 
-    override fun onSessionsListUpdate() {
+    override suspend fun onSessionsListUpdate() {
         try {
             this.updateSessionsList()
         } catch (_: Exception) {

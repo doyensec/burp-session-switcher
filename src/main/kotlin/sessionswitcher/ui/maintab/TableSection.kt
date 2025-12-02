@@ -1,5 +1,10 @@
 package sessionswitcher.ui.maintab
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.tables.ITableModel
 import sessionswitcher.ui.withScrollPane
@@ -31,6 +36,8 @@ class TableSection<T>(
         (it.tableHeader.defaultRenderer as DefaultTableCellRenderer).horizontalAlignment = JLabel.LEFT
     }
 
+    val tableUpdateMutex = Mutex()
+
     // UI elements
     val mainPanel = JPanel(BorderLayout())
 
@@ -55,16 +62,20 @@ class TableSection<T>(
     }
 
     fun refreshTable() {
-        // Save current selected row
-        var selectedRow = this.table.selectedRow
+        CoroutineScope(Dispatchers.Default).launch {
+            tableUpdateMutex.withLock {
+                // Save current selected row
+                var selectedRow = table.selectedRow
 
-        // Update
-        this.tableModel.refresh()
+                // Update the table
+                tableModel.refresh()
 
-        // Restore selection
-        selectedRow = min(selectedRow, this.table.rowCount - 1) // Do not select a row that does not exist anymore
-        if (selectedRow != -1 && selectedRow < this.table.rowCount) {
-            this.table.setRowSelectionInterval(selectedRow, selectedRow)
+                // Restore selection
+                selectedRow = min(selectedRow, table.rowCount - 1) // Do not select a row that does not exist anymore
+                if (selectedRow != -1 && selectedRow < table.rowCount) {
+                    table.setRowSelectionInterval(selectedRow, selectedRow)
+                }
+            }
         }
     }
 
