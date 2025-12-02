@@ -99,6 +99,7 @@ fun HttpRequest.host(): String {
 }
 
 fun HttpRequest.topDomain(): String {
-    val uri = URI(this.url())
-    return InternetDomainName.from(uri.host).topPrivateDomain().toString()
+    val host = URI(this.url()).host
+    if (!host.contains(".")) return host // Handle intranet hosts
+    return InternetDomainName.from(host).topPrivateDomain().toString()
 }
