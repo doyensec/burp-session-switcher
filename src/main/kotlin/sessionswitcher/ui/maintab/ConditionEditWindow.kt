@@ -2,7 +2,7 @@ package sessionswitcher.ui.maintab
 
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.conditions.Condition
-import sessionswitcher.rules.conditions.Condition.ConditionType
+import sessionswitcher.rules.conditions.Condition.ConditionTypeEnum
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.type.types.ConditionField
 import sessionswitcher.ui.ButtonPrimary
@@ -24,7 +24,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     val cancelButton = JButton("Cancel")
 
     // Condition selection
-    val conditionTypesSelector = JComboBox(ConditionType.instances)
+    val conditionTypesSelector = JComboBox(ConditionTypeEnum.instances)
     val operationSelector = JComboBox<String>()
     val extraFields = LinkedHashMap<String, JComponent>()
     val negativeMatchCheckBox = JCheckBox("Negative match")
@@ -62,8 +62,8 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
     fun autoSize() {
         // Pack the window to fit its content
-        this.minimumSize = Dimension(500, 310)
-        this.preferredSize = this.minimumSize
+        this.minimumSize = Dimension(500, this.minimumSize.height)
+        //this.preferredSize = this.minimumSize
         this.pack()
         this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
     }
@@ -71,7 +71,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     fun showDialog(): Optional<Condition> {
         this.isVisible = true
         return if (this.shouldSave) {
-            Optional.of(Condition.make(ConditionType.fromInstance(this.selectedConditionType), this.configuration))
+            Optional.of(Condition.make(ConditionTypeEnum.fromInstance(this.selectedConditionType), this.configuration))
         } else {
             Optional.empty()
         }
@@ -227,6 +227,7 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
             this.generateExtraFieldsComponents()
             this.redrawControls()
+            this.autoSize()
 
             // Validate configuration
             this.validateConfiguration()

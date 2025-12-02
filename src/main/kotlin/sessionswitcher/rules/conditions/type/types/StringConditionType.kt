@@ -15,39 +15,51 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) 
         CONTAINS("Contains"),
         STARTS_WITH("Starts with"),
         ENDS_WITH("Ends with"),
-        REGEX_MATCH("Matches Regex"),
+        REGEX_MATCH("Matches Regex");
+
+        companion object {
+            fun fromDescription(description: String): OPERATORS {
+                return entries.find { it.description == description } ?: throw IllegalArgumentException("Unknown operation: $description")
+            }
+        }
     }
 
-    protected fun stringMatches(
-        configuration: ConditionConfig,
-        value: String,
-        negativeMatch: Boolean = configuration.negativeMatch
-    ): Boolean {
-        val pattern = configuration.extraFields["Pattern"] ?: throw IllegalArgumentException("Pattern is null!")
-        val match = when (configuration.operation) {
-            OPERATORS.STARTS_WITH.description -> {
-                value.lowercase().startsWith(pattern.lowercase())
-            }
+    companion object {
+        fun stringMatches(
+            pattern: String,
+            operation: OPERATORS,
+            value: String,
+            negativeMatch: Boolean
+        ): Boolean {
+            val match = when (operation) {
+                OPERATORS.STARTS_WITH -> {
+                    value.lowercase().startsWith(pattern.lowercase())
+                }
 
-            OPERATORS.CONTAINS.description -> {
-                value.lowercase().contains(pattern.lowercase())
-            }
+                OPERATORS.CONTAINS -> {
+                    value.lowercase().contains(pattern.lowercase())
+                }
 
-            OPERATORS.ENDS_WITH.description -> {
-                value.lowercase().endsWith(pattern.lowercase())
-            }
+                OPERATORS.ENDS_WITH -> {
+                    value.lowercase().endsWith(pattern.lowercase())
+                }
 
-            OPERATORS.EXACT_MATCH.description -> {
-                value.equals(pattern, ignoreCase = true)
-            }
+                OPERATORS.EXACT_MATCH -> {
+                    value.equals(pattern, ignoreCase = true)
+                }
 
-            OPERATORS.REGEX_MATCH.description -> {
-                value.matches(pattern.toRegex())
+                OPERATORS.REGEX_MATCH -> {
+                    value.matches(pattern.toRegex())
+                }
             }
-
-            else -> throw IllegalArgumentException("Unknown operation: ${configuration.operation}")
+            return match xor negativeMatch
         }
-        return match xor negativeMatch
+    }
+
+    fun stringMatches(configuration: ConditionConfig, value: String, negativeMatch: Boolean = false): Boolean {
+        val operation = OPERATORS.fromDescription(configuration.operation)
+        val pattern = configuration.extraFields["Pattern"] ?: throw IllegalArgumentException("Pattern is null!")
+        return StringConditionType.stringMatches(pattern, operation, value, negativeMatch)
     }
 
     override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> {

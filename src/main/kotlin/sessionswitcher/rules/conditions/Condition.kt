@@ -14,7 +14,7 @@ class Condition private constructor(
     private val saveStateId: UUID = UUID.randomUUID()
 ) : CanSaveData {
     companion object {
-        fun make(type: ConditionType, configuration: ConditionConfig): Condition {
+        fun make(type: ConditionTypeEnum, configuration: ConditionConfig): Condition {
             val validationResult = type.instance.validateConfiguration(configuration)
             if (!validationResult.first) {
                 throw IllegalArgumentException("Invalid configuration for selected type: ${validationResult.second}")
@@ -22,7 +22,7 @@ class Condition private constructor(
             return Condition(type.instance, configuration)
         }
 
-        fun make(type: ConditionType, operation: String, negativeMatch: Boolean, extraFields: Map<String, String>): Condition {
+        fun make(type: ConditionTypeEnum, operation: String, negativeMatch: Boolean, extraFields: Map<String, String>): Condition {
             val configuration = ConditionConfig(operation, negativeMatch, extraFields)
             return this.make(type, configuration)
         }
@@ -30,7 +30,7 @@ class Condition private constructor(
         val Deserializer = object : DeserializerFactory<Condition>() {
             override fun deserializeObject(obj: PersistedObject): Condition {
                 val id = UUID.fromString(obj.getString("id"))
-                val type = ConditionType.valueOf(obj.getString("type"))
+                val type = ConditionTypeEnum.valueOf(obj.getString("type"))
                 val conditionConfigKey = obj.getString("configuration")
                 val configuration = ConditionConfig.Deserializer.deserialize(conditionConfigKey)
                     ?: throw Exception("Cannot deserialize ConditionConfig: $conditionConfigKey")
@@ -40,7 +40,7 @@ class Condition private constructor(
         }
     }
 
-    enum class ConditionType(val instance: sessionswitcher.rules.conditions.type.ConditionType) {
+    enum class ConditionTypeEnum(val instance: sessionswitcher.rules.conditions.type.ConditionType) {
         IN_SCOPE(InScopeConditionType),
         DOMAIN_NAME(DomainNameConditionType),
         URL(UrlConditionType),
@@ -52,12 +52,13 @@ class Condition private constructor(
         PATH(PathConditionType),
         QUERY_PARAM(QueryStringConditionType),
         FILE_EXTENSION(FileExtensionConditionType),
+        JWT_PAYLOAD(JWTPayloadConditionType),
         RESPONSE_HEADER(ResponseHeaderConditionType),
         STATUS_CODE(StatusCodeConditionType),
         RESPONSE_BODY(ResponseBodyConditionType);
 
         companion object {
-            fun fromInstance(type: sessionswitcher.rules.conditions.type.ConditionType): ConditionType {
+            fun fromInstance(type: sessionswitcher.rules.conditions.type.ConditionType): ConditionTypeEnum {
                 return entries.find { it.instance == type }
                     ?: throw IllegalArgumentException("Unknown condition type: $type")
             }
@@ -93,7 +94,7 @@ class Condition private constructor(
 
     override fun burpSerialize(): PersistedObject {
         val obj = PersistedObject.persistedObject()
-        val type = ConditionType.fromInstance(typeInstance)
+        val type = ConditionTypeEnum.fromInstance(typeInstance)
         val configuration = this.configuration.saveStateKey
 
         obj.setString("id", saveStateId.toString())
