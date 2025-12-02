@@ -49,6 +49,7 @@ class Condition private constructor(
         REQUEST_HEADER(RequestHeaderConditionType),
         REQUEST_COOKIE(RequestCookieConditionType),
         REQUEST_BODY(RequestBodyConditionType),
+        USER_AGENT(UserAgentConditionType),
         PATH(PathConditionType),
         QUERY_PARAM(QueryStringConditionType),
         FILE_EXTENSION(FileExtensionConditionType),
