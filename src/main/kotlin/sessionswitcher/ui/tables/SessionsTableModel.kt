@@ -34,7 +34,12 @@ class SessionsTableModel(private val sessionCollection: SessionCollection) : Abs
     }
 
     override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
-        val session = sessions[rowIndex]
+        val session: Session
+        try {
+            session = sessions[rowIndex]
+        } catch (_: IndexOutOfBoundsException) {
+            return ""
+        }
         return when (columnIndex) {
             0 -> session.name
             1 -> session.getHost()
@@ -68,6 +73,9 @@ class SessionsTableModel(private val sessionCollection: SessionCollection) : Abs
 
     override fun getAt(index: Int): Optional<Session> {
         return try {
+            if (index < 0 || index >= this.sessions.size) {
+                return Optional.empty()
+            }
             Optional.of(this.sessions[index])
         } catch (e: IndexOutOfBoundsException) {
             Optional.empty()

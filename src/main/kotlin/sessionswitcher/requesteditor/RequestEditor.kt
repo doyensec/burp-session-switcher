@@ -128,23 +128,23 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     and it still matches the current request
      */
     private suspend fun updateSessionsList() {
-        val oldSession = selectedSession
-
-        val request = originalRequest
-        val hostFilter: String = if (request == null) {
-            // If request is null, do not filter
-            ""
-        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
-            // Filter by subdomain (entire host)
-            request.host()
-        } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
-            // Filter by main domain
-            request.topDomain()
-        } else {
-            // No filter
-            ""
-        }
         comboBoxUpdateMutex.withLock {
+            val oldSession = selectedSession
+
+            val request = originalRequest
+            val hostFilter: String = if (request == null) {
+                // If request is null, do not filter
+                ""
+            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
+                // Filter by subdomain (entire host)
+                request.host()
+            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
+                // Filter by main domain
+                request.topDomain()
+            } else {
+                // No filter
+                ""
+            }
             isUpdatingUI = true
             sessionsComboBox.removeAllItems()
             sessionsComboBox.addItem(SESSION_NONE)
