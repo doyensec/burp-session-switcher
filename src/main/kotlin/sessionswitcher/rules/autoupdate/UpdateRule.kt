@@ -68,6 +68,7 @@ class UpdateRule private constructor(
                 UpdateConfig.UpdateSource.REQUEST -> this.updateFromRequest(httpRequest)
                 UpdateConfig.UpdateSource.RESPONSE -> TODO("Not yet implemented")
             }
+            httpRequest.annotations().setHighlightColor(config.highlightColor)
             return true
         }
         return false
@@ -79,6 +80,7 @@ class UpdateRule private constructor(
                 UpdateConfig.UpdateSource.REQUEST -> this.updateFromRequest(httpResponse.request())
                 UpdateConfig.UpdateSource.RESPONSE -> TODO("Not yet implemented")
             }
+            httpResponse.annotations().setHighlightColor(config.highlightColor)
             return true
         }
         return false

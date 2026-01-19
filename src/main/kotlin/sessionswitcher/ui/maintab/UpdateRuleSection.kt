@@ -1,13 +1,19 @@
 package sessionswitcher.ui.maintab
 
+import burp.api.montoya.core.HighlightColor
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.ui.tables.UpdateRuleTableModel
+import java.awt.Color
+import java.awt.Component
 import java.util.*
 import javax.swing.JButton
 import javax.swing.JComponent
+import javax.swing.JPanel
+import javax.swing.JTable
 import javax.swing.event.ListSelectionEvent
+import javax.swing.table.TableCellRenderer
 
 object UpdateRuleSection {
     // Table model
@@ -138,7 +144,42 @@ object UpdateRuleSection {
         tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
         tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
+        tableSection.table.columnModel.getColumn(3).maxWidth = 50 // For Color column
+        tableSection.table.columnModel.getColumn(3).cellRenderer = colorRendererCell
         tableSection.table.selectionModel.addListSelectionListener { this.selectionListener(it) }
         return tableSection.getComponent()
+    }
+
+    private fun HighlightColor.toPanel(): JPanel {
+        val panel = JPanel()
+        panel.background = when (this) {
+            HighlightColor.RED -> Color.RED
+            HighlightColor.ORANGE -> Color.ORANGE
+            HighlightColor.YELLOW -> Color.YELLOW
+            HighlightColor.GREEN -> Color.GREEN
+            HighlightColor.CYAN -> Color.CYAN
+            HighlightColor.BLUE -> Color.BLUE
+            HighlightColor.PINK -> Color.PINK
+            HighlightColor.MAGENTA -> Color.MAGENTA
+            HighlightColor.GRAY -> Color.GRAY
+            else -> panel.background
+        }
+        return panel
+    }
+
+    private object colorRendererCell: TableCellRenderer {
+        override fun getTableCellRendererComponent(
+            table: JTable?,
+            value: Any?,
+            isSelected: Boolean,
+            hasFocus: Boolean,
+            row: Int,
+            column: Int
+        ): Component {
+            if (table == null) return JPanel()
+            val color = value as HighlightColor
+            return color.toPanel()
+        }
+
     }
 }

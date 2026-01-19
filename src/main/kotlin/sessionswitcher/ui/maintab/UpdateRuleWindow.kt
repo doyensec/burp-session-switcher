@@ -1,5 +1,6 @@
 package sessionswitcher.ui.maintab
 
+import burp.api.montoya.core.HighlightColor
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.rules.autoupdate.UpdateConfig
@@ -63,6 +64,8 @@ class UpdateRuleWindow(
     val cookieModeSelector = JComboBox(requestCookiesUpdateOptions)
     val headersModeSelector = JComboBox(headersUpdateOptions)
 
+    val highlightColorSelector = JComboBox(HighlightColor.entries.map { it.name.titleCase() }.toTypedArray())
+
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
         val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils()
@@ -85,6 +88,10 @@ class UpdateRuleWindow(
         this.setLocationRelativeTo(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame())
     }
 
+    private fun String.titleCase(): String {
+        return this.lowercase().replaceFirstChar { it.uppercase() }
+    }
+
     private fun loadInitialRule() {
         if (this.initialUpdateRule.isPresent) {
             // Load conditions
@@ -104,6 +111,7 @@ class UpdateRuleWindow(
             this.updateSourceSelector.selectedItem = config.updateSource
             this.cookieModeSelector.selectedItem = config.cookiesUpdateMode
             this.headersModeSelector.selectedItem = config.headersUpdateMode
+            this.highlightColorSelector.selectedItem = config.highlightColor.name.titleCase()
         }
     }
 
@@ -123,6 +131,7 @@ class UpdateRuleWindow(
             updateSourceSelector.selectedItem as UpdateConfig.UpdateSource,
             cookieModeSelector.selectedItem as CookiesUpdateMode,
             headersModeSelector.selectedItem as HeadersUpdateMode,
+            highlightColor = HighlightColor.valueOf((highlightColorSelector.selectedItem as String).uppercase())
         )
 
         return if (initialUpdateRule.isPresent) {
@@ -199,6 +208,7 @@ class UpdateRuleWindow(
             // Pair("Update from:", updateSourceSelector),
             Pair("Cookie update mode:", cookieModeSelector),
             Pair("Headers update mode:", headersModeSelector),
+            Pair("Highlight color:", highlightColorSelector)
         )
 
         val panel = JPanel(GridBagLayout())

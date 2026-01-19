@@ -1,5 +1,6 @@
 package sessionswitcher.rules.autoupdate
 
+import burp.api.montoya.core.HighlightColor
 import burp.api.montoya.persistence.PersistedList
 import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.savestate.CanSaveData
@@ -14,6 +15,7 @@ class UpdateConfig private constructor(
     val headersUpdateMode: HeadersUpdateMode,
     val cookiesToUpdate: Set<String> = emptySet(),
     val headersToUpdate: Set<String> = emptySet(),
+    val highlightColor: HighlightColor = HighlightColor.NONE,
     private val saveStateId: UUID = UUID.randomUUID()
 ) :
     CanSaveData {
@@ -23,12 +25,13 @@ class UpdateConfig private constructor(
             cookiesUpdateMode: CookiesUpdateMode,
             headersUpdateMode: HeadersUpdateMode,
             cookiesToUpdate: Set<String> = emptySet(),
-            headersToUpdate: Set<String> = emptySet()
+            headersToUpdate: Set<String> = emptySet(),
+            highlightColor: HighlightColor = HighlightColor.NONE
         ): UpdateConfig {
             if (updateSource == UpdateSource.RESPONSE && cookiesUpdateMode == CookiesUpdateMode.MIRROR) {
                 throw IllegalArgumentException("Cannot use MIRROR cookie update mode when updating from a response")
             }
-            return UpdateConfig(updateSource, cookiesUpdateMode, headersUpdateMode, cookiesToUpdate, headersToUpdate)
+            return UpdateConfig(updateSource, cookiesUpdateMode, headersUpdateMode, cookiesToUpdate, headersToUpdate, highlightColor)
         }
 
         fun make(
@@ -36,14 +39,16 @@ class UpdateConfig private constructor(
             cookiesUpdateMode: String,
             headersUpdateMode: String,
             cookiesToUpdate: Set<String> = emptySet(),
-            headersToUpdate: Set<String> = emptySet()
+            headersToUpdate: Set<String> = emptySet(),
+            highlightColor: String = HighlightColor.NONE.name
         ): UpdateConfig {
             return this.make(
                 UpdateSource.valueOf(updateSource.uppercase()),
                 CookiesUpdateMode.valueOf(cookiesUpdateMode.uppercase()),
                 HeadersUpdateMode.valueOf(headersUpdateMode.uppercase()),
                 cookiesToUpdate,
-                headersToUpdate
+                headersToUpdate,
+                HighlightColor.valueOf(highlightColor)
             )
         }
 
@@ -55,6 +60,7 @@ class UpdateConfig private constructor(
                 val headersUpdateMode = HeadersUpdateMode.valueOf(obj.getString("headers_update_mode"))
                 val cookiesToUpdate = obj.getStringList("cookies_to_update")
                 val headersToUpdate = obj.getStringList("headers_to_update")
+                val highlightColor = HighlightColor.valueOf(obj.getString("highlight_color") ?: HighlightColor.NONE.name)
 
                 return UpdateConfig(
                     updateSource,
@@ -62,6 +68,7 @@ class UpdateConfig private constructor(
                     headersUpdateMode,
                     cookiesToUpdate.toSet(),
                     headersToUpdate.toSet(),
+                    highlightColor,
                     id
                 )
             }
@@ -95,7 +102,8 @@ class UpdateConfig private constructor(
             this.cookiesUpdateMode,
             this.headersUpdateMode,
             this.cookiesToUpdate.toSet(),
-            this.headersToUpdate.toSet()
+            this.headersToUpdate.toSet(),
+            this.highlightColor
         )
     }
 
@@ -112,6 +120,7 @@ class UpdateConfig private constructor(
         obj.setString("update_source", updateSource.name)
         obj.setString("cookies_update_mode", cookiesUpdateMode.name)
         obj.setString("headers_update_mode", headersUpdateMode.name)
+        obj.setString("highlight_color", highlightColor.name)
 
         val cookiesToUpdateLst = PersistedList.persistedStringList()
         cookiesToUpdateLst.addAll(cookiesToUpdate)
