@@ -318,9 +318,9 @@ class UpdateRuleWindow(
 
         this.add(panel)
         this.autoSize()
-        this.checkEnableSaveButton()
 
-        loadInitialRule()
+        this.loadInitialRule()
+        this.checkEnableSaveButton()
     }
 
     fun checkEnableSaveButton() {

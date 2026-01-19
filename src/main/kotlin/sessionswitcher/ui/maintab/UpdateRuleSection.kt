@@ -145,7 +145,7 @@ object UpdateRuleSection {
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
         tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
         tableSection.table.columnModel.getColumn(3).maxWidth = 50 // For Color column
-        tableSection.table.columnModel.getColumn(3).cellRenderer = colorRendererCell
+        tableSection.table.columnModel.getColumn(3).cellRenderer = ColorRendererCell
         tableSection.table.selectionModel.addListSelectionListener { this.selectionListener(it) }
         return tableSection.getComponent()
     }
@@ -167,7 +167,7 @@ object UpdateRuleSection {
         return panel
     }
 
-    private object colorRendererCell: TableCellRenderer {
+    private object ColorRendererCell: TableCellRenderer {
         override fun getTableCellRendererComponent(
             table: JTable?,
             value: Any?,
