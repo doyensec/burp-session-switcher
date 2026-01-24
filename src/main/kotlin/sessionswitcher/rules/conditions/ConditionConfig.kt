@@ -23,8 +23,8 @@ class ConditionConfig private constructor(
     companion object {
         val Deserializer = object : DeserializerFactory<ConditionConfig>() {
             override fun deserializeObject(obj: PersistedObject): ConditionConfig {
-                Logger.debug("Deserializing ConditionConfig: $obj")
                 val id = UUID.fromString(obj.getString("id"))
+                Logger.debug("Deserializing ConditionConfig: $id")
                 val operation = obj.getString("operation")
                 val negativeMatch = obj.getBoolean("negativeMatch")
                 val extraFieldsKeys = obj.getStringList("extraFieldsKeys")
