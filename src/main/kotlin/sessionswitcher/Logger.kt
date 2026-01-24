@@ -1,5 +1,8 @@
 package sessionswitcher
 
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
 class Logger {
     companion object {
         private val default = Logger()
@@ -66,15 +69,17 @@ class Logger {
     fun warning(msg: String) = log(msg, Level.WARNING)
     fun error(msg: String) = log(msg, Level.ERROR)
     fun critical(msg: String) = log(msg, Level.CRITICAL)
-    private val _fileName get(): String = Thread.currentThread().stackTrace[6].fileName ?: "null"
-    private val _lineNumber get(): Int = Thread.currentThread().stackTrace[6].lineNumber
+    private val fileName get(): String = Thread.currentThread().stackTrace[6].fileName ?: "null"
+    private val lineNumber get(): Int = Thread.currentThread().stackTrace[6].lineNumber
     private val _fullClassName get(): String = Thread.currentThread().stackTrace[6].className
-    private val _shortClassName
+    private val shortClassName
         get(): String {
             val fullClass = Thread.currentThread().stackTrace[6].className
             return fullClass.substring(fullClass.lastIndexOf('.') + 1)
         }
-    private val _methodName get(): String = Thread.currentThread().stackTrace[6].methodName
+    private val methodName get(): String = Thread.currentThread().stackTrace[6].methodName
+    private val timeStampFormat = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")
+    private val timeStamp get(): String = LocalDateTime.now().format(timeStampFormat)
     private fun format(msg: String, level: Level? = null): String {
         val prefix = when (level) {
             Level.DEBUG -> "[D]"
@@ -84,6 +89,6 @@ class Logger {
             Level.CRITICAL -> "[C]"
             else -> ""
         }
-        return "$prefix[$_fileName:$_lineNumber :: $_shortClassName.$_methodName()]    $msg"
+        return "$prefix[$timeStamp][$shortClassName.$methodName()] $msg"
     }
 }
