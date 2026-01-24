@@ -28,7 +28,7 @@ class ContextMenuProvider(private val sessionSwitcher: SessionSwitcher) : Contex
 
     private var request: HttpRequest? = null
     private fun requestFromContext(event: ContextMenuEvent): HttpRequest? {
-        val invocationType = event.invocationType()
+        val invocationType = event.invocationType()?: return null
         if (invocationType.containsHttpRequestResponses()) {
             val requestResponses = event.selectedRequestResponses()
             if (requestResponses.size != 1) return null
