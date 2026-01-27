@@ -1,5 +1,6 @@
 package sessionswitcher.rules.autoupdate
 
+import burp.api.montoya.core.HighlightColor
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.persistence.PersistedList
 import burp.api.montoya.persistence.PersistedObject
@@ -58,7 +59,6 @@ class UpdateRule private constructor(
             } else {
                 it.matchesRequest(httpResponse.request(), m)
             }
-
         }
     }
 
@@ -68,7 +68,7 @@ class UpdateRule private constructor(
                 UpdateConfig.UpdateSource.REQUEST -> this.updateFromRequest(httpRequest)
                 UpdateConfig.UpdateSource.RESPONSE -> TODO("Not yet implemented")
             }
-            httpRequest.annotations().setHighlightColor(config.highlightColor)
+            if (config.highlightColor != HighlightColor.NONE) httpRequest.annotations().setHighlightColor(config.highlightColor)
             return true
         }
         return false
@@ -80,7 +80,7 @@ class UpdateRule private constructor(
                 UpdateConfig.UpdateSource.REQUEST -> this.updateFromRequest(httpResponse.request())
                 UpdateConfig.UpdateSource.RESPONSE -> TODO("Not yet implemented")
             }
-            httpResponse.annotations().setHighlightColor(config.highlightColor)
+            if (config.highlightColor != HighlightColor.NONE) httpResponse.annotations().setHighlightColor(config.highlightColor)
             return true
         }
         return false
