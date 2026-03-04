@@ -130,13 +130,14 @@ class DiffHighlightRequestEditor : StyledTextEditor() {
         }
 
         // Add body
-        this.appendText("\n")
         if (showRequestBody) {
             when (httpRequest.contentType()) {
                 ContentType.JSON -> {
+                    this.appendText("\n")
                     this.appendText(JsonPrettifier.prettify(httpRequest.bodyToString()))
                 }
                 ContentType.XML, ContentType.URL_ENCODED, ContentType.MULTIPART -> {
+                    this.appendText("\n")
                     this.appendText(httpRequest.bodyToString())
                 }
                 else -> {
