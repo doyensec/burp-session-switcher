@@ -35,16 +35,20 @@ interface CanLoadData : BurpDeserializable {
         }
         try {
             Logger.debug("[$key] Found, deserializing...")
-            this@CanLoadData.burpDeserialize(obj)
+            val loadedSuccessfully = this@CanLoadData.burpDeserialize(obj)
+            if (loadedSuccessfully) {
+                Logger.verbose("[$key] Object loaded successfully")
+                return true
+            } else {
+                Logger.warning("[$key] Failed object data deserialization, data may be corrupted")
+                return false
+            }
         } catch (e: Exception) {
-            Logger.error("[$key] Failed deserializing object's data")
-            Logger.error(e.stackTraceToString())
+            Logger.error("[$key] Exception deserializing object's data")
+            Logger.printStackTrace(e)
             return false
         }
-        Logger.verbose("[$key] Object loaded successfully")
-        return true
     }
-
 }
 
 interface CanSaveData : BurpSerializable {
@@ -79,7 +83,7 @@ interface CanSaveData : BurpSerializable {
             obj = burpSerialize()
         } catch (e: Exception) {
             Logger.error("[$key] Failed serializing the object's data")
-            Logger.error(e.stackTraceToString())
+            Logger.printStackTrace(e)
             return null
         }
         Logger.info("[$key] Serialization completed successfully")
@@ -158,12 +162,17 @@ abstract class DeserializerFactory<T> {
             override val saveStateKey: String
                 get() = id
 
-            override fun burpDeserialize(obj: PersistedObject) {
+            override fun burpDeserialize(obj: PersistedObject): Boolean {
                 this.deserialized = deserializeObject(obj)
+                return true
             }
 
             fun deserialize(): T? = runBlocking {
-                loadFromProjectFile()
+                val deserializationSuccess = loadFromProjectFile()
+                if (!deserializationSuccess) {
+                    Logger.warning("[$id] Failed to deserialize data from project file")
+                    throw IllegalStateException("Failed to deserialize data from project file")
+                }
                 return@runBlocking deserialized
             }
         }

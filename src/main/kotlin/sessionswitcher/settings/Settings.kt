@@ -38,6 +38,8 @@ class Settings(val provider: SettingsProvider) {
     val registerUpdaterHandler = BooleanSetting(provider, "handler.register_updater", "Register updater handler", true)
     val registerInjectorHandler =
         BooleanSetting(provider, "handler.register_injector", "Register injector handler", true)
+    val tryLoadDifferentSavedDataVersion =
+        BooleanSetting(provider, "data.try_load_different_version", "Try to load saved data from an incompatible version", true)
 
     /* Editor Settings */
     val editorShowRequestBody =
