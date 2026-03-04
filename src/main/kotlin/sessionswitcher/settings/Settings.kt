@@ -43,7 +43,7 @@ class Settings(val provider: SettingsProvider) {
 
     /* Editor Settings */
     val editorShowRequestBody =
-        BooleanSetting(provider, "editor.show_request_body", "Show the body in the request editor", true)
+        BooleanSetting(provider, "editor.show_request_body", "Show the body in the request editor", false)
     val editorHideHeadersMode = EnumSetting(
         provider,
         "editor.hide_headers_mode",
