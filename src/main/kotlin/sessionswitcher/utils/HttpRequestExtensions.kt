@@ -100,6 +100,10 @@ fun HttpRequest.host(): String {
 
 fun HttpRequest.topDomain(): String {
     val host = URI(this.url()).host
-    if (!host.contains(".")) return host // Handle intranet hosts
-    return InternetDomainName.from(host).topPrivateDomain().toString()
+    return try {
+        InternetDomainName.from(host).topPrivateDomain().toString()
+    } catch (_: IllegalArgumentException) {
+        // Handle IPs, local domains, etc.
+        host
+    }
 }
