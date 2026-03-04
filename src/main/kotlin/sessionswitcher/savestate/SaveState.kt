@@ -30,7 +30,7 @@ interface CanLoadData : BurpDeserializable {
             obj = persistenceStore.getChildObject(key)
         }
         if (obj == null) {
-            Logger.debug("[$key] No savestate with this key found in this project file")
+            Logger.warning("[$key] No savestate with this key found in this project file")
             return false
         }
         try {
@@ -90,9 +90,9 @@ interface CanSaveData : BurpSerializable {
     }
 
     fun saveToProjectFileAsync(processChildren: Boolean = true) {
-        coroutineScope.launch {
+        jobs.add(coroutineScope.launch {
             this@CanSaveData.saveToProjectFile(processChildren)
-        }
+        })
     }
 
     suspend fun saveChildrenObjectsToProjectFile() {
@@ -111,9 +111,9 @@ interface CanSaveData : BurpSerializable {
     }
 
     fun updateChildObjectAsync(obj: CanSaveData) {
-        coroutineScope.launch {
+        jobs.add(coroutineScope.launch {
             this@CanSaveData.updateChildObject(obj)
-        }
+        })
     }
 
     suspend fun deleteFromProjectFile(deleteChildren: Boolean = true) {
