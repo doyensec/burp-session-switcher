@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-tags: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+      - name: Build
+        run: ./gradlew build
+      - name: GitHub Release (upload jar)
+        uses: softprops/action-gh-release@v2
+        with:
+          files: SessionSwitcher.jar
+          generate_release_notes: true
+          make_latest: true
