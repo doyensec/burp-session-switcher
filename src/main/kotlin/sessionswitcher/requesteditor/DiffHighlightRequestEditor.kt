@@ -132,10 +132,16 @@ class DiffHighlightRequestEditor : StyledTextEditor() {
         // Add body
         this.appendText("\n")
         if (showRequestBody) {
-            if (httpRequest.contentType() == ContentType.JSON) {
-                this.appendText(JsonPrettifier.prettify(httpRequest.bodyToString()))
-            } else {
-                this.appendText(httpRequest.bodyToString())
+            when (httpRequest.contentType()) {
+                ContentType.JSON -> {
+                    this.appendText(JsonPrettifier.prettify(httpRequest.bodyToString()))
+                }
+                ContentType.XML, ContentType.URL_ENCODED, ContentType.MULTIPART -> {
+                    this.appendText(httpRequest.bodyToString())
+                }
+                else -> {
+                    // Don't show binary Content-Type
+                }
             }
         }
 
