@@ -86,7 +86,7 @@ interface CanSaveData : BurpSerializable {
             Logger.printStackTrace(e)
             return null
         }
-        Logger.info("[$key] Serialization completed successfully")
+        Logger.verbose("[$key] Serialization completed successfully")
         saveStateMutex.withLock {
             persistenceStore.setChildObject(key, obj)
         }
