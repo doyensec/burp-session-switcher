@@ -119,12 +119,13 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         return obj
     }
 
-    override fun burpDeserialize(obj: PersistedObject) {
-        val sessionsList = obj.getStringList("SavedSessions") ?: return
+    override fun burpDeserialize(obj: PersistedObject): Boolean {
+        val sessionsList = obj.getStringList("SavedSessions") ?: return true
 
         for (sessionId in sessionsList) {
             val p = Session.Deserializer.deserialize(sessionId) ?: continue
             this.sessions[p.name] = p
         }
+        return true
     }
 }

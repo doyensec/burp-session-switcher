@@ -7,6 +7,6 @@ interface BurpSerializable {
 }
 
 interface BurpDeserializable {
-    fun burpDeserialize(obj: PersistedObject)
+    fun burpDeserialize(obj: PersistedObject): Boolean
 }
 
