@@ -21,9 +21,19 @@ import sessionswitcher.ui.SaveSessionDialog
 import sessionswitcher.ui.maintab.SessionEditWindow
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
-import java.awt.*
-import java.util.*
-import javax.swing.*
+import java.awt.BorderLayout
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.Font
+import java.util.Optional
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JComboBox
+import javax.swing.JLabel
+import javax.swing.JPanel
 
 class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, val readOnly: Boolean) :
     ExtensionProvidedHttpRequestEditor, SessionsListUpdateListener {
@@ -225,17 +235,19 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
     private fun selectedSessionChanged() {
         Logger.info("Selected session changed")
-        val selected = (this.sessionsComboBox.selectedItem ?: return) as Session
-        when (selected) {
-            SESSION_NONE -> {
-                Logger.info("Selected session null")
-                this.selectedSession = null
-            }
-
-            else -> {
-                Logger.info("Selected session NOT null")
-                this.selectedSession = selected
-            }
+        var selected: Session? = (this.sessionsComboBox.selectedItem ?: return) as Session
+        if (selected == SESSION_NONE) {
+            selected = null
+        }
+        if (readOnly) {
+            // In read-only mode, we don't want to change the displayed request,
+            // just the saved request for a possible "update" operation,
+            // so we skip the update logic and set the value directly
+            this._selectedSession = selected
+            // Let's re-set the same request to trigger the UI update
+            this.httpRequest = this.httpRequest
+        } else {
+            this.selectedSession = selected
         }
     }
 
@@ -251,7 +263,6 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         it.preferredSize = Dimension(300, it.preferredSize.height)
         it.toolTipText = "Select a session"
         it.addActionListener { this.selectedSessionChanged() }
-        it.isEnabled = !this.readOnly
     }
     private val newOrOverwriteBtn = JButton("New").also {
         it.isEnabled = true
@@ -290,7 +301,8 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
         val switchSessionLabelPanel = JPanel().also {
             it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
-            it.add(JLabel("Switch Session:"))
+            val switcherLabelText = if (this.readOnly) "Update Session:" else "Switch Session:"
+            it.add(JLabel(switcherLabelText))
         }
 
         val rootContainer = JPanel().also {
