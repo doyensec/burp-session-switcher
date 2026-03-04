@@ -2,8 +2,6 @@ package sessionswitcher
 
 import burp.api.montoya.MontoyaApi
 import kotlinx.coroutines.runBlocking
-import sessionswitcher.handlers.SessionInjectorHandler
-import sessionswitcher.handlers.SessionUpdaterHandler
 import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.rules.autoupdate.AutoUpdateProxyListener
 import sessionswitcher.rules.autoupdate.UpdateRulesCollection
@@ -80,12 +78,14 @@ class SessionSwitcher private constructor(
         }
 
         // Register session handlers
+        /* // Experimental feature, will be removed
         if (settings.registerUpdaterHandler.get()) {
             montoyaApi.http().registerSessionHandlingAction(SessionUpdaterHandler(this))
         }
         if (settings.registerInjectorHandler.get()) {
             montoyaApi.http().registerSessionHandlingAction(SessionInjectorHandler(this))
         }
+        */
 
         // Register proxy listeners
         autoUpdateProxyListener = AutoUpdateProxyListener(this)
