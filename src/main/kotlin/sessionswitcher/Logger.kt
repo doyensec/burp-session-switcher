@@ -7,6 +7,7 @@ class Logger {
     companion object {
         private val default = Logger()
         fun debug(msg: String) = default.log(msg, Level.DEBUG)
+        fun verbose(msg: String) = default.log(msg, Level.VERBOSE)
         fun info(msg: String) = default.log(msg, Level.INFO)
         fun warning(msg: String) = default.log(msg, Level.WARNING)
         fun error(msg: String) = default.log(msg, Level.ERROR)
@@ -22,6 +23,7 @@ class Logger {
 
     enum class Level {
         DEBUG,
+        VERBOSE,
         INFO,
         WARNING,
         ERROR,
@@ -37,6 +39,7 @@ class Logger {
         setLevel(
             when (level.uppercase()) {
                 "DEBUG" -> Level.DEBUG
+                "VERBOSE" -> Level.VERBOSE
                 "INFO" -> Level.INFO
                 "WARN" -> Level.WARNING
                 "WARNING" -> Level.WARNING
@@ -65,6 +68,7 @@ class Logger {
     }
 
     fun debug(msg: String) = log(msg, Level.DEBUG)
+    fun verbose(msg: String) = log(msg, Level.VERBOSE)
     fun info(msg: String) = log(msg, Level.INFO)
     fun warning(msg: String) = log(msg, Level.WARNING)
     fun error(msg: String) = log(msg, Level.ERROR)
@@ -83,6 +87,7 @@ class Logger {
     private fun format(msg: String, level: Level? = null): String {
         val prefix = when (level) {
             Level.DEBUG -> "[D]"
+            Level.VERBOSE -> "[V]"
             Level.INFO -> "[I]"
             Level.WARNING -> "[W]"
             Level.ERROR -> "[E]"
