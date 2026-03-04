@@ -1,9 +1,10 @@
-package sessionswitcher.ui
+package sessionswitcher.ui.maintab
 
 import burp.api.montoya.ui.Theme
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.ui.maintab.TableSection
+import sessionswitcher.ui.ButtonPrimary
+import sessionswitcher.ui.TextFieldWithPlaceholder
 import sessionswitcher.ui.tables.PairListTableModel
 import java.awt.*
 import java.awt.event.ActionEvent
@@ -244,7 +245,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
     private fun validateFields(): Pair<Boolean, String> {
         val sessionName = nameField.text.trim()
-        if (!Session.isValidName(sessionName)) {
+        if (!Session.Companion.isValidName(sessionName)) {
             return Pair(false, "Session name is invalid. Allowed characters: [A-Za-z0-9._-]")
         }
         if (initialSession.isEmpty && sessionSwitcher.sessions.hasSession(sessionName)) {

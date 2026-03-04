@@ -91,8 +91,11 @@ class TableSection<T>(
     }
 
     fun getSelected(): Optional<T> {
-        val row = this.table.selectedRow
-        return tableModel.getAt(row)
+        val viewRow = table.selectedRow
+        if (viewRow < 0) return Optional.empty<T>() as Optional<T>
+
+        val modelRow = table.convertRowIndexToModel(viewRow)
+        return tableModel.getAt(modelRow)
     }
 
     fun tableSelectionListener(e: ListSelectionEvent) {
