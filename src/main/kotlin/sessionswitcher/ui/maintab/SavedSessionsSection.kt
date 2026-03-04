@@ -5,7 +5,6 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.sessions.SessionsListUpdateListener
 import sessionswitcher.ui.SaveSessionDialog
-import sessionswitcher.ui.SessionEditWindow
 import sessionswitcher.ui.tables.SessionsTableModel
 import java.util.*
 import javax.swing.JComponent

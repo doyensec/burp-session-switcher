@@ -18,7 +18,7 @@ import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsItem
 import sessionswitcher.ui.ConfirmationDialog
 import sessionswitcher.ui.SaveSessionDialog
-import sessionswitcher.ui.SessionEditWindow
+import sessionswitcher.ui.maintab.SessionEditWindow
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
 import java.awt.*

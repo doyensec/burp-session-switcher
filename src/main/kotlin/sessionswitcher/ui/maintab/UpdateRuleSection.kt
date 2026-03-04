@@ -7,7 +7,7 @@ import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.ui.tables.UpdateRuleTableModel
 import java.awt.Color
 import java.awt.Component
-import java.util.*
+import java.util.Optional
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -147,6 +147,7 @@ object UpdateRuleSection {
         tableSection.table.columnModel.getColumn(3).maxWidth = 50 // For Color column
         tableSection.table.columnModel.getColumn(3).cellRenderer = ColorRendererCell
         tableSection.table.selectionModel.addListSelectionListener { this.selectionListener(it) }
+        tableSection.table.autoCreateRowSorter = true
         return tableSection.getComponent()
     }
 
