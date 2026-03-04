@@ -26,7 +26,7 @@ class PDControlScrollPane(view: Component?) : JScrollPane(view) {
                     while (parent !is JScrollPane && parent != null) {
                         parent = parent.parent
                     }
-                    field = parent as JScrollPane?
+                    field = parent
                 }
                 return field
             }

@@ -103,7 +103,10 @@ fun HttpRequest.topDomain(): String {
     return try {
         InternetDomainName.from(host).topPrivateDomain().toString()
     } catch (_: IllegalArgumentException) {
-        // Handle IPs, local domains, etc.
+        // Handle IPs and other non-domain names
+        host
+    } catch (_: IllegalStateException) {
+        // Handle local and other non-routable domains
         host
     }
 }
