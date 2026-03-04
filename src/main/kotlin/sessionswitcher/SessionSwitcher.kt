@@ -65,6 +65,7 @@ class SessionSwitcher private constructor(
     init {
         montoyaApi.logging().raiseInfoEvent("Session Switcher v${SessionSwitcherExtension.VERSION} Started")
 
+        Logger.setLevel(Logger.Level.WARNING) // Suppress logs while fetching the actual logging level
         val logLevel = settings.loggingLevel.get()
         Logger.setLevel(logLevel)
 

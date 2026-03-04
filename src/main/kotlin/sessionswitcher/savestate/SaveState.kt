@@ -41,7 +41,7 @@ interface CanLoadData : BurpDeserializable {
             Logger.error(e.stackTraceToString())
             return false
         }
-        Logger.info("[$key] Load from project completed")
+        Logger.verbose("[$key] Object loaded successfully")
         return true
     }
 
