@@ -6,7 +6,7 @@ import burp.api.montoya.extension.ExtensionUnloadingHandler
 
 class SessionSwitcherExtension : BurpExtension, ExtensionUnloadingHandler {
     companion object {
-        const val VERSION = "1.0"
+        val VERSION = SessionSwitcherExtension::class.java.`package`.implementationVersion ?: "Unknown"
     }
 
     lateinit var instance: SessionSwitcher

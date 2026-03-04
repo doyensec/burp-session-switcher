@@ -3,7 +3,15 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.2.20"
+    id("pl.allegro.tech.build.axion-release") version "1.21.1"
 }
+
+scmVersion {
+    tag {
+        prefix.set("v")
+    }
+}
+version = scmVersion.version
 
 java {
     sourceCompatibility = 21
@@ -49,7 +57,10 @@ defaultTasks "build"
 // build standalone jar with bundled dependencies
 jar {
     manifest {
-        attributes('Class-Path': configurations.compileClasspath.collect { it.getName() }.join(' '))
+        attributes(
+                'Class-Path': configurations.compileClasspath.collect { it.getName() }.join(' '),
+                'Implementation-Version': project.version.toString()
+        )
         archiveFileName = 'SessionSwitcher.jar'
     }
     from { configurations.compileClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
