@@ -103,5 +103,5 @@ class Settings(val provider: SettingsProvider) {
 
     /* Logging settings */
     val loggingLevel =
-        EnumSetting(provider, "logging.level", "Logging level:", Logger.Level::class.java, Logger.Level.DEBUG)
+        EnumSetting(provider, "logging.level", "Logging level:", Logger.Level::class.java, Logger.Level.INFO)
 }
