@@ -52,7 +52,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
 
             // Delete session
             this.sessions.remove(key)
-            this.deleteChildObjectAsync(session)
+            this.deleteChildObjectFromProjectFileAsync(session)
             fireUpdateEvent()
         }
     }
@@ -63,7 +63,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         }
         val s = Session(name)
         this.sessions[s.name] = s
-        this.updateChildObjectAsync(s)
+        this.updateChildObjectInProjectFileAsync(s)
         fireUpdateEvent()
         return s
     }
@@ -75,7 +75,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         val oldSession = this.getSession(name) ?: throw Exception("Session to duplicate not found: $name")
         val newSession = Session(newName, oldSession)
         this.sessions[newName] = newSession
-        this.updateChildObjectAsync(newSession)
+        this.updateChildObjectInProjectFileAsync(newSession)
         fireUpdateEvent()
         return newSession
     }
@@ -110,7 +110,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
     override val saveStateKey: String
         get() = "SessionCollection"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
+    override fun getChildObjectsToSave(): Collection<CanSaveData> {
         return this.sessions.values
     }
 

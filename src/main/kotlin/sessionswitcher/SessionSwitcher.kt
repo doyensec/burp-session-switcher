@@ -111,8 +111,8 @@ class SessionSwitcher private constructor(
         var loadedCorrectly = true
         val store = montoyaApi.persistence().extensionData()
         val firstLevelKeys = store.childObjectKeys()
-        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.sessions.saveStateKey) or this.sessions.loadFromSavedData(store))
-        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.updateRulesCollection.saveStateKey) or this.updateRulesCollection.loadFromSavedData(store))
+        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.sessions.saveStateKey) or this.sessions.loadFromDataStore(store))
+        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.updateRulesCollection.saveStateKey) or this.updateRulesCollection.loadFromDataStore(store))
         return loadedCorrectly
     }
 

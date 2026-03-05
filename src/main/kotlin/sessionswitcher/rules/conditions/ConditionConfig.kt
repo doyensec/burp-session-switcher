@@ -40,7 +40,7 @@ class ConditionConfig private constructor(
 
     override val saveStateKey: String = "UpdateRule.Condition.Config.${saveStateId}"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
     override fun burpSerialize(): PersistedObject {
         val obj = PersistedObject.persistedObject()

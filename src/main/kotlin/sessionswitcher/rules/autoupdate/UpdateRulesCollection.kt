@@ -29,12 +29,12 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
 
     fun addRule(rule: UpdateRule) {
         updateRules.add(rule)
-        this.updateChildObjectAsync(rule)
+        this.updateChildObjectInProjectFileAsync(rule)
     }
 
     fun addRule(index: Int, rule: UpdateRule) {
         updateRules.add(index, rule)
-        this.updateChildObjectAsync(rule)
+        this.updateChildObjectInProjectFileAsync(rule)
     }
 
     fun deleteRule(id: Int) {
@@ -44,7 +44,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
 
     fun deleteRule(rule: UpdateRule) {
         updateRules.remove(rule)
-        this.deleteChildObjectAsync(rule)
+        this.deleteChildObjectFromProjectFileAsync(rule)
     }
 
     fun deleteRulesForSession(session: Session) {
@@ -63,7 +63,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
     override val saveStateKey: String
         get() = "UpdateRulesCollection"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
+    override fun getChildObjectsToSave(): Collection<CanSaveData> {
         return this.updateRules
     }
 

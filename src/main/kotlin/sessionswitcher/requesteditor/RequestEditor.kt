@@ -79,7 +79,6 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         get() = this._selectedSession
         set(s) = runBlocking {
             if (isUpdatingUI) return@runBlocking
-            Logger.info("Selected session set")
 
             val original = originalRequest ?: HttpRequest.httpRequest()
             val request = original.withMethod(original.method())

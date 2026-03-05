@@ -6,15 +6,29 @@ import sessionswitcher.sessions.Session
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.TextFieldWithPlaceholder
 import sessionswitcher.ui.tables.PairListTableModel
-import java.awt.*
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Image
+import java.awt.Insets
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.*
-import javax.swing.*
+import java.util.Optional
+import javax.swing.AbstractCellEditor
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.ImageIcon
+import javax.swing.JButton
+import javax.swing.JDialog
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JTable
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.table.DefaultTableCellRenderer
@@ -113,7 +127,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             session.headers.putAll(headers)
             session.cookies.setPairs(cookies)
         }
-        sessionSwitcher.sessions.updateChildObjectAsync(session)
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(session)
         return session
     }
 

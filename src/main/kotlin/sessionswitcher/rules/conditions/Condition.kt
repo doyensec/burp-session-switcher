@@ -104,7 +104,7 @@ class Condition private constructor(
     override val saveStateKey: String
         get() = "UpdateRule.Condition.$saveStateId"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
+    override fun getChildObjectsToSave(): Collection<CanSaveData> {
         return arrayListOf(configuration)
     }
 

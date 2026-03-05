@@ -111,7 +111,7 @@ class UpdateConfig private constructor(
     override val saveStateKey: String
         get() = "UpdateRule.Config.$saveStateId"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
     override fun burpSerialize(): PersistedObject {
         val obj = PersistedObject.persistedObject()
