@@ -109,8 +109,9 @@ class SessionSwitcher private constructor(
 
     private suspend fun tryDeserializeData(): Boolean {
         var loadedCorrectly = true
-        loadedCorrectly = loadedCorrectly and this.sessions.loadFromProjectFile()
-        loadedCorrectly = loadedCorrectly and this.updateRulesCollection.loadFromProjectFile()
+        val store = montoyaApi.persistence().extensionData()
+        loadedCorrectly = loadedCorrectly and this.sessions.loadFromSavedData(store)
+        loadedCorrectly = loadedCorrectly and this.updateRulesCollection.loadFromSavedData(store)
         return loadedCorrectly
     }
 

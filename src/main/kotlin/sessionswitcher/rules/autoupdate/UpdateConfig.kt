@@ -7,7 +7,8 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.sessions.CookiesUpdateMode
 import sessionswitcher.sessions.HeadersUpdateMode
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 class UpdateConfig private constructor(
     val updateSource: UpdateSource,
@@ -53,7 +54,7 @@ class UpdateConfig private constructor(
         }
 
         val Deserializer = object : DeserializerFactory<UpdateConfig>() {
-            override fun deserializeObject(obj: PersistedObject): UpdateConfig {
+            override fun deserializeObject(obj: PersistedObject, store: PersistedObject): UpdateConfig {
                 val id = UUID.fromString(obj.getString("id"))
                 val updateSource = UpdateSource.valueOf(obj.getString("update_source"))
                 val cookiesUpdateMode = CookiesUpdateMode.valueOf(obj.getString("cookies_update_mode"))

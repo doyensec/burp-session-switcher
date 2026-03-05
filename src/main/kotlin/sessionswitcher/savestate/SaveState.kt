@@ -1,7 +1,12 @@
 package sessionswitcher.savestate
 
 import burp.api.montoya.persistence.PersistedObject
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import sessionswitcher.Logger
@@ -15,14 +20,8 @@ interface CanLoadData : BurpDeserializable {
     }
 
     val saveStateKey: String
-    private val persistenceStore: PersistedObject
-        get() {
-            val persistence = SessionSwitcher.getApi().persistence().extensionData()
-            assert(persistence != null)
-            return persistence
-        }
 
-    suspend fun loadFromProjectFile(): Boolean {
+    suspend fun loadFromSavedData(persistenceStore: PersistedObject): Boolean {
         val key = saveStateKey
         Logger.debug("[$key] Trying to load data from project file")
         val obj: PersistedObject?
@@ -35,7 +34,7 @@ interface CanLoadData : BurpDeserializable {
         }
         try {
             Logger.debug("[$key] Found, deserializing...")
-            val loadedSuccessfully = this@CanLoadData.burpDeserialize(obj)
+            val loadedSuccessfully = this@CanLoadData.burpDeserialize(obj, persistenceStore)
             if (loadedSuccessfully) {
                 Logger.verbose("[$key] Object loaded successfully")
                 return true
@@ -153,22 +152,22 @@ interface CanSaveData : BurpSerializable {
 
 interface CanSaveAndLoadData : CanSaveData, CanLoadData
 
-// This Factory-Deserializer class allows to create a Kotlin object from the deserialization
+// This Factory-Deserializer class allows creating a Kotlin object from the deserialization
 // of data from the project file, instead of creating the object first and then loading data into it
 abstract class DeserializerFactory<T> {
-    fun deserialize(id: String): T? {
-        val deserializer = object : CanLoadData {
+    fun deserialize(id: String, store: PersistedObject): T? {
+        val wrapper = object : CanLoadData {
             var deserialized: T? = null
             override val saveStateKey: String
                 get() = id
 
-            override fun burpDeserialize(obj: PersistedObject): Boolean {
-                this.deserialized = deserializeObject(obj)
+            override fun burpDeserialize(obj: PersistedObject, store: PersistedObject): Boolean {
+                this.deserialized = deserializeObject(obj, store)
                 return true
             }
 
             fun deserialize(): T? = runBlocking {
-                val deserializationSuccess = loadFromProjectFile()
+                val deserializationSuccess = loadFromSavedData(store)
                 if (!deserializationSuccess) {
                     Logger.warning("[$id] Failed to deserialize data from project file")
                     throw IllegalStateException("Failed to deserialize data from project file")
@@ -176,8 +175,8 @@ abstract class DeserializerFactory<T> {
                 return@runBlocking deserialized
             }
         }
-        return deserializer.deserialize()
+        return wrapper.deserialize()
     }
 
-    protected abstract fun deserializeObject(obj: PersistedObject): T?
+    protected abstract fun deserializeObject(obj: PersistedObject, store: PersistedObject): T?
 }

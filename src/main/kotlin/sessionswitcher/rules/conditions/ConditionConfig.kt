@@ -5,7 +5,7 @@ import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
-import java.util.*
+import java.util.UUID
 
 class ConditionConfig private constructor(
     val operation: String,
@@ -22,7 +22,7 @@ class ConditionConfig private constructor(
 
     companion object {
         val Deserializer = object : DeserializerFactory<ConditionConfig>() {
-            override fun deserializeObject(obj: PersistedObject): ConditionConfig {
+            override fun deserializeObject(obj: PersistedObject, store: PersistedObject): ConditionConfig {
                 val id = UUID.fromString(obj.getString("id"))
                 Logger.debug("Deserializing ConditionConfig: $id")
                 val operation = obj.getString("operation")

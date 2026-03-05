@@ -8,15 +8,19 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
-import sessionswitcher.utils.*
+import sessionswitcher.utils.headersMap
+import sessionswitcher.utils.host
+import sessionswitcher.utils.mergedHeaders
+import sessionswitcher.utils.withCookies
+import sessionswitcher.utils.withHeaders
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 
 class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
         val Deserializer = object : DeserializerFactory<Session>() {
-            override fun deserializeObject(obj: PersistedObject): Session {
+            override fun deserializeObject(obj: PersistedObject, store: PersistedObject): Session {
                 // Basic data
                 val session = Session(obj.getString("name"), obj.getString("id"))
                 session.host = obj.getString("host")

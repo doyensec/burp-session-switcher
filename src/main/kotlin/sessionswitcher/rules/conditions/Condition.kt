@@ -3,10 +3,25 @@ package sessionswitcher.rules.conditions
 import burp.api.montoya.http.message.requests.HttpRequest
 import burp.api.montoya.http.message.responses.HttpResponse
 import burp.api.montoya.persistence.PersistedObject
-import sessionswitcher.rules.conditions.type.types.*
+import sessionswitcher.rules.conditions.type.types.DomainNameConditionType
+import sessionswitcher.rules.conditions.type.types.FileExtensionConditionType
+import sessionswitcher.rules.conditions.type.types.InScopeConditionType
+import sessionswitcher.rules.conditions.type.types.JWTPayloadConditionType
+import sessionswitcher.rules.conditions.type.types.MethodConditionType
+import sessionswitcher.rules.conditions.type.types.PathConditionType
+import sessionswitcher.rules.conditions.type.types.ProtocolConditionType
+import sessionswitcher.rules.conditions.type.types.QueryStringConditionType
+import sessionswitcher.rules.conditions.type.types.RequestBodyConditionType
+import sessionswitcher.rules.conditions.type.types.RequestCookieConditionType
+import sessionswitcher.rules.conditions.type.types.RequestHeaderConditionType
+import sessionswitcher.rules.conditions.type.types.ResponseBodyConditionType
+import sessionswitcher.rules.conditions.type.types.ResponseHeaderConditionType
+import sessionswitcher.rules.conditions.type.types.StatusCodeConditionType
+import sessionswitcher.rules.conditions.type.types.UrlConditionType
+import sessionswitcher.rules.conditions.type.types.UserAgentConditionType
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
-import java.util.*
+import java.util.UUID
 
 class Condition private constructor(
     val typeInstance: sessionswitcher.rules.conditions.type.ConditionType,
@@ -28,11 +43,11 @@ class Condition private constructor(
         }
 
         val Deserializer = object : DeserializerFactory<Condition>() {
-            override fun deserializeObject(obj: PersistedObject): Condition {
+            override fun deserializeObject(obj: PersistedObject, store: PersistedObject): Condition {
                 val id = UUID.fromString(obj.getString("id"))
                 val type = ConditionTypeEnum.valueOf(obj.getString("type"))
                 val conditionConfigKey = obj.getString("configuration")
-                val configuration = ConditionConfig.Deserializer.deserialize(conditionConfigKey)
+                val configuration = ConditionConfig.Deserializer.deserialize(conditionConfigKey, store)
                     ?: throw Exception("Cannot deserialize ConditionConfig: $conditionConfigKey")
 
                 return Condition(type.instance, configuration, id)

@@ -12,7 +12,7 @@ import sessionswitcher.rules.conditions.MatchInfo
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.sessions.Session
-import java.util.*
+import java.util.UUID
 import kotlin.math.max
 
 class UpdateRule private constructor(
@@ -126,7 +126,7 @@ class UpdateRule private constructor(
     }
 
     class Deserializer(val sessionSwitcher: SessionSwitcher) : DeserializerFactory<UpdateRule>() {
-        override fun deserializeObject(obj: PersistedObject): UpdateRule {
+        override fun deserializeObject(obj: PersistedObject, store: PersistedObject): UpdateRule {
             val saveStateId = UUID.fromString(obj.getString("id"))
             val ruleId = obj.getInteger("ruleId")
 
@@ -135,13 +135,13 @@ class UpdateRule private constructor(
                 ?: throw Exception("Cannot find session with name $sessionName")
 
             val configKey = obj.getString("config")
-            val config = UpdateConfig.Deserializer.deserialize(configKey)
+            val config = UpdateConfig.Deserializer.deserialize(configKey, store)
                 ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
 
             val conditionsList = obj.getStringList("conditions")
 
             val conditions: ArrayList<Condition> = ArrayList<Condition>()
-            conditionsList.forEach { Condition.Deserializer.deserialize(it)?.let { e -> conditions.add(e) } }
+            conditionsList.forEach { Condition.Deserializer.deserialize(it, store)?.let { e -> conditions.add(e) } }
             return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
         }
     }
