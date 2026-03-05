@@ -118,7 +118,13 @@ class SessionSwitcher private constructor(
 
     private suspend fun loadSavedData() {
         val storage = montoyaApi.persistence().extensionData()
-        val serializedDataVersion = storage.getInteger(SERIALIZED_DATA_VERSION_KEY) ?: return
+        val serializedDataVersion = storage.getInteger(SERIALIZED_DATA_VERSION_KEY)
+        if (serializedDataVersion == null) {
+            // New project, no data yet
+            storage.setInteger(SERIALIZED_DATA_VERSION_KEY, SERIALIZED_DATA_VERSION)
+            return
+        }
+
         val shouldTryLoadIncompatibleVersion = settings.tryLoadDifferentSavedDataVersion.get()
 
         if (serializedDataVersion < SERIALIZED_DATA_VERSION) {
