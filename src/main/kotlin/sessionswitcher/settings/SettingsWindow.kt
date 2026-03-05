@@ -3,7 +3,12 @@ package sessionswitcher.settings
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.Window
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JPanel
+import javax.swing.JScrollPane
+import javax.swing.JSeparator
 
 class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings") {
     init {
@@ -66,13 +71,28 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             }
         }
 
+        val deleteEverythingButton = JButton("Delete Everything").also {
+            it.addActionListener {
+                val data = SessionSwitcher.getApi().persistence().extensionData()
+                data.childObjectKeys().forEach { s -> data.deleteChildObject(s) }
+                data.stringKeys().forEach { s -> data.deleteString(s) }
+                data.booleanKeys().forEach { s -> data.deleteBoolean(s) }
+                data.integerKeys().forEach { s -> data.deleteInteger(s) }
+                data.longKeys().forEach { s -> data.deleteLong(s) }
+                data.shortKeys().forEach { s -> data.deleteShort(s) }
+                data.stringListKeys().forEach { s -> data.deleteStringList(s) }
+            }
+        }
+
         val resetButtonsPanel = UISection(
             "Project data",
             "Use these buttons to reset the project data in case of issues.",
             deleteSessionsButton,
             Box.createVerticalStrut(6),
-            deleteUpdateRulesButton
-        )
+            deleteUpdateRulesButton,
+            Box.createVerticalStrut(6),
+            deleteEverythingButton
+            )
 
         // Build the main window
         val panel = JPanel().also {
