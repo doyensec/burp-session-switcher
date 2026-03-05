@@ -81,7 +81,7 @@ interface CanSaveData : BurpSerializable {
             val obj = burpSerialize(existingObj)
 
             if (processChildren) {
-                Logger.debug("[$key] Processing children first...")
+                Logger.debug("[$key] Processing children...")
                 saveChildObjects(obj)
             }
 
