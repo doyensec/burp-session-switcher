@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
@@ -119,13 +120,21 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         return obj
     }
 
-    override fun burpDeserialize(obj: PersistedObject, store: PersistedObject): Boolean {
+    override fun burpDeserialize(obj: PersistedObject): Boolean {
         val sessionsList = obj.getStringList("SavedSessions") ?: return true
+        if (sessionsList.isEmpty()) return true
 
+        var atLeastOneLoadedSuccessfully = false
         for (sessionId in sessionsList) {
-            val p = Session.Deserializer.deserialize(sessionId, store) ?: continue
-            this.sessions[p.name] = p
+            try {
+                val p = Session.Deserializer.deserialize(sessionId, obj) ?: continue
+                this.sessions[p.name] = p
+                atLeastOneLoadedSuccessfully = true
+            } catch (_: Exception) {
+                Logger.error("Failed deserializing session: $sessionId")
+                continue
+            }
         }
-        return true
+        return atLeastOneLoadedSuccessfully
     }
 }

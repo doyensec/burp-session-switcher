@@ -43,11 +43,11 @@ class Condition private constructor(
         }
 
         val Deserializer = object : DeserializerFactory<Condition>() {
-            override fun deserializeObject(obj: PersistedObject, store: PersistedObject): Condition {
+            override fun deserializeObject(obj: PersistedObject): Condition {
                 val id = UUID.fromString(obj.getString("id"))
                 val type = ConditionTypeEnum.valueOf(obj.getString("type"))
                 val conditionConfigKey = obj.getString("configuration")
-                val configuration = ConditionConfig.Deserializer.deserialize(conditionConfigKey, store)
+                val configuration = ConditionConfig.Deserializer.deserialize(conditionConfigKey, obj)
                     ?: throw Exception("Cannot deserialize ConditionConfig: $conditionConfigKey")
 
                 return Condition(type.instance, configuration, id)

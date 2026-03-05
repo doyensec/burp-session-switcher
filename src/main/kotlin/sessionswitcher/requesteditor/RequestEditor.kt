@@ -234,7 +234,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     }
 
     private fun selectedSessionChanged() {
-        Logger.info("Selected session changed")
+        Logger.verbose("Selected session changed to ${this.sessionsComboBox.selectedItem}")
         var selected: Session? = (this.sessionsComboBox.selectedItem ?: return) as Session
         if (selected == SESSION_NONE) {
             selected = null

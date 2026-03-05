@@ -77,19 +77,23 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
         return obj
     }
 
-    override fun burpDeserialize(obj: PersistedObject, store: PersistedObject): Boolean {
+    override fun burpDeserialize(obj: PersistedObject,): Boolean {
         val rules = obj.getStringList("rules") ?: return true
         Logger.debug("Deserializing ${rules.size} rules")
         val deserializer = UpdateRule.Deserializer(sessionSwitcher)
+        if (rules.isEmpty()) return true
+
+        var atLeastOneLoadedSuccessfully = false
         for (ruleKey in rules) {
             try {
-                val rule = deserializer.deserialize(ruleKey, store) ?: continue
+                val rule = deserializer.deserialize(ruleKey, obj) ?: continue
                 this.updateRules.add(rule)
-            } catch (e: Exception) {
+                atLeastOneLoadedSuccessfully = true
+            } catch (_: Exception) {
                 Logger.error("Failed deserializing rule: $ruleKey")
-                return false
+                continue
             }
         }
-        return true
+        return atLeastOneLoadedSuccessfully
     }
 }

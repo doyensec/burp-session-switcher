@@ -126,7 +126,7 @@ class UpdateRule private constructor(
     }
 
     class Deserializer(val sessionSwitcher: SessionSwitcher) : DeserializerFactory<UpdateRule>() {
-        override fun deserializeObject(obj: PersistedObject, store: PersistedObject): UpdateRule {
+        override fun deserializeObject(obj: PersistedObject): UpdateRule {
             val saveStateId = UUID.fromString(obj.getString("id"))
             val ruleId = obj.getInteger("ruleId")
 
@@ -135,13 +135,13 @@ class UpdateRule private constructor(
                 ?: throw Exception("Cannot find session with name $sessionName")
 
             val configKey = obj.getString("config")
-            val config = UpdateConfig.Deserializer.deserialize(configKey, store)
+            val config = UpdateConfig.Deserializer.deserialize(configKey, obj)
                 ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
 
             val conditionsList = obj.getStringList("conditions")
 
             val conditions: ArrayList<Condition> = ArrayList<Condition>()
-            conditionsList.forEach { Condition.Deserializer.deserialize(it, store)?.let { e -> conditions.add(e) } }
+            conditionsList.forEach { Condition.Deserializer.deserialize(it, obj)?.let { e -> conditions.add(e) } }
             return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
         }
     }

@@ -20,7 +20,7 @@ import java.util.UUID
 class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
         val Deserializer = object : DeserializerFactory<Session>() {
-            override fun deserializeObject(obj: PersistedObject, store: PersistedObject): Session {
+            override fun deserializeObject(obj: PersistedObject): Session {
                 // Basic data
                 val session = Session(obj.getString("name"), obj.getString("id"))
                 session.host = obj.getString("host")

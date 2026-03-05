@@ -29,12 +29,12 @@ interface CanLoadData : BurpDeserializable {
             obj = persistenceStore.getChildObject(key)
         }
         if (obj == null) {
-            Logger.warning("[$key] No savestate with this key found in this project file")
+            Logger.warning("[$key] No savestate with this key found in data store")
             return false
         }
         try {
             Logger.debug("[$key] Found, deserializing...")
-            val loadedSuccessfully = this@CanLoadData.burpDeserialize(obj, persistenceStore)
+            val loadedSuccessfully = this@CanLoadData.burpDeserialize(obj)
             if (loadedSuccessfully) {
                 Logger.verbose("[$key] Object loaded successfully")
                 return true
@@ -161,8 +161,8 @@ abstract class DeserializerFactory<T> {
             override val saveStateKey: String
                 get() = id
 
-            override fun burpDeserialize(obj: PersistedObject, store: PersistedObject): Boolean {
-                this.deserialized = deserializeObject(obj, store)
+            override fun burpDeserialize(obj: PersistedObject): Boolean {
+                this.deserialized = deserializeObject(obj)
                 return true
             }
 
@@ -178,5 +178,5 @@ abstract class DeserializerFactory<T> {
         return wrapper.deserialize()
     }
 
-    protected abstract fun deserializeObject(obj: PersistedObject, store: PersistedObject): T?
+    protected abstract fun deserializeObject(obj: PersistedObject): T?
 }
