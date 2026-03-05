@@ -67,8 +67,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
         return this.updateRules
     }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val rules = PersistedList.persistedStringList()
         for (rule in updateRules) {
             rules.add(rule.saveStateKey)

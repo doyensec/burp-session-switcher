@@ -70,7 +70,7 @@ interface CanSaveData : BurpSerializable {
 
     suspend fun saveToDataStore(persistenceStore: PersistedObject, processChildren: Boolean = true): PersistedObject? {
         val key = saveStateKey
-        val obj: PersistedObject
+        val existingObj = persistenceStore.getChildObject(key) ?: PersistedObject.persistedObject()
         Logger.debug("[$key] Saving data to project file (with children: $processChildren)")
         try {
             // Processing children in a separate step allows to do partial updates
@@ -78,22 +78,23 @@ interface CanSaveData : BurpSerializable {
             // Then we can invoke saveToProjectFile(false) to update the parent's children list but not
             // all the underlying children, saving some IO time
             Logger.debug("[$key] Serializing data")
-            obj = burpSerialize()
+            val obj = burpSerialize(existingObj)
 
             if (processChildren) {
                 Logger.debug("[$key] Processing children first...")
                 saveChildObjects(obj)
             }
+
+            Logger.verbose("[$key] Serialization completed successfully")
+            saveStateMutex.withLock {
+                persistenceStore.setChildObject(key, obj)
+            }
+            return obj
         } catch (e: Exception) {
             Logger.error("[$key] Failed serializing the object's data")
             Logger.printStackTrace(e)
             return null
         }
-        Logger.verbose("[$key] Serialization completed successfully")
-        saveStateMutex.withLock {
-            persistenceStore.setChildObject(key, obj)
-        }
-        return obj
     }
 
     fun saveToProjectFileAsync(processChildren: Boolean = true) {

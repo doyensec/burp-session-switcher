@@ -113,9 +113,7 @@ class UpdateConfig private constructor(
 
     override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setString("id", saveStateId.toString())
 
         obj.setString("update_source", updateSource.name)

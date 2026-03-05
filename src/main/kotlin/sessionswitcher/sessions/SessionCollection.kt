@@ -114,8 +114,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         return this.sessions.values
     }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setStringList("SavedSessions", getSaveStateKeys(this.sessions.values))
         return obj
     }

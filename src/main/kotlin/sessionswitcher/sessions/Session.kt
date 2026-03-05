@@ -274,9 +274,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
 
     override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         // Basic data
         obj.setString("name", name)
         obj.setString("id", id)

@@ -103,9 +103,7 @@ class UpdateRule private constructor(
         return arrayListOf(*conditions, config)
     }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val saveStateId = this.saveStateId.toString()
         obj.setString("id", saveStateId)
 

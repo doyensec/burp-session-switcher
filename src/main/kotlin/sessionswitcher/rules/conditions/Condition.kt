@@ -108,8 +108,7 @@ class Condition private constructor(
         return arrayListOf(configuration)
     }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val type = ConditionTypeEnum.fromInstance(typeInstance)
         val configuration = this.configuration.saveStateKey
 
