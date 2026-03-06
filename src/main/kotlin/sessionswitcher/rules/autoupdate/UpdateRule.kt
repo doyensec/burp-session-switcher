@@ -89,7 +89,7 @@ class UpdateRule private constructor(
     private fun updateFromRequest(httpRequest: HttpRequest) {
         if (this.config.updateSource != UpdateConfig.UpdateSource.REQUEST) throw Exception("updateFromRequest called on a rule that doesn't update from request")
         this.session.updateFromRequest(httpRequest, config.cookiesUpdateMode, config.headersUpdateMode)
-        this.session.setLastUpdateReason(Session.LastUpdateType.UPDATE_RULE, this.ruleId)
+        this.session.setLastUpdateReason(Session.LastUpdateType.UPDATE_RULE, this.saveStateKey)
     }
 
     fun copy(): UpdateRule {

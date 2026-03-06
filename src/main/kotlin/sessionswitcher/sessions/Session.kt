@@ -48,11 +48,11 @@ class Session private constructor(val name: String, private val id: String) : Ca
                 if (obj.getLong("lastUpdatedAt") != null) {
                     session.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
                     session.lastUpdatedBy = LastUpdateType.entries[obj.getInteger("lastUpdatedFrom")]
-                    val lastUpdatedRuleId = obj.getInteger("lastUpdatedRuleId")
-                    if (lastUpdatedRuleId != null && lastUpdatedRuleId != -1) {
-                        session.lastUpdatedRuleId = lastUpdatedRuleId
+                    val lastUpdatedRuleId = obj.getString("lastUpdatedRuleId")
+                    if (lastUpdatedRuleId != null && lastUpdatedRuleId.isNotEmpty()) {
+                        session.lastUpdatedRuleKey = lastUpdatedRuleId
                     } else {
-                        session.lastUpdatedRuleId = null
+                        session.lastUpdatedRuleKey = null
                     }
                 }
                 return session
@@ -129,13 +129,20 @@ class Session private constructor(val name: String, private val id: String) : Ca
         private set
     var lastUpdatedBy: LastUpdateType = LastUpdateType.CREATION
         private set
-    var lastUpdatedRuleId: Int? = null
+    var lastUpdatedRuleKey: String? = null
         private set
+    val lastUpdatedRuleId: Int?
+        get() {
+            sessionSwitcher.updateRulesCollection.updateRules.find { it.saveStateKey == lastUpdatedRuleKey }?.let {
+                return it.ruleId
+            }
+            return null
+        }
 
-    fun setLastUpdateReason(reason: LastUpdateType, ruleId: Int? = null) {
-        if (reason != LastUpdateType.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
+    fun setLastUpdateReason(reason: LastUpdateType, ruleKey: String? = null) {
+        if (reason != LastUpdateType.UPDATE_RULE && ruleKey != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
         this.lastUpdatedBy = reason
-        this.lastUpdatedRuleId = ruleId
+        this.lastUpdatedRuleKey = ruleKey
         sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
@@ -304,7 +311,9 @@ class Session private constructor(val name: String, private val id: String) : Ca
         // Last update info
         obj.setLong("lastUpdatedAt", lastUpdatedAt.epochSecond)
         obj.setInteger("lastUpdatedFrom", lastUpdatedBy.ordinal)
-        obj.setInteger("lastUpdatedRuleId", lastUpdatedRuleId ?: -1)
+        if (lastUpdatedRuleKey != null) {
+            obj.setString("lastUpdatedRuleId", lastUpdatedRuleKey)
+        }
         return obj
     }
 }
