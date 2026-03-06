@@ -107,9 +107,6 @@ class UpdateRule private constructor(
         val saveStateId = this.saveStateId.toString()
         obj.setString("id", saveStateId)
 
-        val ruleId = this.ruleId
-        obj.setInteger("ruleId", ruleId)
-
         val session = session.name
         obj.setString("session", session)
 
@@ -126,7 +123,6 @@ class UpdateRule private constructor(
     class Deserializer(val sessionSwitcher: SessionSwitcher) : DeserializerFactory<UpdateRule>() {
         override fun deserializeObject(obj: PersistedObject): UpdateRule {
             val saveStateId = UUID.fromString(obj.getString("id"))
-            val ruleId = obj.getInteger("ruleId")
 
             val sessionName = obj.getString("session")
             val session = sessionSwitcher.sessions.getSession(sessionName)
@@ -140,7 +136,7 @@ class UpdateRule private constructor(
 
             val conditions: ArrayList<Condition> = ArrayList<Condition>()
             conditionsList.forEach { Condition.Deserializer.deserialize(it, obj)?.let { e -> conditions.add(e) } }
-            return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
+            return UpdateRule(conditions.toTypedArray(), session, config, generateId(), saveStateId)
         }
     }
 }

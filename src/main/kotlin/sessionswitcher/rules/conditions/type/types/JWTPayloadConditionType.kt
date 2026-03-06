@@ -1,7 +1,6 @@
 package sessionswitcher.rules.conditions.type.types
 
 import burp.api.montoya.http.message.requests.HttpRequest
-import com.google.gson.Gson
 import com.google.gson.JsonParser
 import sessionswitcher.Logger
 import sessionswitcher.rules.conditions.ConditionConfig
@@ -21,7 +20,6 @@ object JWTPayloadConditionType : ConditionType(
         ConditionField.makeMultipleChoiceField("Match Type", StringConditionType.OPERATORS.entries.map {it.description}.toTypedArray()),
         ConditionField.makeTextField("Claim Value"))
 ) {
-    private val gson = Gson()
     override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
         val jwt: String
         when (configuration.operation) {

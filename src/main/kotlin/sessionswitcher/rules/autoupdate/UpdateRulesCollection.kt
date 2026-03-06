@@ -79,9 +79,9 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
     override fun burpDeserialize(obj: PersistedObject,): Boolean {
         val rules = obj.getStringList("rules") ?: return true
         Logger.debug("Deserializing ${rules.size} rules")
-        val deserializer = UpdateRule.Deserializer(sessionSwitcher)
         if (rules.isEmpty()) return true
 
+        val deserializer = UpdateRule.Deserializer(sessionSwitcher)
         var atLeastOneLoadedSuccessfully = false
         for (ruleKey in rules) {
             try {
