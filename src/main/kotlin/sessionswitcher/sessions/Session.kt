@@ -19,6 +19,14 @@ import java.util.UUID
 
 class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
+        private lateinit var _sessionSwitcherInstance: SessionSwitcher
+        val sessionSwitcher: SessionSwitcher
+            get() {
+                if (!::_sessionSwitcherInstance.isInitialized) {
+                    _sessionSwitcherInstance = SessionSwitcher.getInstance()
+                }
+                return _sessionSwitcherInstance
+            }
         val Deserializer = object : DeserializerFactory<Session>() {
             override fun deserializeObject(obj: PersistedObject): Session {
                 // Basic data
@@ -128,7 +136,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
         if (reason != LastUpdateType.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
         this.lastUpdatedBy = reason
         this.lastUpdatedRuleId = ruleId
-        this.saveToProjectFileAsync()
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
     override fun toString(): String {
@@ -144,7 +152,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
     }
 
     fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
-        return apply(r, SessionSwitcher.getInstance().settings.cookiesInjectMode.get())
+        return apply(r, sessionSwitcher.settings.cookiesInjectMode.get())
     }
 
     fun apply(
@@ -185,7 +193,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
     fun loadFromRequest(r: HttpRequest) {
         this.host = r.host()
         this.updateFromRequest(r, CookiesUpdateMode.MIRROR, HeadersUpdateMode.MIRROR)
-        this.saveToProjectFileAsync()
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
     /*
@@ -246,7 +254,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
         this.lastUpdatedAt = Instant.now()
         this.lastUpdatedBy = LastUpdateType.MANUAL_REQUEST
 
-        this.saveToProjectFileAsync()
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
     /*
