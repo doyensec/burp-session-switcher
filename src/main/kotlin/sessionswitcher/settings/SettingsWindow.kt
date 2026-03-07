@@ -6,12 +6,14 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.importexport.JSONImportExport
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.Window
+import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.io.File
 import java.text.Normalizer
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JButton
+import javax.swing.JComponent
 import javax.swing.JFileChooser
 import javax.swing.JOptionPane
 import javax.swing.JPanel
@@ -49,19 +51,21 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
         settings.headersUpdateMode.drawComboBox(store, true),
         Box.createVerticalStrut(6),
         settings.cookiesInjectMode.drawComboBox(store, true),
-        Box.createVerticalStrut(6),
+        Box.createVerticalGlue()
     )
 
     private fun makeAutoUpdateSection(store: SettingsItem.Store) = UISection(
         "Auto Updater",
         "Set the behavior of Auto Update Rules",
-        settings.stopAtFirstUpdateRule.drawCheckbox(store)
+        settings.stopAtFirstUpdateRule.drawCheckbox(store),
+        Box.createVerticalGlue()
     )
 
     private fun makeLoggingLevelSection(store: SettingsItem.Store) = UISection(
     "Logging options",
     "Use these settings to configure the logging level of the extension.",
     settings.loggingLevel.drawComboBox(store, true),
+        Box.createVerticalGlue()
     )
 
     private fun makeProjectDataSection(): UISection {
@@ -168,14 +172,14 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
         )
     }
 
-    private fun makeProjectSettingsTab(): JScrollPane {
+    private fun makeProjectSettingsTab(): JComponent {
         val store = SettingsItem.Store.PROJECT
         val requestEditorSection = makeRequestEditorSection(store)
         val autoUpdateSection = makeAutoUpdateSection(store)
         val loggingLevelSection = makeLoggingLevelSection(store)
         val projectDataSection = makeProjectDataSection()
 
-        val panel = JPanel().also {
+        val inner =  JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(requestEditorSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
@@ -185,30 +189,42 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             it.add(loggingLevelSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(projectDataSection)
+            it.add(Box.createVerticalGlue())
         }
 
-        val scrollable = JScrollPane(panel)
+        val outer = JPanel().also {
+            it.layout = BorderLayout()
+            it.add(inner, BorderLayout.NORTH)
+        }
+
+        val scrollable = JScrollPane(outer)
         scrollable.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         scrollable.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         return scrollable
     }
 
-    private fun makeGlobalSettingsTab(): JScrollPane {
+    private fun makeGlobalSettingsTab(): JComponent {
         val store = SettingsItem.Store.GLOBAL
         val requestEditorSection = makeRequestEditorSection(store)
         val autoUpdateSection = makeAutoUpdateSection(store)
         val loggingLevelSection = makeLoggingLevelSection(store)
 
-        val panel = JPanel().also {
+        val inner = JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(requestEditorSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(autoUpdateSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(loggingLevelSection)
+            it.add(Box.createVerticalGlue())
         }
 
-        val scrollable = JScrollPane(panel)
+        val outer = JPanel().also {
+            it.layout = BorderLayout()
+            it.add(inner, BorderLayout.NORTH)
+        }
+
+        val scrollable = JScrollPane(outer)
         scrollable.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         scrollable.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
         return scrollable
