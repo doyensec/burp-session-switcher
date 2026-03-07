@@ -8,13 +8,25 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.savestate.getChildObjectList
 import sessionswitcher.savestate.setChildObjectList
-import sessionswitcher.utils.*
+import sessionswitcher.utils.headersMap
+import sessionswitcher.utils.host
+import sessionswitcher.utils.mergedHeaders
+import sessionswitcher.utils.withCookies
+import sessionswitcher.utils.withHeaders
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 
 class Session private constructor(val name: String, private val id: String) : CanSaveData {
     companion object {
+        private lateinit var _sessionSwitcherInstance: SessionSwitcher
+        val sessionSwitcher: SessionSwitcher
+            get() {
+                if (!::_sessionSwitcherInstance.isInitialized) {
+                    _sessionSwitcherInstance = SessionSwitcher.getInstance()
+                }
+                return _sessionSwitcherInstance
+            }
         val Deserializer = object : DeserializerFactory<Session>() {
             override fun deserializeObject(obj: PersistedObject): Session {
                 // Basic data
@@ -36,11 +48,11 @@ class Session private constructor(val name: String, private val id: String) : Ca
                 if (obj.getLong("lastUpdatedAt") != null) {
                     session.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
                     session.lastUpdatedBy = LastUpdateType.entries[obj.getInteger("lastUpdatedFrom")]
-                    val lastUpdatedRuleId = obj.getInteger("lastUpdatedRuleId")
-                    if (lastUpdatedRuleId != null && lastUpdatedRuleId != -1) {
-                        session.lastUpdatedRuleId = lastUpdatedRuleId
+                    val lastUpdatedRuleId = obj.getString("lastUpdatedRuleId")
+                    if (lastUpdatedRuleId != null && lastUpdatedRuleId.isNotEmpty()) {
+                        session.lastUpdatedRuleKey = lastUpdatedRuleId
                     } else {
-                        session.lastUpdatedRuleId = null
+                        session.lastUpdatedRuleKey = null
                     }
                 }
                 return session
@@ -117,14 +129,21 @@ class Session private constructor(val name: String, private val id: String) : Ca
         private set
     var lastUpdatedBy: LastUpdateType = LastUpdateType.CREATION
         private set
-    var lastUpdatedRuleId: Int? = null
+    var lastUpdatedRuleKey: String? = null
         private set
+    val lastUpdatedRuleId: Int?
+        get() {
+            sessionSwitcher.updateRulesCollection.updateRules.find { it.saveStateKey == lastUpdatedRuleKey }?.let {
+                return it.ruleId
+            }
+            return null
+        }
 
-    fun setLastUpdateReason(reason: LastUpdateType, ruleId: Int? = null) {
-        if (reason != LastUpdateType.UPDATE_RULE && ruleId != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
+    fun setLastUpdateReason(reason: LastUpdateType, ruleKey: String? = null) {
+        if (reason != LastUpdateType.UPDATE_RULE && ruleKey != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
         this.lastUpdatedBy = reason
-        this.lastUpdatedRuleId = ruleId
-        this.saveToProjectFileAsync()
+        this.lastUpdatedRuleKey = ruleKey
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
     override fun toString(): String {
@@ -140,7 +159,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
     }
 
     fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
-        return apply(r, SessionSwitcher.getInstance().settings.cookiesInjectMode.get())
+        return apply(r, sessionSwitcher.settings.cookiesInjectMode.get())
     }
 
     fun apply(
@@ -181,7 +200,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
     fun loadFromRequest(r: HttpRequest) {
         this.host = r.host()
         this.updateFromRequest(r, CookiesUpdateMode.MIRROR, HeadersUpdateMode.MIRROR)
-        this.saveToProjectFileAsync()
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
     /*
@@ -242,7 +261,7 @@ class Session private constructor(val name: String, private val id: String) : Ca
         this.lastUpdatedAt = Instant.now()
         this.lastUpdatedBy = LastUpdateType.MANUAL_REQUEST
 
-        this.saveToProjectFileAsync()
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
     /*
@@ -268,11 +287,9 @@ class Session private constructor(val name: String, private val id: String) : Ca
     override val saveStateKey: String
         get() = "Session.$id"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         // Basic data
         obj.setString("name", name)
         obj.setString("id", id)
@@ -294,7 +311,9 @@ class Session private constructor(val name: String, private val id: String) : Ca
         // Last update info
         obj.setLong("lastUpdatedAt", lastUpdatedAt.epochSecond)
         obj.setInteger("lastUpdatedFrom", lastUpdatedBy.ordinal)
-        obj.setInteger("lastUpdatedRuleId", lastUpdatedRuleId ?: -1)
+        if (lastUpdatedRuleKey != null) {
+            obj.setString("lastUpdatedRuleId", lastUpdatedRuleKey)
+        }
         return obj
     }
 }

@@ -1,6 +1,7 @@
 package sessionswitcher
 
 import burp.api.montoya.MontoyaApi
+import burp.api.montoya.persistence.PersistedObject
 import kotlinx.coroutines.runBlocking
 import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.rules.autoupdate.AutoUpdateProxyListener
@@ -21,7 +22,7 @@ class SessionSwitcher private constructor(
     // Singleton pattern to ensure the extension is not initialized more than once
     companion object {
         const val SERIALIZED_DATA_VERSION_KEY = "SerializedDataVersion"
-        const val SERIALIZED_DATA_VERSION = 1
+        const val SERIALIZED_DATA_VERSION = 2
 
         private lateinit var montoyaApi: MontoyaApi
         fun getApi(): MontoyaApi {
@@ -97,7 +98,7 @@ class SessionSwitcher private constructor(
 
         // Reload data from the project file
         runBlocking {
-            this@SessionSwitcher.loadSavedData()
+            this@SessionSwitcher.loadDataFromProjectFile()
         }
 
         // Register the extension main tab
@@ -107,30 +108,35 @@ class SessionSwitcher private constructor(
         }
     }
 
-    private suspend fun tryDeserializeData(): Boolean {
+    suspend fun tryDeserializeData(store: PersistedObject): Boolean {
         var loadedCorrectly = true
-        loadedCorrectly = loadedCorrectly and this.sessions.loadFromProjectFile()
-        loadedCorrectly = loadedCorrectly and this.updateRulesCollection.loadFromProjectFile()
+        val firstLevelKeys = store.childObjectKeys()
+        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.sessions.saveStateKey) or this.sessions.loadFromDataStore(store))
+        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.updateRulesCollection.saveStateKey) or this.updateRulesCollection.loadFromDataStore(store))
         return loadedCorrectly
     }
 
-    private suspend fun loadSavedData() {
-        val storage = montoyaApi.persistence().extensionData()
-        val serializedDataVersion = storage.getInteger(SERIALIZED_DATA_VERSION_KEY)
+    suspend fun loadDataFromProjectFile() {
+        val store = montoyaApi.persistence().extensionData()
+
+        val serializedDataVersion = store.getInteger(SERIALIZED_DATA_VERSION_KEY)
+        if (serializedDataVersion == null) {
+            // New project, no data yet
+            store.setInteger(SERIALIZED_DATA_VERSION_KEY, SERIALIZED_DATA_VERSION)
+            return
+        }
+
         val shouldTryLoadIncompatibleVersion = settings.tryLoadDifferentSavedDataVersion.get()
 
-        if (
-                (serializedDataVersion != null && serializedDataVersion < SERIALIZED_DATA_VERSION) ||
-                (serializedDataVersion == null && storage.getChildObject(this.sessions.saveStateKey) != null)
-            ) {
+        if (serializedDataVersion < SERIALIZED_DATA_VERSION) {
             if (shouldTryLoadIncompatibleVersion) {
                 Logger.info("Saved data was made with an older SessionSwitcher version, trying to load it anyway.")
-                val loadedCorrectly = tryDeserializeData()
+                val loadedCorrectly = tryDeserializeData(store)
                 if (loadedCorrectly) {
                     Logger.info("Data loaded successfully, upgrading saved data version to current one")
-                    storage.setInteger(SERIALIZED_DATA_VERSION_KEY, SERIALIZED_DATA_VERSION)
+                    store.setInteger(SERIALIZED_DATA_VERSION_KEY, SERIALIZED_DATA_VERSION)
                 } else {
-                    Logger.warning("Data could not be loaded successfully.")
+                    Logger.warning("Data could not be loaded.")
                 }
             } else {
                 Logger.warning("Saved data was made with an older SessionSwitcher version, not loading it.")
@@ -138,11 +144,11 @@ class SessionSwitcher private constructor(
             }
         } else if (serializedDataVersion > SERIALIZED_DATA_VERSION) {
             if (shouldTryLoadIncompatibleVersion) {
-                val loadedCorrectly = tryDeserializeData()
+                val loadedCorrectly = tryDeserializeData(store)
                 if (loadedCorrectly) {
                     Logger.info("Data loaded successfully.")
                 } else {
-                    Logger.warning("Data could not be loaded successfully.")
+                    Logger.warning("Data could not be loaded.")
                 }
                 Logger.warning("Saved data was made with a newer SessionSwitcher version, trying to load it anyway.")
             } else {
@@ -150,7 +156,7 @@ class SessionSwitcher private constructor(
                 return
             }
         } else {
-            val loadedCorrectly = tryDeserializeData()
+            val loadedCorrectly = tryDeserializeData(store)
             if (loadedCorrectly) {
                 Logger.info("Saved data loaded successfully")
             } else {

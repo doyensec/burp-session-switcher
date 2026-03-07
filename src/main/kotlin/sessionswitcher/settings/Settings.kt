@@ -28,7 +28,6 @@ class Settings(val provider: SettingsProvider) {
         }
     }
 
-
     /* Internal */
     val displayRequestEditor = BooleanSetting(provider, "ui.display_request_editor", "Display the request editor", true)
     val registerContextMenu =

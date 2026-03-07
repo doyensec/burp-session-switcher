@@ -29,12 +29,12 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
 
     fun addRule(rule: UpdateRule) {
         updateRules.add(rule)
-        this.updateChildObjectAsync(rule)
+        this.updateChildObjectInProjectFileAsync(rule)
     }
 
     fun addRule(index: Int, rule: UpdateRule) {
         updateRules.add(index, rule)
-        this.updateChildObjectAsync(rule)
+        this.updateChildObjectInProjectFileAsync(rule)
     }
 
     fun deleteRule(id: Int) {
@@ -44,7 +44,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
 
     fun deleteRule(rule: UpdateRule) {
         updateRules.remove(rule)
-        this.deleteChildObjectAsync(rule)
+        this.deleteChildObjectFromProjectFileAsync(rule)
     }
 
     fun deleteRulesForSession(session: Session) {
@@ -63,12 +63,11 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
     override val saveStateKey: String
         get() = "UpdateRulesCollection"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
+    override fun getChildObjectsToSave(): Collection<CanSaveData> {
         return this.updateRules
     }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val rules = PersistedList.persistedStringList()
         for (rule in updateRules) {
             rules.add(rule.saveStateKey)
@@ -77,19 +76,23 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
         return obj
     }
 
-    override fun burpDeserialize(obj: PersistedObject): Boolean {
+    override fun burpDeserialize(obj: PersistedObject,): Boolean {
         val rules = obj.getStringList("rules") ?: return true
         Logger.debug("Deserializing ${rules.size} rules")
+        if (rules.isEmpty()) return true
+
         val deserializer = UpdateRule.Deserializer(sessionSwitcher)
+        var atLeastOneLoadedSuccessfully = false
         for (ruleKey in rules) {
             try {
-                val rule = deserializer.deserialize(ruleKey) ?: continue
+                val rule = deserializer.deserialize(ruleKey, obj) ?: continue
                 this.updateRules.add(rule)
-            } catch (e: Exception) {
+                atLeastOneLoadedSuccessfully = true
+            } catch (_: Exception) {
                 Logger.error("Failed deserializing rule: $ruleKey")
-                return false
+                continue
             }
         }
-        return true
+        return atLeastOneLoadedSuccessfully
     }
 }

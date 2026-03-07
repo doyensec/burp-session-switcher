@@ -7,7 +7,8 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.sessions.CookiesUpdateMode
 import sessionswitcher.sessions.HeadersUpdateMode
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 class UpdateConfig private constructor(
     val updateSource: UpdateSource,
@@ -110,11 +111,9 @@ class UpdateConfig private constructor(
     override val saveStateKey: String
         get() = "UpdateRule.Config.$saveStateId"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setString("id", saveStateId.toString())
 
         obj.setString("update_source", updateSource.name)

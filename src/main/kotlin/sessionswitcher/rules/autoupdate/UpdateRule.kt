@@ -12,7 +12,7 @@ import sessionswitcher.rules.conditions.MatchInfo
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
 import sessionswitcher.sessions.Session
-import java.util.*
+import java.util.UUID
 import kotlin.math.max
 
 class UpdateRule private constructor(
@@ -89,7 +89,7 @@ class UpdateRule private constructor(
     private fun updateFromRequest(httpRequest: HttpRequest) {
         if (this.config.updateSource != UpdateConfig.UpdateSource.REQUEST) throw Exception("updateFromRequest called on a rule that doesn't update from request")
         this.session.updateFromRequest(httpRequest, config.cookiesUpdateMode, config.headersUpdateMode)
-        this.session.setLastUpdateReason(Session.LastUpdateType.UPDATE_RULE, this.ruleId)
+        this.session.setLastUpdateReason(Session.LastUpdateType.UPDATE_RULE, this.saveStateKey)
     }
 
     fun copy(): UpdateRule {
@@ -99,18 +99,13 @@ class UpdateRule private constructor(
     override val saveStateKey: String
         get() = "UpdateRule.$saveStateId"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
+    override fun getChildObjectsToSave(): Collection<CanSaveData> {
         return arrayListOf(*conditions, config)
     }
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
-
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val saveStateId = this.saveStateId.toString()
         obj.setString("id", saveStateId)
-
-        val ruleId = this.ruleId
-        obj.setInteger("ruleId", ruleId)
 
         val session = session.name
         obj.setString("session", session)
@@ -128,21 +123,20 @@ class UpdateRule private constructor(
     class Deserializer(val sessionSwitcher: SessionSwitcher) : DeserializerFactory<UpdateRule>() {
         override fun deserializeObject(obj: PersistedObject): UpdateRule {
             val saveStateId = UUID.fromString(obj.getString("id"))
-            val ruleId = obj.getInteger("ruleId")
 
             val sessionName = obj.getString("session")
             val session = sessionSwitcher.sessions.getSession(sessionName)
                 ?: throw Exception("Cannot find session with name $sessionName")
 
             val configKey = obj.getString("config")
-            val config = UpdateConfig.Deserializer.deserialize(configKey)
+            val config = UpdateConfig.Deserializer.deserialize(configKey, obj)
                 ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
 
             val conditionsList = obj.getStringList("conditions")
 
             val conditions: ArrayList<Condition> = ArrayList<Condition>()
-            conditionsList.forEach { Condition.Deserializer.deserialize(it)?.let { e -> conditions.add(e) } }
-            return UpdateRule(conditions.toTypedArray(), session, config, ruleId, saveStateId)
+            conditionsList.forEach { Condition.Deserializer.deserialize(it, obj)?.let { e -> conditions.add(e) } }
+            return UpdateRule(conditions.toTypedArray(), session, config, generateId(), saveStateId)
         }
     }
 }

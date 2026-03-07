@@ -6,7 +6,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Optional
 import javax.swing.table.AbstractTableModel
 
 class SessionsTableModel(private val sessionCollection: SessionCollection) : AbstractTableModel(),
@@ -66,6 +66,7 @@ class SessionsTableModel(private val sessionCollection: SessionCollection) : Abs
 
     private fun formatLastUpdatedBy(session: Session): String {
         if (session.lastUpdatedBy == Session.LastUpdateType.UPDATE_RULE) {
+            if (session.lastUpdatedRuleId == null) return "Rule"
             return "Rule ${session.lastUpdatedRuleId}"
         }
         return session.lastUpdatedBy.toString()

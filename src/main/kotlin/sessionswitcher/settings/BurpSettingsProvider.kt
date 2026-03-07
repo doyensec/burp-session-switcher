@@ -4,10 +4,24 @@ import burp.api.montoya.MontoyaApi
 import burp.api.montoya.persistence.PersistedObject
 import burp.api.montoya.persistence.Preferences
 
-class BurpSettingsProvider(montoyaApi: MontoyaApi) : SettingsProvider {
+class BurpSettingsProvider(val montoyaApi: MontoyaApi) : SettingsProvider {
 
     val globalStore: Preferences = montoyaApi.persistence().preferences()
-    val projectStore: PersistedObject = montoyaApi.persistence().extensionData()
+    private lateinit var _projectStore: PersistedObject
+    val projectStore: PersistedObject
+        get() {
+            if (!::_projectStore.isInitialized) {
+                val projectStore = montoyaApi.persistence().extensionData()
+                var settings = projectStore.getChildObject("Settings")
+                if (settings == null) {
+                    settings = PersistedObject.persistedObject()
+                    projectStore.setChildObject("Settings", settings)
+                }
+                _projectStore = settings
+            }
+            return _projectStore
+        }
+
     override fun getBoolean(key: String, store: SettingsItem.Store): Boolean? {
         return when (store) {
             SettingsItem.Store.GLOBAL -> this.globalStore.getBoolean(key)

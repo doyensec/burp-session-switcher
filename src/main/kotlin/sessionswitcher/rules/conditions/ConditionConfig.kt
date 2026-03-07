@@ -5,7 +5,7 @@ import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
-import java.util.*
+import java.util.UUID
 
 class ConditionConfig private constructor(
     val operation: String,
@@ -40,10 +40,9 @@ class ConditionConfig private constructor(
 
     override val saveStateKey: String = "UpdateRule.Condition.Config.${saveStateId}"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setString("id", saveStateId.toString())
         obj.setString("operation", operation)
         obj.setBoolean("negativeMatch", negativeMatch)
