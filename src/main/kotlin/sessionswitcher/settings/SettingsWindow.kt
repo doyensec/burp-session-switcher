@@ -1,25 +1,25 @@
 package sessionswitcher.settings
 
-import burp.api.montoya.persistence.PersistedObject
-import com.google.gson.JsonParser
 import kotlinx.coroutines.runBlocking
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
-import sessionswitcher.savestate.importexport.JsonPersistedObject
-import sessionswitcher.savestate.importexport.toJsonObject
+import sessionswitcher.savestate.importexport.JSONImportExport
 import sessionswitcher.ui.UISection
 import sessionswitcher.ui.Window
+import java.awt.BorderLayout
 import java.awt.GridLayout
 import java.io.File
 import java.text.Normalizer
 import javax.swing.Box
 import javax.swing.BoxLayout
 import javax.swing.JButton
+import javax.swing.JComponent
 import javax.swing.JFileChooser
 import javax.swing.JOptionPane
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JSeparator
+import javax.swing.JTabbedPane
 
 class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings") {
     companion object {
@@ -34,43 +34,44 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             data.stringListKeys().forEach { s -> data.deleteStringList(s) }
         }
     }
-    init {
-        // Build the different section first
-        val requestEditorSection = UISection(
-            "Request Editor",
-            "Settings related to the Request Editor UI",
-            settings.editorHideHeadersMode.drawComboBox(true),
-            Box.createVerticalStrut(6),
-            settings.editorShowRequestBody.drawCheckbox(),
-            Box.createVerticalStrut(6),
-            settings.filterSessionMode.drawComboBox(true),
-            Box.createVerticalStrut(6),
-            settings.editorDoNotAskOverwriteConfirmation.drawCheckbox(),
-            Box.createVerticalStrut(6),
-            settings.cookiesUpdateMode.drawComboBox(true),
-            Box.createVerticalStrut(6),
-            settings.headersUpdateMode.drawComboBox(true),
-            Box.createVerticalStrut(6),
-            settings.cookiesInjectMode.drawComboBox(true),
-            Box.createVerticalStrut(6),
-        )
 
-        val autoUpdateSections = UISection(
-            "Auto Updater",
-            "Set the behavior of Auto Update Rules",
-            settings.stopAtFirstUpdateRule.drawCheckbox()
-        )
+    private fun makeRequestEditorSection(store: SettingsItem.Store) = UISection(
+        "Request Editor",
+        "Settings related to the Request Editor UI",
+        settings.editorHideHeadersMode.drawComboBox(store, true),
+        Box.createVerticalStrut(6),
+        settings.editorShowRequestBody.drawCheckbox(store),
+        Box.createVerticalStrut(6),
+        settings.filterSessionMode.drawComboBox(store, true),
+        Box.createVerticalStrut(6),
+        settings.editorDoNotAskOverwriteConfirmation.drawCheckbox(store),
+        Box.createVerticalStrut(6),
+        settings.cookiesUpdateMode.drawComboBox(store, true),
+        Box.createVerticalStrut(6),
+        settings.headersUpdateMode.drawComboBox(store, true),
+        Box.createVerticalStrut(6),
+        settings.cookiesInjectMode.drawComboBox(store, true),
+        Box.createVerticalGlue()
+    )
 
-        val loggingLevelSection = UISection(
-            "Logging options",
-            "Use these settings to configure the logging level of the extension.",
-            settings.loggingLevel.drawComboBox(true),
-        )
+    private fun makeAutoUpdateSection(store: SettingsItem.Store) = UISection(
+        "Auto Updater",
+        "Set the behavior of Auto Update Rules",
+        settings.stopAtFirstUpdateRule.drawCheckbox(store),
+        Box.createVerticalGlue()
+    )
 
-        val exportJson = JButton("Export to JSON").also {
+    private fun makeLoggingLevelSection(store: SettingsItem.Store) = UISection(
+    "Logging options",
+    "Use these settings to configure the logging level of the extension.",
+    settings.loggingLevel.drawComboBox(store, true),
+        Box.createVerticalGlue()
+    )
+
+    private fun makeProjectDataSection(): UISection {
+        val exportJsonButton = JButton("Export to JSON").also {
             it.addActionListener {
-                val data = SessionSwitcher.getApi().persistence().extensionData()
-                val json = data.toJsonObject().toString()
+                val json = JSONImportExport.exportToJson()
                 val rawProjectName = SessionSwitcher.getApi().project().name()
                 val projectName = Normalizer.normalize(rawProjectName, Normalizer.Form.NFD)
                     .replace("[^\\w-]".toRegex(), "_") // Replace invalid characters with underscores
@@ -87,7 +88,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             }
         }
 
-        val importJson = JButton("Import from JSON").also {
+        val importJsonButton = JButton("Import from JSON").also {
             it.addActionListener {
                 val fileChooser = JFileChooser()
                 val userSelection = fileChooser.showOpenDialog(null)
@@ -95,42 +96,12 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
                     return@addActionListener
                 }
                 val selectedFile = fileChooser.selectedFile
-                
+
                 try {
-                    val sessionSwitcher = SessionSwitcher.getInstance()
                     val jsonText = selectedFile.readText(Charsets.UTF_8)
-                    val jsonObject = JsonParser.parseString(jsonText).asJsonObject
-
                     Logger.verbose("Importing data from JSON file...")
-
-                    val success: Boolean
-                    runBlocking {
-                        // Load the data
-                        success = sessionSwitcher.tryDeserializeData(JsonPersistedObject(jsonObject))
-                        Logger.verbose("Triggering save of new data on project file")
-
-                        // Save in project file
-                        val extensionStore = SessionSwitcher.getApi().persistence().extensionData()
-                        sessionSwitcher.sessions.saveToDataStore(extensionStore, true)
-                        sessionSwitcher.updateRulesCollection.saveToDataStore(extensionStore, true)
-
-                        // Import settings
-                        if (!jsonObject.has("Settings") || !jsonObject.get("Settings").isJsonObject) return@runBlocking
-                        Logger.verbose("Importing settings...")
-                        val settingsObject = extensionStore.getChildObject("Settings") ?: PersistedObject.persistedObject()
-                        for (key in jsonObject.getAsJsonObject("Settings").keySet()) {
-                            val value = jsonObject.getAsJsonObject("Settings").get(key)
-                            if (!value.isJsonPrimitive) continue
-                            val primitive = value.asJsonPrimitive
-                            if (primitive.isString) {
-                                settingsObject.setString(key, primitive.asString)
-                            } else if (primitive.isNumber) {
-                                settingsObject.setInteger(key, primitive.asInt)
-                            } else if (primitive.isBoolean) {
-                                settingsObject.setBoolean(key, primitive.asBoolean)
-                            }
-                        }
-                        extensionStore.setChildObject("Settings", settingsObject)
+                    val success = runBlocking {
+                        JSONImportExport.importFromJson(jsonText)
                     }
                     if (success) {
                         JOptionPane.showMessageDialog(
@@ -160,8 +131,8 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
 
         val importExportPanel = JPanel().also {
             it.layout = GridLayout(1, 2, 5, 2)
-            it.add(exportJson)
-            it.add(importJson)
+            it.add(exportJsonButton)
+            it.add(importJsonButton)
         }
 
         val deleteSessionsButton = JButton("Delete All Sessions").also {
@@ -190,7 +161,7 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             it.add(deleteUpdateRulesButton)
         }
 
-        val resetButtonsPanel = UISection(
+        return UISection(
             "Project data",
             "Use these buttons to manage the data stored by the extension in the project file",
             importExportPanel,
@@ -198,26 +169,73 @@ class SettingsWindow(val settings: Settings) : Window("SessionSwitcher Settings"
             deleteButtonsPanel,
             Box.createVerticalStrut(6),
             deleteEverythingButton
-            )
+        )
+    }
 
-        // Build the main window
-        val panel = JPanel().also {
+    private fun makeProjectSettingsTab(): JComponent {
+        val store = SettingsItem.Store.PROJECT
+        val requestEditorSection = makeRequestEditorSection(store)
+        val autoUpdateSection = makeAutoUpdateSection(store)
+        val loggingLevelSection = makeLoggingLevelSection(store)
+        val projectDataSection = makeProjectDataSection()
+
+        val inner =  JPanel().also {
             it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
             it.add(requestEditorSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             //it.add(autoInjectorSections)
-            it.add(autoUpdateSections)
+            it.add(autoUpdateSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
             it.add(loggingLevelSection)
             it.add(JSeparator(JSeparator.HORIZONTAL))
-            it.add(resetButtonsPanel)
+            it.add(projectDataSection)
+            it.add(Box.createVerticalGlue())
         }
 
-        val scrollable = JScrollPane(panel)
+        val outer = JPanel().also {
+            it.layout = BorderLayout()
+            it.add(inner, BorderLayout.NORTH)
+        }
+
+        val scrollable = JScrollPane(outer)
         scrollable.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
         scrollable.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        return scrollable
+    }
 
-        this.add(scrollable)
+    private fun makeGlobalSettingsTab(): JComponent {
+        val store = SettingsItem.Store.GLOBAL
+        val requestEditorSection = makeRequestEditorSection(store)
+        val autoUpdateSection = makeAutoUpdateSection(store)
+        val loggingLevelSection = makeLoggingLevelSection(store)
+
+        val inner = JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            it.add(requestEditorSection)
+            it.add(JSeparator(JSeparator.HORIZONTAL))
+            it.add(autoUpdateSection)
+            it.add(JSeparator(JSeparator.HORIZONTAL))
+            it.add(loggingLevelSection)
+            it.add(Box.createVerticalGlue())
+        }
+
+        val outer = JPanel().also {
+            it.layout = BorderLayout()
+            it.add(inner, BorderLayout.NORTH)
+        }
+
+        val scrollable = JScrollPane(outer)
+        scrollable.verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_ALWAYS
+        scrollable.horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        return scrollable
+    }
+
+    init {
+        val tabbedPane = JTabbedPane()
+        tabbedPane.addTab("Project Settings", makeProjectSettingsTab())
+        tabbedPane.addTab("Global Settings", makeGlobalSettingsTab())
+
+        this.add(tabbedPane)
         this.autoSize()
     }
 }
