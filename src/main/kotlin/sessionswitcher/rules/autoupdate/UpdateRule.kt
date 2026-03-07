@@ -41,17 +41,27 @@ class UpdateRule private constructor(
         currentId = max(currentId, ruleId + 1)
     }
 
+    var isEnabled: Boolean = true
+        private set
+
+    fun setEnabled(enabled: Boolean) {
+        this.isEnabled = enabled
+        SessionSwitcher.getInstance().updateRulesCollection.updateChildObjectInProjectFileAsync(this)
+    }
+
     fun needsResponse(): Boolean {
         return config.updateSource == UpdateConfig.UpdateSource.RESPONSE || conditions.any { it.typeInstance.matchesOnResponse }
     }
 
     fun matchesRequest(httpRequest: InterceptedRequest): Boolean {
+        if (!isEnabled) return false
         if (needsResponse()) return false
         val m = MatchInfo()
         return conditions.all { it.matchesRequest(httpRequest, m) }
     }
 
     fun matchesResponse(httpResponse: InterceptedResponse): Boolean {
+        if (!isEnabled) return false
         val m = MatchInfo()
         return conditions.all {
             if (it.typeInstance.matchesOnResponse) {
@@ -113,6 +123,8 @@ class UpdateRule private constructor(
         val updateConfig = config.saveStateKey
         obj.setString("config", updateConfig)
 
+        obj.setBoolean("enabled", isEnabled)
+
         val conditionsList = PersistedList.persistedStringList()
         conditionsList.addAll(conditions.map { it.saveStateKey })
         obj.setStringList("conditions", conditionsList)
@@ -132,11 +144,16 @@ class UpdateRule private constructor(
             val config = UpdateConfig.Deserializer.deserialize(configKey, obj)
                 ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
 
+            val enabled = obj.getBoolean("enabled") ?: true
+
             val conditionsList = obj.getStringList("conditions")
 
             val conditions: ArrayList<Condition> = ArrayList<Condition>()
             conditionsList.forEach { Condition.Deserializer.deserialize(it, obj)?.let { e -> conditions.add(e) } }
-            return UpdateRule(conditions.toTypedArray(), session, config, generateId(), saveStateId)
+
+            val rule = UpdateRule(conditions.toTypedArray(), session, config, generateId(), saveStateId)
+            rule.isEnabled = enabled
+            return rule
         }
     }
 }

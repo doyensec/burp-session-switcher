@@ -1,11 +1,11 @@
 package sessionswitcher.ui.tables
 
 import sessionswitcher.rules.autoupdate.UpdateRule
-import java.util.*
+import java.util.Optional
 import javax.swing.table.AbstractTableModel
 
 class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>) : AbstractTableModel(), ITableModel<UpdateRule> {
-    private val columnNames = arrayOf("ID", "Conditions", "Session", "Color")
+    private val columnNames = arrayOf("ID", "Conditions", "Session", "Enabled", "Color")
 
     override fun getRowCount(): Int {
         return rules.size
@@ -20,7 +20,10 @@ class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>) : AbstractT
     }
 
     override fun getColumnClass(columnIndex: Int): Class<*> {
-        return String::class.java
+        return when(columnIndex) {
+            3 -> Boolean::class.javaObjectType
+            else -> String::class.java
+        }
     }
 
     override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
@@ -30,8 +33,24 @@ class UpdateRuleTableModel(private val rules: ArrayList<UpdateRule>) : AbstractT
             0 -> rule.ruleId.toString()
             1 -> conditionsDescription
             2 -> rule.session.name
-            3 -> rule.config.highlightColor
+            3 -> rule.isEnabled
+            4 -> rule.config.highlightColor
             else -> "N/A"
+        }
+    }
+
+    override fun isCellEditable(rowIndex: Int, columnIndex: Int): Boolean {
+        return columnIndex == 3
+    }
+
+    override fun setValueAt(aValue: Any?, rowIndex: Int, columnIndex: Int) {
+        when (columnIndex) {
+            3 -> {
+                val newValue = aValue as Boolean
+                rules[rowIndex].setEnabled(newValue)
+                fireTableCellUpdated(rowIndex, columnIndex)
+            }
+            else -> throw IllegalArgumentException("Invalid column index: $columnIndex")
         }
     }
 

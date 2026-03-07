@@ -144,8 +144,10 @@ object UpdateRuleSection {
         tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
         tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
-        tableSection.table.columnModel.getColumn(3).maxWidth = 50 // For Color column
-        tableSection.table.columnModel.getColumn(3).cellRenderer = ColorRendererCell
+        tableSection.table.columnModel.getColumn(3).maxWidth = 60 // For Enabled column
+        tableSection.table.columnModel.getColumn(4).maxWidth = 40 // For Color column
+        tableSection.table.columnModel.getColumn(4).cellRenderer = ColorRendererCell
+        (tableSection.table.getDefaultRenderer(Boolean::class.java) as? JComponent)?.let {  }
         tableSection.table.selectionModel.addListSelectionListener { this.selectionListener(it) }
         tableSection.table.autoCreateRowSorter = true
         return tableSection.getComponent()
@@ -181,6 +183,5 @@ object UpdateRuleSection {
             val color = value as HighlightColor
             return color.toPanel()
         }
-
     }
 }
