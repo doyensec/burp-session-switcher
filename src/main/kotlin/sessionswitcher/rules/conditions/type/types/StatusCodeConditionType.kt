@@ -9,8 +9,6 @@ object StatusCodeConditionType :
     override fun matchesResponse(
         configuration: ConditionConfig,
         response: HttpResponse,
-        matchInfo: MatchInfo
-    ): Boolean {
-        return this.stringMatches(configuration, response.statusCode().toString())
-    }
+        matchInfo: MatchInfo,
+    ): Boolean = this.stringMatches(configuration, response.statusCode().toString())
 }

@@ -1,6 +1,13 @@
 package sessionswitcher.rules.autoupdate
 
-import burp.api.montoya.proxy.http.*
+import burp.api.montoya.proxy.http.InterceptedRequest
+import burp.api.montoya.proxy.http.InterceptedResponse
+import burp.api.montoya.proxy.http.ProxyRequestHandler
+import burp.api.montoya.proxy.http.ProxyRequestReceivedAction
+import burp.api.montoya.proxy.http.ProxyRequestToBeSentAction
+import burp.api.montoya.proxy.http.ProxyResponseHandler
+import burp.api.montoya.proxy.http.ProxyResponseReceivedAction
+import burp.api.montoya.proxy.http.ProxyResponseToBeSentAction
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -10,7 +17,9 @@ import kotlinx.coroutines.launch
 import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 
-class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher) : ProxyRequestHandler,
+class AutoUpdateProxyListener(
+    private val sessionSwitcher: SessionSwitcher,
+) : ProxyRequestHandler,
     ProxyResponseHandler {
     private val supervisor = SupervisorJob()
     private val coroutineScope = CoroutineScope(supervisor + Dispatchers.Default)
@@ -30,13 +39,14 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher) : Pr
         Logger.debug("Auto update proxy listener initialized")
     }
 
-
     override fun handleRequestReceived(interceptedRequest: InterceptedRequest): ProxyRequestReceivedAction {
         coroutineScope.launch {
             tasks.send {
                 for (rule in sessionSwitcher.updateRulesCollection.getRequestMatchingRules()) {
                     if (rule.updateIfRequestMatches(interceptedRequest)) {
-                        Logger.info("Request ${interceptedRequest.messageId()} with URL ${interceptedRequest.url()} matched rule ${rule.ruleId}")
+                        Logger.info(
+                            "Request ${interceptedRequest.messageId()} with URL ${interceptedRequest.url()} matched rule ${rule.ruleId}",
+                        )
                         if (stopAtFirstMatch) return@send
                     }
                 }
@@ -45,9 +55,8 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher) : Pr
         return ProxyRequestReceivedAction.continueWith(interceptedRequest)
     }
 
-    override fun handleRequestToBeSent(interceptedRequest: InterceptedRequest): ProxyRequestToBeSentAction {
-        return ProxyRequestToBeSentAction.continueWith(interceptedRequest)
-    }
+    override fun handleRequestToBeSent(interceptedRequest: InterceptedRequest): ProxyRequestToBeSentAction =
+        ProxyRequestToBeSentAction.continueWith(interceptedRequest)
 
     override fun handleResponseReceived(interceptedResponse: InterceptedResponse): ProxyResponseReceivedAction {
         coroutineScope.launch {
@@ -57,7 +66,7 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher) : Pr
                         Logger.info(
                             "Response ${interceptedResponse.messageId()} with URL ${
                                 interceptedResponse.request().url()
-                            } matched rule ${rule.ruleId}"
+                            } matched rule ${rule.ruleId}",
                         )
                         if (stopAtFirstMatch) return@send
                     }
@@ -67,9 +76,8 @@ class AutoUpdateProxyListener(private val sessionSwitcher: SessionSwitcher) : Pr
         return ProxyResponseReceivedAction.continueWith(interceptedResponse)
     }
 
-    override fun handleResponseToBeSent(interceptedResponse: InterceptedResponse): ProxyResponseToBeSentAction {
-        return ProxyResponseToBeSentAction.continueWith(interceptedResponse)
-    }
+    override fun handleResponseToBeSent(interceptedResponse: InterceptedResponse): ProxyResponseToBeSentAction =
+        ProxyResponseToBeSentAction.continueWith(interceptedResponse)
 
     fun stop() {
         try {

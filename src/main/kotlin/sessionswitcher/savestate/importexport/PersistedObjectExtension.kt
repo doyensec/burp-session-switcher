@@ -23,7 +23,7 @@ fun PersistedObject.toJsonObject(): JsonObject {
     this.shortListKeys().forEach { key -> json.add(key, this.getShortList(key).toJsonArray()) }
 
     // Objects
-    this.childObjectKeys().forEach { key -> json.add(key, this.getChildObject(key).toJsonObject())}
+    this.childObjectKeys().forEach { key -> json.add(key, this.getChildObject(key).toJsonObject()) }
 
     return json
 }

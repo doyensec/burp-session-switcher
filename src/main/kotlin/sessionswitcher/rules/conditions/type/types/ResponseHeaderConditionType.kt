@@ -9,7 +9,7 @@ object ResponseHeaderConditionType :
     override fun matchesResponse(
         configuration: ConditionConfig,
         response: HttpResponse,
-        matchInfo: MatchInfo
+        matchInfo: MatchInfo,
     ): Boolean {
         val headers = response.headers().map { it.toString() }
         return if (configuration.negativeMatch) {
@@ -19,7 +19,6 @@ object ResponseHeaderConditionType :
         }
     }
 
-    override fun describe(configuration: ConditionConfig): String {
-        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
-    }
+    override fun describe(configuration: ConditionConfig): String =
+        "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
 }

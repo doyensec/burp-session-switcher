@@ -20,20 +20,19 @@ class UpdateRule private constructor(
     val session: Session,
     val config: UpdateConfig,
     val ruleId: Int,
-    private val saveStateId: UUID
+    private val saveStateId: UUID,
 ) : CanSaveData {
     companion object {
         private var currentId = 1
-        private fun generateId(): Int {
-            return currentId++
-        }
+
+        private fun generateId(): Int = currentId++
     }
 
     constructor(
         conditions: Array<Condition>,
         session: Session,
         config: UpdateConfig,
-        ruleId: Int = generateId()
+        ruleId: Int = generateId(),
     ) : this(conditions, session, config, ruleId, UUID.randomUUID())
 
     init {
@@ -49,9 +48,11 @@ class UpdateRule private constructor(
         SessionSwitcher.getInstance().updateRulesCollection.updateChildObjectInProjectFileAsync(this)
     }
 
-    fun needsResponse(): Boolean {
-        return config.updateSource == UpdateConfig.UpdateSource.RESPONSE || conditions.any { it.typeInstance.matchesOnResponse }
-    }
+    fun needsResponse(): Boolean =
+        config.updateSource == UpdateConfig.UpdateSource.RESPONSE ||
+            conditions.any {
+                it.typeInstance.matchesOnResponse
+            }
 
     fun matchesRequest(httpRequest: InterceptedRequest): Boolean {
         if (!isEnabled) return false
@@ -97,21 +98,21 @@ class UpdateRule private constructor(
     }
 
     private fun updateFromRequest(httpRequest: HttpRequest) {
-        if (this.config.updateSource != UpdateConfig.UpdateSource.REQUEST) throw Exception("updateFromRequest called on a rule that doesn't update from request")
+        if (this.config.updateSource !=
+            UpdateConfig.UpdateSource.REQUEST
+        ) {
+            throw Exception("updateFromRequest called on a rule that doesn't update from request")
+        }
         this.session.updateFromRequest(httpRequest, config.cookiesUpdateMode, config.headersUpdateMode)
         this.session.setLastUpdateReason(Session.LastUpdateType.UPDATE_RULE, this.saveStateKey)
     }
 
-    fun copy(): UpdateRule {
-        return UpdateRule(conditions.map { it.copy() }.toTypedArray(), session, config.copy())
-    }
+    fun copy(): UpdateRule = UpdateRule(conditions.map { it.copy() }.toTypedArray(), session, config.copy())
 
     override val saveStateKey: String
         get() = "UpdateRule.$saveStateId"
 
-    override fun getChildObjectsToSave(): Collection<CanSaveData> {
-        return arrayListOf(*conditions, config)
-    }
+    override fun getChildObjectsToSave(): Collection<CanSaveData> = arrayListOf(*conditions, config)
 
     override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val saveStateId = this.saveStateId.toString()
@@ -132,17 +133,21 @@ class UpdateRule private constructor(
         return obj
     }
 
-    class Deserializer(val sessionSwitcher: SessionSwitcher) : DeserializerFactory<UpdateRule>() {
+    class Deserializer(
+        val sessionSwitcher: SessionSwitcher,
+    ) : DeserializerFactory<UpdateRule>() {
         override fun deserializeObject(obj: PersistedObject): UpdateRule {
             val saveStateId = UUID.fromString(obj.getString("id"))
 
             val sessionName = obj.getString("session")
-            val session = sessionSwitcher.sessions.getSession(sessionName)
-                ?: throw Exception("Cannot find session with name $sessionName")
+            val session =
+                sessionSwitcher.sessions.getSession(sessionName)
+                    ?: throw Exception("Cannot find session with name $sessionName")
 
             val configKey = obj.getString("config")
-            val config = UpdateConfig.Deserializer.deserialize(configKey, obj)
-                ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
+            val config =
+                UpdateConfig.Deserializer.deserialize(configKey, obj)
+                    ?: throw Exception("Cannot deserialize UpdateConfig: $configKey")
 
             val enabled = obj.getBoolean("enabled") ?: true
 

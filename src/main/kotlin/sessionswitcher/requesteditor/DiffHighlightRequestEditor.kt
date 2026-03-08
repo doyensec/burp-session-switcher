@@ -10,26 +10,28 @@ import sessionswitcher.utils.JsonPrettifier
 
 class DiffHighlightRequestEditor : StyledTextEditor() {
     companion object {
-        fun normalizeHeaderName(name: String): String {
-            return name.split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } }
-        }
+        fun normalizeHeaderName(name: String): String = name.split('-').joinToString("-") { it.replaceFirstChar { c -> c.uppercase() } }
     }
 
-    val commonHeaderPrefixes = setOf(
-        "connection",
-        "sec-",
-        "user-agent",
-        "priority",
-        "accept",
-        "cache",
-        "referer",
-        "date",
-        "http2",
-        "via",
-        "warning"
-    )
+    val commonHeaderPrefixes =
+        setOf(
+            "connection",
+            "sec-",
+            "user-agent",
+            "priority",
+            "accept",
+            "cache",
+            "referer",
+            "date",
+            "http2",
+            "via",
+            "warning",
+        )
 
-    private fun appendCookieHeader(value: String, cookiesDiffInfo: Pair<List<String>, List<String>>) {
+    private fun appendCookieHeader(
+        value: String,
+        cookiesDiffInfo: Pair<List<String>, List<String>>,
+    ) {
         // Preparation
         val modifiedCookies = cookiesDiffInfo.first.toSet()
         val addedCookies = cookiesDiffInfo.second.toSet()
@@ -63,7 +65,7 @@ class DiffHighlightRequestEditor : StyledTextEditor() {
     fun setRequest(
         httpRequest: HttpRequest,
         headersDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList()),
-        cookiesDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList())
+        cookiesDiffInfo: Pair<List<String>, List<String>> = Pair(emptyList(), emptyList()),
     ) {
         Logger.debug("setRequest, styled")
         val requestLines = httpRequest.toString().split("\r\n")
@@ -136,10 +138,12 @@ class DiffHighlightRequestEditor : StyledTextEditor() {
                     this.appendText("\n")
                     this.appendText(JsonPrettifier.prettify(httpRequest.bodyToString()))
                 }
+
                 ContentType.XML, ContentType.URL_ENCODED, ContentType.MULTIPART -> {
                     this.appendText("\n")
                     this.appendText(httpRequest.bodyToString())
                 }
+
                 else -> {
                     // Don't show binary Content-Type
                 }

@@ -38,5 +38,11 @@ object JSONImportExport {
         return success
     }
 
-    fun exportToJson(): String = SessionSwitcher.getApi().persistence().extensionData().toJsonObject().toString()
+    fun exportToJson(): String =
+        SessionSwitcher
+            .getApi()
+            .persistence()
+            .extensionData()
+            .toJsonObject()
+            .toString()
 }

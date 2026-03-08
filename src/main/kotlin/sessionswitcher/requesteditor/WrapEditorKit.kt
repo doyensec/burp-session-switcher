@@ -1,22 +1,31 @@
 package sessionswitcher.requesteditor
 
-import javax.swing.text.*
+import javax.swing.text.AbstractDocument
+import javax.swing.text.BoxView
+import javax.swing.text.ComponentView
+import javax.swing.text.Element
+import javax.swing.text.IconView
+import javax.swing.text.LabelView
+import javax.swing.text.ParagraphView
+import javax.swing.text.StyleConstants
+import javax.swing.text.StyledEditorKit
+import javax.swing.text.View
+import javax.swing.text.ViewFactory
 
 class WrapEditorKit : StyledEditorKit() {
     private val defaultFactory = WrapFactory()
 
-    override fun getViewFactory(): ViewFactory {
-        return defaultFactory
-    }
+    override fun getViewFactory(): ViewFactory = defaultFactory
 
-    internal class WrapLabelView(elem: Element?) : LabelView(elem) {
-        override fun getMinimumSpan(axis: Int): Float {
-            return when (axis) {
+    internal class WrapLabelView(
+        elem: Element?,
+    ) : LabelView(elem) {
+        override fun getMinimumSpan(axis: Int): Float =
+            when (axis) {
                 X_AXIS -> 0F
                 Y_AXIS -> super.getMinimumSpan(axis)
                 else -> throw IllegalArgumentException("Invalid axis: $axis")
             }
-        }
     }
 
     class WrapFactory : ViewFactory {

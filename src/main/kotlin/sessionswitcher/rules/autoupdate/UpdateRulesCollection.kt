@@ -8,31 +8,28 @@ import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.sessions.Session
 
-class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveAndLoadData {
+class UpdateRulesCollection(
+    private val sessionSwitcher: SessionSwitcher,
+) : CanSaveAndLoadData {
     val updateRules = ArrayList<UpdateRule>()
 
-    fun getRequestMatchingRules(): List<UpdateRule> {
-        return updateRules.filterNot { it.needsResponse() }
-    }
+    fun getRequestMatchingRules(): List<UpdateRule> = updateRules.filterNot { it.needsResponse() }
 
-    fun getResponseMatchingRules(): List<UpdateRule> {
-        return updateRules.filter { it.needsResponse() }
-    }
+    fun getResponseMatchingRules(): List<UpdateRule> = updateRules.filter { it.needsResponse() }
 
-    fun indexOf(rule: UpdateRule): Int {
-        return updateRules.indexOf(rule)
-    }
+    fun indexOf(rule: UpdateRule): Int = updateRules.indexOf(rule)
 
-    fun getRuleWithId(id: Int): UpdateRule? {
-        return updateRules.find { it.ruleId == id }
-    }
+    fun getRuleWithId(id: Int): UpdateRule? = updateRules.find { it.ruleId == id }
 
     fun addRule(rule: UpdateRule) {
         updateRules.add(rule)
         this.updateChildObjectInProjectFileAsync(rule)
     }
 
-    fun addRule(index: Int, rule: UpdateRule) {
+    fun addRule(
+        index: Int,
+        rule: UpdateRule,
+    ) {
         updateRules.add(index, rule)
         this.updateChildObjectInProjectFileAsync(rule)
     }
@@ -63,9 +60,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
     override val saveStateKey: String
         get() = "UpdateRulesCollection"
 
-    override fun getChildObjectsToSave(): Collection<CanSaveData> {
-        return this.updateRules
-    }
+    override fun getChildObjectsToSave(): Collection<CanSaveData> = this.updateRules
 
     override fun burpSerialize(obj: PersistedObject): PersistedObject {
         val rules = PersistedList.persistedStringList()
@@ -76,7 +71,7 @@ class UpdateRulesCollection(private val sessionSwitcher: SessionSwitcher) : CanS
         return obj
     }
 
-    override fun burpDeserialize(obj: PersistedObject,): Boolean {
+    override fun burpDeserialize(obj: PersistedObject): Boolean {
         val rules = obj.getStringList("rules") ?: return true
         Logger.debug("Deserializing ${rules.size} rules")
         if (rules.isEmpty()) return true

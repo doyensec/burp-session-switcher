@@ -17,9 +17,8 @@ class UpdateConfig private constructor(
     val cookiesToUpdate: Set<String> = emptySet(),
     val headersToUpdate: Set<String> = emptySet(),
     val highlightColor: HighlightColor = HighlightColor.NONE,
-    private val saveStateId: UUID = UUID.randomUUID()
-) :
-    CanSaveData {
+    private val saveStateId: UUID = UUID.randomUUID(),
+) : CanSaveData {
     companion object {
         fun make(
             updateSource: UpdateSource,
@@ -27,7 +26,7 @@ class UpdateConfig private constructor(
             headersUpdateMode: HeadersUpdateMode,
             cookiesToUpdate: Set<String> = emptySet(),
             headersToUpdate: Set<String> = emptySet(),
-            highlightColor: HighlightColor = HighlightColor.NONE
+            highlightColor: HighlightColor = HighlightColor.NONE,
         ): UpdateConfig {
             if (updateSource == UpdateSource.RESPONSE && cookiesUpdateMode == CookiesUpdateMode.MIRROR) {
                 throw IllegalArgumentException("Cannot use MIRROR cookie update mode when updating from a response")
@@ -41,39 +40,39 @@ class UpdateConfig private constructor(
             headersUpdateMode: String,
             cookiesToUpdate: Set<String> = emptySet(),
             headersToUpdate: Set<String> = emptySet(),
-            highlightColor: String = HighlightColor.NONE.name
-        ): UpdateConfig {
-            return this.make(
+            highlightColor: String = HighlightColor.NONE.name,
+        ): UpdateConfig =
+            this.make(
                 UpdateSource.valueOf(updateSource.uppercase()),
                 CookiesUpdateMode.valueOf(cookiesUpdateMode.uppercase()),
                 HeadersUpdateMode.valueOf(headersUpdateMode.uppercase()),
                 cookiesToUpdate,
                 headersToUpdate,
-                HighlightColor.valueOf(highlightColor)
+                HighlightColor.valueOf(highlightColor),
             )
-        }
 
-        val Deserializer = object : DeserializerFactory<UpdateConfig>() {
-            override fun deserializeObject(obj: PersistedObject): UpdateConfig {
-                val id = UUID.fromString(obj.getString("id"))
-                val updateSource = UpdateSource.valueOf(obj.getString("update_source"))
-                val cookiesUpdateMode = CookiesUpdateMode.valueOf(obj.getString("cookies_update_mode"))
-                val headersUpdateMode = HeadersUpdateMode.valueOf(obj.getString("headers_update_mode"))
-                val cookiesToUpdate = obj.getStringList("cookies_to_update")
-                val headersToUpdate = obj.getStringList("headers_to_update")
-                val highlightColor = HighlightColor.valueOf(obj.getString("highlight_color") ?: HighlightColor.NONE.name)
+        val Deserializer =
+            object : DeserializerFactory<UpdateConfig>() {
+                override fun deserializeObject(obj: PersistedObject): UpdateConfig {
+                    val id = UUID.fromString(obj.getString("id"))
+                    val updateSource = UpdateSource.valueOf(obj.getString("update_source"))
+                    val cookiesUpdateMode = CookiesUpdateMode.valueOf(obj.getString("cookies_update_mode"))
+                    val headersUpdateMode = HeadersUpdateMode.valueOf(obj.getString("headers_update_mode"))
+                    val cookiesToUpdate = obj.getStringList("cookies_to_update")
+                    val headersToUpdate = obj.getStringList("headers_to_update")
+                    val highlightColor = HighlightColor.valueOf(obj.getString("highlight_color") ?: HighlightColor.NONE.name)
 
-                return UpdateConfig(
-                    updateSource,
-                    cookiesUpdateMode,
-                    headersUpdateMode,
-                    cookiesToUpdate.toSet(),
-                    headersToUpdate.toSet(),
-                    highlightColor,
-                    id
-                )
+                    return UpdateConfig(
+                        updateSource,
+                        cookiesUpdateMode,
+                        headersUpdateMode,
+                        cookiesToUpdate.toSet(),
+                        headersToUpdate.toSet(),
+                        highlightColor,
+                        id,
+                    )
+                }
             }
-        }
     }
 
     /*
@@ -82,31 +81,31 @@ class UpdateConfig private constructor(
     # UPDATE_SOURCE: RESPONSE -> COOKIE: (UPDATE_ALL, UPDATE_EXISTING, UPDATE_SOME, NO_UPDATE) HEADER: ALL
      */
 
-    enum class UpdateSource(val description: String) {
+    enum class UpdateSource(
+        val description: String,
+    ) {
         REQUEST("Request"),
-        RESPONSE("Response");
+        RESPONSE("Response"),
+        ;
 
-        override fun toString(): String {
-            return this.description
-        }
+        override fun toString(): String = this.description
     }
 
-    fun describe(name: String): String {
-        return name.split(" ")
+    fun describe(name: String): String =
+        name
+            .split(" ")
             .joinToString(" ") { it.replaceFirstChar { c -> if (c.isLowerCase()) c.titlecase(Locale.getDefault()) else c.toString() } }
-    }
 
     // Copy constructor
-    fun copy(): UpdateConfig {
-        return UpdateConfig(
+    fun copy(): UpdateConfig =
+        UpdateConfig(
             this.updateSource,
             this.cookiesUpdateMode,
             this.headersUpdateMode,
             this.cookiesToUpdate.toSet(),
             this.headersToUpdate.toSet(),
-            this.highlightColor
+            this.highlightColor,
         )
-    }
 
     override val saveStateKey: String
         get() = "UpdateRule.Config.$saveStateId"

@@ -54,13 +54,19 @@ interface CanSaveData : BurpSerializable {
     companion object {
         private val coroutineScope = CoroutineScope(Dispatchers.IO)
         private val jobs = mutableListOf<Job>()
+
         suspend fun joinAll() = jobs.joinAll()
 
         private lateinit var _burpPersistenceStore: PersistedObject
         val burpPersistenceStore: PersistedObject
             get() {
                 if (!::_burpPersistenceStore.isInitialized) {
-                    _burpPersistenceStore = SessionSwitcher.getInstance().montoyaApi.persistence().extensionData()
+                    _burpPersistenceStore =
+                        SessionSwitcher
+                            .getInstance()
+                            .montoyaApi
+                            .persistence()
+                            .extensionData()
                 }
                 return _burpPersistenceStore
             }
@@ -68,7 +74,10 @@ interface CanSaveData : BurpSerializable {
 
     val saveStateKey: String
 
-    suspend fun saveToDataStore(persistenceStore: PersistedObject, processChildren: Boolean = true): PersistedObject? {
+    suspend fun saveToDataStore(
+        persistenceStore: PersistedObject,
+        processChildren: Boolean = true,
+    ): PersistedObject? {
         val key = saveStateKey
         val existingObj = persistenceStore.getChildObject(key) ?: PersistedObject.persistedObject()
         Logger.debug("[$key] Saving data to project file (with children: $processChildren)")
@@ -98,9 +107,11 @@ interface CanSaveData : BurpSerializable {
     }
 
     fun saveToProjectFileAsync(processChildren: Boolean = true) {
-        jobs.add(coroutineScope.launch {
-            this@CanSaveData.saveToDataStore(burpPersistenceStore, processChildren)
-        })
+        jobs.add(
+            coroutineScope.launch {
+                this@CanSaveData.saveToDataStore(burpPersistenceStore, processChildren)
+            },
+        )
     }
 
     fun getChildObjectsToSave(): Collection<CanSaveData>?
@@ -119,9 +130,11 @@ interface CanSaveData : BurpSerializable {
     }
 
     fun updateChildObjectInProjectFileAsync(obj: CanSaveData) {
-        jobs.add(coroutineScope.launch {
-            this@CanSaveData.updateChildObjectInProjectFile(obj)
-        })
+        jobs.add(
+            coroutineScope.launch {
+                this@CanSaveData.updateChildObjectInProjectFile(obj)
+            },
+        )
     }
 
     suspend fun deleteChildObjectFromProjectFile(obj: CanSaveData) {
@@ -130,37 +143,46 @@ interface CanSaveData : BurpSerializable {
     }
 
     fun deleteChildObjectFromProjectFileAsync(obj: CanSaveData) {
-        jobs.add(coroutineScope.launch {
-            this@CanSaveData.deleteChildObjectFromProjectFile(obj)
-        })
+        jobs.add(
+            coroutineScope.launch {
+                this@CanSaveData.deleteChildObjectFromProjectFile(obj)
+            },
+        )
     }
 }
 
-interface CanSaveAndLoadData : CanSaveData, CanLoadData
+interface CanSaveAndLoadData :
+    CanSaveData,
+    CanLoadData
 
 // This Factory-Deserializer class allows creating a Kotlin object from the deserialization
 // of data from the project file, instead of creating the object first and then loading data into it
 abstract class DeserializerFactory<T> {
-    fun deserialize(id: String, store: PersistedObject): T? {
-        val wrapper = object : CanLoadData {
-            var deserialized: T? = null
-            override val saveStateKey: String
-                get() = id
+    fun deserialize(
+        id: String,
+        store: PersistedObject,
+    ): T? {
+        val wrapper =
+            object : CanLoadData {
+                var deserialized: T? = null
+                override val saveStateKey: String
+                    get() = id
 
-            override fun burpDeserialize(obj: PersistedObject): Boolean {
-                this.deserialized = deserializeObject(obj)
-                return true
-            }
-
-            fun deserialize(): T? = runBlocking {
-                val deserializationSuccess = loadFromDataStore(store)
-                if (!deserializationSuccess) {
-                    Logger.warning("[$id] Failed to deserialize data from project file")
-                    throw IllegalStateException("Failed to deserialize data from project file")
+                override fun burpDeserialize(obj: PersistedObject): Boolean {
+                    this.deserialized = deserializeObject(obj)
+                    return true
                 }
-                return@runBlocking deserialized
+
+                fun deserialize(): T? =
+                    runBlocking {
+                        val deserializationSuccess = loadFromDataStore(store)
+                        if (!deserializationSuccess) {
+                            Logger.warning("[$id] Failed to deserialize data from project file")
+                            throw IllegalStateException("Failed to deserialize data from project file")
+                        }
+                        return@runBlocking deserialized
+                    }
             }
-        }
         return wrapper.deserialize()
     }
 

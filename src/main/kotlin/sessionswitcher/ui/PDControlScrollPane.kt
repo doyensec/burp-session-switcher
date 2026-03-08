@@ -7,11 +7,14 @@ import javax.swing.JScrollBar
 import javax.swing.JScrollPane
 
 // From: https://stackoverflow.com/a/1379695
+
 /**
  * A JScrollPane that will bubble a mouse wheel scroll event to the parent
  * JScrollPane if one exists when this scrollpane either tops out or bottoms out.
  */
-class PDControlScrollPane(view: Component?) : JScrollPane(view) {
+class PDControlScrollPane(
+    view: Component?,
+) : JScrollPane(view) {
     init {
         addMouseWheelListener(PDMouseWheelListener())
     }
@@ -35,8 +38,8 @@ class PDControlScrollPane(view: Component?) : JScrollPane(view) {
             val parent = parentScrollPane
             if (parent != null) {
                 /*
-                * Only dispatch if we have reached top/bottom on previous scroll
-                */
+                 * Only dispatch if we have reached top/bottom on previous scroll
+                 */
                 if (e.wheelRotation < 0) {
                     if (bar.value == 0 && previousValue == 0) {
                         parent.dispatchEvent(cloneEvent(e))
@@ -55,13 +58,22 @@ class PDControlScrollPane(view: Component?) : JScrollPane(view) {
         private val max: Int
             get() = bar.maximum - bar.visibleAmount
 
-        private fun cloneEvent(e: MouseWheelEvent): MouseWheelEvent {
-            return MouseWheelEvent(
-                parentScrollPane, e.id, e
-                    .getWhen(), e.modifiersEx, 1, 1, e
-                    .clickCount, false, e.scrollType, e
-                    .scrollAmount, e.wheelRotation
+        private fun cloneEvent(e: MouseWheelEvent): MouseWheelEvent =
+            MouseWheelEvent(
+                parentScrollPane,
+                e.id,
+                e
+                    .getWhen(),
+                e.modifiersEx,
+                1,
+                1,
+                e
+                    .clickCount,
+                false,
+                e.scrollType,
+                e
+                    .scrollAmount,
+                e.wheelRotation,
             )
-        }
     }
 }

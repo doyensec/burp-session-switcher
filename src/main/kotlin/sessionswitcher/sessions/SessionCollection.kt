@@ -13,7 +13,9 @@ import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.getSaveStateKeys
 import java.lang.ref.WeakReference
 
-class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveAndLoadData {
+class SessionCollection(
+    private val sessionSwitcher: SessionSwitcher,
+) : CanSaveAndLoadData {
     companion object {
         val updateEventCoroutineScope = CoroutineScope(Dispatchers.Default)
         val updateMutex = Mutex()
@@ -24,13 +26,9 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
 
     val size get() = this.sessions.size
 
-    fun getSessionNames(): Set<String> {
-        return this.sessions.keys
-    }
+    fun getSessionNames(): Set<String> = this.sessions.keys
 
-    fun hasSession(key: String): Boolean {
-        return this.sessions.containsKey(key)
-    }
+    fun hasSession(key: String): Boolean = this.sessions.containsKey(key)
 
     fun getSessions(suffix: String = ""): Collection<Session> {
         if (suffix.isNotBlank()) {
@@ -39,9 +37,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         return this.sessions.values
     }
 
-    fun getSession(key: String): Session? {
-        return this.sessions[key]
-    }
+    fun getSession(key: String): Session? = this.sessions[key]
 
     fun deleteSession(key: String) {
         if (this.sessions.containsKey(key)) {
@@ -68,7 +64,10 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         return s
     }
 
-    fun duplicateSession(name: String, newName: String): Session {
+    fun duplicateSession(
+        name: String,
+        newName: String,
+    ): Session {
         if (this.hasSession(newName)) {
             throw Exception("Trying to duplicate a session with a name that is already present in the collection: $newName")
         }
@@ -110,9 +109,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
     override val saveStateKey: String
         get() = "SessionCollection"
 
-    override fun getChildObjectsToSave(): Collection<CanSaveData> {
-        return this.sessions.values
-    }
+    override fun getChildObjectsToSave(): Collection<CanSaveData> = this.sessions.values
 
     override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setStringList("SavedSessions", getSaveStateKeys(this.sessions.values))

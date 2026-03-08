@@ -7,7 +7,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object UserAgentConditionType :
     StringConditionType(matchOn = "User Agent", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val userAgent = request.header("User-Agent")
         if (userAgent == null) {
             Logger.debug("User-Agent header not found in request")

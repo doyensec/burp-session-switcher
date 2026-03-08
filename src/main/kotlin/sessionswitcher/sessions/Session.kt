@@ -16,83 +16,79 @@ import sessionswitcher.utils.withHeaders
 import java.time.Instant
 import java.util.UUID
 
-
-class Session private constructor(val name: String, private val id: String) : CanSaveData {
+class Session private constructor(
+    val name: String,
+    private val id: String,
+) : CanSaveData {
     companion object {
-        private lateinit var _sessionSwitcherInstance: SessionSwitcher
-        val sessionSwitcher: SessionSwitcher
-            get() {
-                if (!::_sessionSwitcherInstance.isInitialized) {
-                    _sessionSwitcherInstance = SessionSwitcher.getInstance()
-                }
-                return _sessionSwitcherInstance
-            }
-        val Deserializer = object : DeserializerFactory<Session>() {
-            override fun deserializeObject(obj: PersistedObject): Session {
-                // Basic data
-                val session = Session(obj.getString("name"), obj.getString("id"))
-                session.host = obj.getString("host")
+        val sessionSwitcher
+            get() = SessionSwitcher.getInstance()
+        val Deserializer =
+            object : DeserializerFactory<Session>() {
+                override fun deserializeObject(obj: PersistedObject): Session {
+                    // Basic data
+                    val session = Session(obj.getString("name"), obj.getString("id"))
+                    session.host = obj.getString("host")
 
-                // Cookies
-                session.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
+                    // Cookies
+                    session.cookies = Cookies.fromHeaderValue(obj.getString("cookies"))
 
-                // Headers
-                val headersLst = obj.getChildObjectList("headers")
-                if (headersLst != null) {
-                    for (headerObj in headersLst) {
-                        session.headers[headerObj.getString("k")] = headerObj.getString("v")
+                    // Headers
+                    val headersLst = obj.getChildObjectList("headers")
+                    if (headersLst != null) {
+                        for (headerObj in headersLst) {
+                            session.headers[headerObj.getString("k")] = headerObj.getString("v")
+                        }
                     }
-                }
 
-                // Last update info
-                if (obj.getLong("lastUpdatedAt") != null) {
-                    session.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
-                    session.lastUpdatedBy = LastUpdateType.entries[obj.getInteger("lastUpdatedFrom")]
-                    val lastUpdatedRuleId = obj.getString("lastUpdatedRuleId")
-                    if (lastUpdatedRuleId != null && lastUpdatedRuleId.isNotEmpty()) {
-                        session.lastUpdatedRuleKey = lastUpdatedRuleId
-                    } else {
-                        session.lastUpdatedRuleKey = null
+                    // Last update info
+                    if (obj.getLong("lastUpdatedAt") != null) {
+                        session.lastUpdatedAt = Instant.ofEpochSecond(obj.getLong("lastUpdatedAt"))
+                        session.lastUpdatedBy = LastUpdateType.entries[obj.getInteger("lastUpdatedFrom")]
+                        val lastUpdatedRuleId = obj.getString("lastUpdatedRuleId")
+                        if (lastUpdatedRuleId != null && lastUpdatedRuleId.isNotEmpty()) {
+                            session.lastUpdatedRuleKey = lastUpdatedRuleId
+                        } else {
+                            session.lastUpdatedRuleKey = null
+                        }
                     }
+                    return session
                 }
-                return session
             }
-        }
 
-        val EXCLUDED_HEADER_PREFIXES = setOf<String>(
-            // Keep these lowercase
-            ":", // HTTP2 headers
-            "cookie", // Handled separately
-            "connection",
-            "sec-",
-            "priority",
-            "accept",
-            "cache",
-            "content",
-            "host",
-            "user-agent",
-            "referer",
-            "upgrade",
-            "if-",
-            "access-",
-            "date",
-            "expect",
-            "forwarded",
-            "http2",
-            "max-forwards",
-            "pragma",
-            "proxy-",
-            "range",
-            "te",
-            "trailer",
-            "transfer-",
-            "via",
-            "warning"
-        )
+        val EXCLUDED_HEADER_PREFIXES =
+            setOf<String>(
+                // Keep these lowercase
+                ":", // HTTP2 headers
+                "cookie", // Handled separately
+                "connection",
+                "sec-",
+                "priority",
+                "accept",
+                "cache",
+                "content",
+                "host",
+                "user-agent",
+                "referer",
+                "upgrade",
+                "if-",
+                "access-",
+                "date",
+                "expect",
+                "forwarded",
+                "http2",
+                "max-forwards",
+                "pragma",
+                "proxy-",
+                "range",
+                "te",
+                "trailer",
+                "transfer-",
+                "via",
+                "warning",
+            )
 
-        fun isValidName(name: String): Boolean {
-            return name.isNotEmpty() && !name.contains(Regex("[^A-Za-z0-9._-]"))
-        }
+        fun isValidName(name: String): Boolean = name.isNotEmpty() && !name.contains(Regex("[^A-Za-z0-9._-]"))
     }
 
     constructor(name: String) : this(name, UUID.randomUUID().toString())
@@ -116,11 +112,14 @@ class Session private constructor(val name: String, private val id: String) : Ca
     /*
     Some metadata about the last time this session was updated
      */
-    enum class LastUpdateType(val description: String) {
+    enum class LastUpdateType(
+        val description: String,
+    ) {
         CREATION("Creation"),
         MANUAL_EDIT("Manual (Edit Menu)"),
         MANUAL_REQUEST("Manual (From Request)"),
-        UPDATE_RULE("Update rule");
+        UPDATE_RULE("Update rule"),
+        ;
 
         override fun toString(): String = description
     }
@@ -139,32 +138,34 @@ class Session private constructor(val name: String, private val id: String) : Ca
             return null
         }
 
-    fun setLastUpdateReason(reason: LastUpdateType, ruleKey: String? = null) {
-        if (reason != LastUpdateType.UPDATE_RULE && ruleKey != null) throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
+    fun setLastUpdateReason(
+        reason: LastUpdateType,
+        ruleKey: String? = null,
+    ) {
+        if (reason != LastUpdateType.UPDATE_RULE &&
+            ruleKey != null
+        ) {
+            throw IllegalArgumentException("Cannot set rule ID for reason other than UPDATE_RULE")
+        }
         this.lastUpdatedBy = reason
         this.lastUpdatedRuleKey = ruleKey
         sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(this)
     }
 
-    override fun toString(): String {
-        return name
-    }
+    override fun toString(): String = name
 
     fun setHost(host: String) {
         this.host = host.trim()
     }
 
-    fun getHost(): String {
-        return this.host
-    }
+    fun getHost(): String = this.host
 
-    fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
-        return apply(r, sessionSwitcher.settings.cookiesInjectMode.get())
-    }
+    fun apply(r: HttpRequest): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> =
+        apply(r, sessionSwitcher.settings.cookiesInjectMode.get())
 
     fun apply(
         r: HttpRequest,
-        cookiesInjectMode: CookiesInjectMode
+        cookiesInjectMode: CookiesInjectMode,
     ): Triple<HttpRequest, Pair<List<String>, List<String>>, Pair<List<String>, List<String>>> {
         Logger.debug("session.apply: " + this.headers)
         var (output, updatedHeaders, addedHeaders) = r.withHeaders(this.headers)
@@ -177,12 +178,13 @@ class Session private constructor(val name: String, private val id: String) : Ca
             Logger.debug("Cookies in the Request: $reqCookies")
 
             Logger.debug("Cookies Inject Mode: $cookiesInjectMode")
-            val cookieDiffPair = when (cookiesInjectMode) {
-                CookiesInjectMode.MIRROR -> reqCookies.replace(this.cookies)
-                CookiesInjectMode.ADD_ALL -> reqCookies.update(this.cookies, onlyUpdateExisting = false)
-                CookiesInjectMode.UPDATE_EXISTING -> reqCookies.update(this.cookies, onlyUpdateExisting = true)
-                CookiesInjectMode.NOOP -> Pair(listOf(), listOf())
-            }
+            val cookieDiffPair =
+                when (cookiesInjectMode) {
+                    CookiesInjectMode.MIRROR -> reqCookies.replace(this.cookies)
+                    CookiesInjectMode.ADD_ALL -> reqCookies.update(this.cookies, onlyUpdateExisting = false)
+                    CookiesInjectMode.UPDATE_EXISTING -> reqCookies.update(this.cookies, onlyUpdateExisting = true)
+                    CookiesInjectMode.NOOP -> Pair(listOf(), listOf())
+                }
 
             Logger.debug("Cookies in the output: $reqCookies")
 
@@ -207,7 +209,10 @@ class Session private constructor(val name: String, private val id: String) : Ca
     Updates stored info from a request.
      */
 
-    private fun updateHeaders(r: HttpRequest, headersUpdateMode: HeadersUpdateMode) {
+    private fun updateHeaders(
+        r: HttpRequest,
+        headersUpdateMode: HeadersUpdateMode,
+    ) {
         if (headersUpdateMode == HeadersUpdateMode.NOOP) return
 
         if (headersUpdateMode == HeadersUpdateMode.MIRROR || headersUpdateMode == HeadersUpdateMode.ADD_ALL) {
@@ -215,8 +220,10 @@ class Session private constructor(val name: String, private val id: String) : Ca
             if (headersUpdateMode == HeadersUpdateMode.MIRROR) this.headers.clear()
 
             // Filter useless headers
-            val filtered = r.mergedHeaders()
-                .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) } }
+            val filtered =
+                r
+                    .mergedHeaders()
+                    .filter { !EXCLUDED_HEADER_PREFIXES.any { h -> it.name().lowercase().startsWith(h) } }
 
             // Add the filtered headers
             this.headers.putAll(filtered.map { Pair(it.name().lowercase(), it.value()) })
@@ -227,7 +234,9 @@ class Session private constructor(val name: String, private val id: String) : Ca
                 if (this.headers.containsKey(headerName)) {
                     if (this.headers[headerName] != header.value()) {
                         // Update existing header if value is different
-                        Logger.debug("Updating header in session ${this.name}: $headerName: ${this.headers[headerName]} -> ${header.value()}")
+                        Logger.debug(
+                            "Updating header in session ${this.name}: $headerName: ${this.headers[headerName]} -> ${header.value()}",
+                        )
                         this.headers[headerName] = header.value()
                     }
                 }
@@ -235,7 +244,10 @@ class Session private constructor(val name: String, private val id: String) : Ca
         }
     }
 
-    private fun updateCookies(r: HttpRequest, cookiesUpdateMode: CookiesUpdateMode) {
+    private fun updateCookies(
+        r: HttpRequest,
+        cookiesUpdateMode: CookiesUpdateMode,
+    ) {
         when (cookiesUpdateMode) {
             CookiesUpdateMode.MIRROR -> {
                 this.cookies = Cookies.fromHttpRequest(r)
@@ -249,11 +261,17 @@ class Session private constructor(val name: String, private val id: String) : Ca
                 this.cookies.update(Cookies.fromHttpRequest(r), onlyUpdateExisting = true)
             }
 
-            CookiesUpdateMode.NOOP -> return
+            CookiesUpdateMode.NOOP -> {
+                return
+            }
         }
     }
 
-    fun updateFromRequest(r: HttpRequest, cookiesUpdateMode: CookiesUpdateMode, headersUpdateMode: HeadersUpdateMode) {
+    fun updateFromRequest(
+        r: HttpRequest,
+        cookiesUpdateMode: CookiesUpdateMode,
+        headersUpdateMode: HeadersUpdateMode,
+    ) {
         Logger.debug("Updating session from request")
         this.updateHeaders(r, headersUpdateMode)
         this.updateCookies(r, cookiesUpdateMode)

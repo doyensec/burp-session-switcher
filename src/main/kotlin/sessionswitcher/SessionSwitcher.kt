@@ -16,15 +16,15 @@ import sessionswitcher.ui.maintab.MainSuiteTab
 
 class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
-    val settingsProvider: SettingsProvider
+    val settingsProvider: SettingsProvider,
 ) {
-
     // Singleton pattern to ensure the extension is not initialized more than once
     companion object {
         const val SERIALIZED_DATA_VERSION_KEY = "SerializedDataVersion"
         const val SERIALIZED_DATA_VERSION = 2
 
         private lateinit var montoyaApi: MontoyaApi
+
         fun getApi(): MontoyaApi {
             if (!this::montoyaApi.isInitialized) {
                 throw Exception("Montoya API not initialized yet.")
@@ -40,9 +40,10 @@ class SessionSwitcher private constructor(
         }
 
         private lateinit var instance: SessionSwitcher
+
         fun init(
             montoyaApi: MontoyaApi,
-            settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
+            settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi), // Allow to override this to use this as a library
         ): SessionSwitcher {
             if (this::instance.isInitialized) {
                 throw Exception("SessionSwitcher instance already initialized.")
@@ -81,16 +82,6 @@ class SessionSwitcher private constructor(
             montoyaApi.userInterface().registerContextMenuItemsProvider(ContextMenuProvider(this))
         }
 
-        // Register session handlers
-        /* // Experimental feature will be removed
-        if (settings.registerUpdaterHandler.get()) {
-            montoyaApi.http().registerSessionHandlingAction(SessionUpdaterHandler(this))
-        }
-        if (settings.registerInjectorHandler.get()) {
-            montoyaApi.http().registerSessionHandlingAction(SessionInjectorHandler(this))
-        }
-        */
-
         // Register proxy listeners
         autoUpdateProxyListener = AutoUpdateProxyListener(this)
         montoyaApi.proxy().registerRequestHandler(autoUpdateProxyListener)
@@ -111,8 +102,11 @@ class SessionSwitcher private constructor(
     suspend fun tryDeserializeData(store: PersistedObject): Boolean {
         var loadedCorrectly = true
         val firstLevelKeys = store.childObjectKeys()
-        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.sessions.saveStateKey) or this.sessions.loadFromDataStore(store))
-        loadedCorrectly = loadedCorrectly and (!firstLevelKeys.contains(this.updateRulesCollection.saveStateKey) or this.updateRulesCollection.loadFromDataStore(store))
+        loadedCorrectly =
+            loadedCorrectly and (!firstLevelKeys.contains(this.sessions.saveStateKey) or this.sessions.loadFromDataStore(store))
+        loadedCorrectly =
+            loadedCorrectly and
+            (!firstLevelKeys.contains(this.updateRulesCollection.saveStateKey) or this.updateRulesCollection.loadFromDataStore(store))
         return loadedCorrectly
     }
 
@@ -165,8 +159,9 @@ class SessionSwitcher private constructor(
         }
     }
 
-    fun unload() = runBlocking {
-        autoUpdateProxyListener.stop()
-        CanSaveData.joinAll()
-    }
+    fun unload() =
+        runBlocking {
+            autoUpdateProxyListener.stop()
+            CanSaveData.joinAll()
+        }
 }

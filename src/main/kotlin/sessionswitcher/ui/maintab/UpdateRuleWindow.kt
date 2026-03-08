@@ -16,20 +16,29 @@ import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import java.awt.Insets
 import java.awt.event.ItemEvent
-import java.util.*
-import javax.swing.*
+import java.util.Optional
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JComboBox
+import javax.swing.JDialog
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JScrollPane
 import kotlin.math.min
 
 class UpdateRuleWindow(
     private val sessionSwitcher: SessionSwitcher,
-    private val initialUpdateRule: Optional<UpdateRule>
-) :
-    JDialog(
-        sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+    private val initialUpdateRule: Optional<UpdateRule>,
+) : JDialog(
+        sessionSwitcher.montoyaApi
+            .userInterface()
+            .swingUtils()
+            .suiteFrame(),
         if (initialUpdateRule.isEmpty) "New Update Rule" else "Edit Update Rule",
-        true
+        true,
     ) {
-
     // Flags
     var shouldSave = false
 
@@ -39,12 +48,13 @@ class UpdateRuleWindow(
     // UI elements
     val saveButton = ButtonPrimary("Save")
     val cancelButton = JButton("Cancel")
-    val tableSection = TableSection(
-        "Conditions",
-        "Conditions in this list are evaluated with a logical AND",
-        ConditionsTableModel(conditions),
-        showRefreshButton = false
-    )
+    val tableSection =
+        TableSection(
+            "Conditions",
+            "Conditions in this list are evaluated with a logical AND",
+            ConditionsTableModel(conditions),
+            showRefreshButton = false,
+        )
 
     val sessionSelector = JComboBox<String>()
 
@@ -57,7 +67,8 @@ class UpdateRuleWindow(
     private val headersUpdateOptions = HeadersUpdateMode.entries.toTypedArray()
     private val defaultHeadersUpdateOption = HeadersUpdateMode.UPDATE_EXISTING
     private val updateSourceOptions =
-        UpdateConfig.UpdateSource.entries.filterNot { it == UpdateConfig.UpdateSource.RESPONSE }
+        UpdateConfig.UpdateSource.entries
+            .filterNot { it == UpdateConfig.UpdateSource.RESPONSE }
             .toTypedArray() // Disable response parsing for now
 
     val updateSourceSelector = JComboBox(updateSourceOptions)
@@ -68,29 +79,36 @@ class UpdateRuleWindow(
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
-        val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils()
-            .suiteFrame().graphicsConfiguration.device.displayMode
+        val screenSize =
+            sessionSwitcher.montoyaApi
+                .userInterface()
+                .swingUtils()
+                .suiteFrame()
+                .graphicsConfiguration.device.displayMode
 
         val reasonableHeight = min(this.preferredSize.height, screenSize.height - 50)
-        //this.preferredSize = Dimension(reasonableWidth, reasonableHeight)
+        // this.preferredSize = Dimension(reasonableWidth, reasonableHeight)
 
         // Set the maximum size of the frame to match its content
         this.maximumSize = Dimension(screenSize.width, reasonableHeight)
 
         // Set the minimum size to something reasonable as well
-        //this.minimumSize = Dimension(this.minimumSize.width, 400)
+        // this.minimumSize = Dimension(this.minimumSize.width, 400)
 
         this.minimumSize = Dimension(680, 480)
         this.preferredSize = Dimension(1100, 550)
 
         // Pack the window to fit its content
         this.pack()
-        this.setLocationRelativeTo(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame())
+        this.setLocationRelativeTo(
+            sessionSwitcher.montoyaApi
+                .userInterface()
+                .swingUtils()
+                .suiteFrame(),
+        )
     }
 
-    private fun String.titleCase(): String {
-        return this.lowercase().replaceFirstChar { it.uppercase() }
-    }
+    private fun String.titleCase(): String = this.lowercase().replaceFirstChar { it.uppercase() }
 
     private fun loadInitialRule() {
         if (this.initialUpdateRule.isPresent) {
@@ -98,7 +116,10 @@ class UpdateRuleWindow(
             this.conditions.addAll(this.initialUpdateRule.get().conditions)
 
             // Set session
-            val sessionName = this.initialUpdateRule.get().session.name
+            val sessionName =
+                this.initialUpdateRule
+                    .get()
+                    .session.name
             val session = this.sessionSwitcher.sessions.getSession(sessionName)
             if (session == null) {
                 Logger.warning("RefreshRule: Session with name $sessionName not found, cannot set initial session")
@@ -124,15 +145,17 @@ class UpdateRuleWindow(
         if (sessionName == "(No sessions)") {
             throw IllegalStateException("No sessions selected")
         }
-        val session = sessionSwitcher.sessions.getSession(sessionName)
-            ?: throw IllegalStateException("Session with name $sessionName not found")
+        val session =
+            sessionSwitcher.sessions.getSession(sessionName)
+                ?: throw IllegalStateException("Session with name $sessionName not found")
 
-        val config = UpdateConfig.make(
-            updateSourceSelector.selectedItem as UpdateConfig.UpdateSource,
-            cookieModeSelector.selectedItem as CookiesUpdateMode,
-            headersModeSelector.selectedItem as HeadersUpdateMode,
-            highlightColor = HighlightColor.valueOf((highlightColorSelector.selectedItem as String).uppercase())
-        )
+        val config =
+            UpdateConfig.make(
+                updateSourceSelector.selectedItem as UpdateConfig.UpdateSource,
+                cookieModeSelector.selectedItem as CookiesUpdateMode,
+                headersModeSelector.selectedItem as HeadersUpdateMode,
+                highlightColor = HighlightColor.valueOf((highlightColorSelector.selectedItem as String).uppercase()),
+            )
 
         return if (initialUpdateRule.isPresent) {
             UpdateRule(this.conditions.toTypedArray(), session, config, initialUpdateRule.get().ruleId)
@@ -202,14 +225,15 @@ class UpdateRuleWindow(
     }
 
     private fun updateOptionsSection(): JPanel {
-        val controls = arrayOf(
-            Pair("Session to update:", sessionSelector),
-            /* For now we only support updating from the request, no point in showing the selector */
-            // Pair("Update from:", updateSourceSelector),
-            Pair("Cookie update mode:", cookieModeSelector),
-            Pair("Headers update mode:", headersModeSelector),
-            Pair("Highlight color:", highlightColorSelector)
-        )
+        val controls =
+            arrayOf(
+                Pair("Session to update:", sessionSelector),
+                // For now we only support updating from the request, no point in showing the selector
+                // Pair("Update from:", updateSourceSelector),
+                Pair("Cookie update mode:", cookieModeSelector),
+                Pair("Headers update mode:", headersModeSelector),
+                Pair("Highlight color:", highlightColorSelector),
+            )
 
         val panel = JPanel(GridBagLayout())
         val c = GridBagConstraints()
@@ -256,7 +280,12 @@ class UpdateRuleWindow(
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
 
         // Update config
-        var sessions = SessionSwitcher.getInstance().sessions.getSessionNames().toTypedArray()
+        var sessions =
+            SessionSwitcher
+                .getInstance()
+                .sessions
+                .getSessionNames()
+                .toTypedArray()
         if (sessions.isEmpty()) {
             sessions = arrayOf("(No sessions)")
         }
@@ -288,19 +317,22 @@ class UpdateRuleWindow(
         val updateConfigSection = UISection("Update Options", null, updateOptionsSection())
 
         // Build the main window
-        val panel = JPanel().also {
-            it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.add(tableSection.getComponent())
-            it.add(updateConfigSection)
-            it.add(JPanel().also { p ->
-                p.layout = BoxLayout(p, BoxLayout.X_AXIS)
-                p.add(Box.createHorizontalGlue())
-                p.add(saveButton)
-                p.add(Box.createHorizontalStrut(5))
-                p.add(cancelButton)
-            })
-        }
+        val panel =
+            JPanel().also {
+                it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+                it.add(tableSection.getComponent())
+                it.add(updateConfigSection)
+                it.add(
+                    JPanel().also { p ->
+                        p.layout = BoxLayout(p, BoxLayout.X_AXIS)
+                        p.add(Box.createHorizontalGlue())
+                        p.add(saveButton)
+                        p.add(Box.createHorizontalStrut(5))
+                        p.add(cancelButton)
+                    },
+                )
+            }
 
         // Set button listeners
         saveButton.addActionListener {

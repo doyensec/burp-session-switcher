@@ -5,37 +5,49 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import javax.swing.JOptionPane
 
-class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
+class SaveSessionDialog(
+    private val sessionSwitcher: SessionSwitcher,
+) {
     fun newSessionDialog(httpRequest: HttpRequest): Session? {
         var name: String
         var ok = false
         do {
-            val output = JOptionPane.showInputDialog(
-                sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
-                "Choose a name for the new Session",
-                "New Session",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                null,
-                "",
-            ) as String?
+            val output =
+                JOptionPane.showInputDialog(
+                    sessionSwitcher.montoyaApi
+                        .userInterface()
+                        .swingUtils()
+                        .suiteFrame(),
+                    "Choose a name for the new Session",
+                    "New Session",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    null,
+                    "",
+                ) as String?
             if (output == null) return null
             name = output
             if (!Session.isValidName(name)) {
                 JOptionPane.showMessageDialog(
-                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    sessionSwitcher.montoyaApi
+                        .userInterface()
+                        .swingUtils()
+                        .suiteFrame(),
                     "The chosen name contains invalid characters. Allowed characters: [A-Za-z0-9._-]",
                     "Invalid characters in name",
-                    JOptionPane.WARNING_MESSAGE
+                    JOptionPane.WARNING_MESSAGE,
                 )
                 continue
             }
             if (this.sessionSwitcher.sessions.hasSession(name)) {
                 JOptionPane.showMessageDialog(
-                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    sessionSwitcher.montoyaApi
+                        .userInterface()
+                        .swingUtils()
+                        .suiteFrame(),
                     "A session with this name already exists in this project, please choose a different name",
                     "Name already in use",
-                    JOptionPane.WARNING_MESSAGE
+                    JOptionPane.WARNING_MESSAGE,
                 )
                 continue
             }
@@ -50,32 +62,42 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
         var name: String
         var ok = false
         do {
-            val output = JOptionPane.showInputDialog(
-                sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
-                "Choose a name for the new Session",
-                "Duplicate Session",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                null,
-                "",
-            ) as String?
+            val output =
+                JOptionPane.showInputDialog(
+                    sessionSwitcher.montoyaApi
+                        .userInterface()
+                        .swingUtils()
+                        .suiteFrame(),
+                    "Choose a name for the new Session",
+                    "Duplicate Session",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    null,
+                    "",
+                ) as String?
             if (output == null) return null
             name = output
             if (!Session.isValidName(name)) {
                 JOptionPane.showMessageDialog(
-                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    sessionSwitcher.montoyaApi
+                        .userInterface()
+                        .swingUtils()
+                        .suiteFrame(),
                     "The chosen name contains invalid characters. Allowed characters: [A-Za-z0-9._-]",
                     "Invalid characters in name",
-                    JOptionPane.WARNING_MESSAGE
+                    JOptionPane.WARNING_MESSAGE,
                 )
                 continue
             }
             if (this.sessionSwitcher.sessions.hasSession(name)) {
                 JOptionPane.showMessageDialog(
-                    sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                    sessionSwitcher.montoyaApi
+                        .userInterface()
+                        .swingUtils()
+                        .suiteFrame(),
                     "A session with this name already exists in this project, please choose a different name",
                     "Name already in use",
-                    JOptionPane.WARNING_MESSAGE
+                    JOptionPane.WARNING_MESSAGE,
                 )
                 continue
             }
@@ -86,34 +108,43 @@ class SaveSessionDialog(private val sessionSwitcher: SessionSwitcher) {
     }
 
     fun updateSessionDialog(httpRequest: HttpRequest): Session? {
-        val sessions = this.sessionSwitcher.sessions.getSessions().toTypedArray()
+        val sessions =
+            this.sessionSwitcher.sessions
+                .getSessions()
+                .toTypedArray()
 
         if (sessions.isEmpty()) {
             JOptionPane.showMessageDialog(
-                sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+                sessionSwitcher.montoyaApi
+                    .userInterface()
+                    .swingUtils()
+                    .suiteFrame(),
                 "There are no sessions saved in this project file yet. Create a new session first.",
                 "No sessions",
-                JOptionPane.WARNING_MESSAGE
+                JOptionPane.WARNING_MESSAGE,
             )
             return null
         }
 
-        val session = JOptionPane.showInputDialog(
-            sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
-            "Choose a session to update using this request",
-            "Update session",
-            JOptionPane.QUESTION_MESSAGE,
-            null,
-            sessions,
-            sessions[0],
-        ) as Session? ?: return null
-
+        val session =
+            JOptionPane.showInputDialog(
+                sessionSwitcher.montoyaApi
+                    .userInterface()
+                    .swingUtils()
+                    .suiteFrame(),
+                "Choose a session to update using this request",
+                "Update session",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                sessions,
+                sessions[0],
+            ) as Session? ?: return null
 
         val settings = this.sessionSwitcher.settings
         session.updateFromRequest(
             httpRequest,
             settings.cookiesUpdateMode.get(),
-            settings.headersUpdateMode.get()
+            settings.headersUpdateMode.get(),
         )
 
         return session

@@ -11,24 +11,29 @@ import java.awt.Component
     This class provides the Context Menu that is opened when the user Right-Clicks inside the request editor
     The autoupdate have associated Keyboard Shortcuts so that standard Burp shortcuts can be used from the editor
  */
-class ContextMenuProvider(private val sessionSwitcher: SessionSwitcher) : ContextMenuItemsProvider {
+class ContextMenuProvider(
+    private val sessionSwitcher: SessionSwitcher,
+) : ContextMenuItemsProvider {
+    private val saveNewSessionAction =
+        MenuAction("New session from this request", null) {
+            SaveSessionDialog(this.sessionSwitcher).newSessionDialog(this.request!!)
+        }
 
-    private val saveNewSessionAction = MenuAction("New session from this request", null) {
-        SaveSessionDialog(this.sessionSwitcher).newSessionDialog(this.request!!)
-    }
+    private val updateSessionAction =
+        MenuAction("Update session from this request", null) {
+            SaveSessionDialog(this.sessionSwitcher).updateSessionDialog(this.request!!)
+        }
 
-    private val updateSessionAction = MenuAction("Update session from this request", null) {
-        SaveSessionDialog(this.sessionSwitcher).updateSessionDialog(this.request!!)
-    }
-
-    private val menuItems = listOf(
-        this.saveNewSessionAction.asJMenuItem(),
-        this.updateSessionAction.asJMenuItem()
-    )
+    private val menuItems =
+        listOf(
+            this.saveNewSessionAction.asJMenuItem(),
+            this.updateSessionAction.asJMenuItem(),
+        )
 
     private var request: HttpRequest? = null
+
     private fun requestFromContext(event: ContextMenuEvent): HttpRequest? {
-        val invocationType = event.invocationType()?: return null
+        val invocationType = event.invocationType() ?: return null
         if (invocationType.containsHttpRequestResponses()) {
             val requestResponses = event.selectedRequestResponses()
             if (requestResponses.size != 1) return null

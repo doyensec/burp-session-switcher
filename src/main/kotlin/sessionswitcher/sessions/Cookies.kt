@@ -3,18 +3,19 @@ package sessionswitcher.sessions
 import burp.api.montoya.http.message.requests.HttpRequest
 import sessionswitcher.utils.headersMap
 
-class Cookies() {
+class Cookies {
     private val cookies = LinkedHashMap<String, String>()
 
     companion object {
         fun fromHeaderValue(headerValue: String): Cookies {
             val cookieValueString = headerValue.trim()
             val output = Cookies()
-            val pairs = cookieValueString
-                .split(';') // Separate different key=value pairs
-                .map { it.trim().split('=', limit = 2) } // Split pair in key and value
-                .filter { it.size == 2 } // Just a sanity check
-                .map { Pair(it[0], it[1]) } // Make it a Pair
+            val pairs =
+                cookieValueString
+                    .split(';') // Separate different key=value pairs
+                    .map { it.trim().split('=', limit = 2) } // Split pair in key and value
+                    .filter { it.size == 2 } // Just a sanity check
+                    .map { Pair(it[0], it[1]) } // Make it a Pair
             for (pair in pairs) {
                 output.set(pair.first, pair.second)
             }
@@ -36,17 +37,13 @@ class Cookies() {
         }
     }
 
-    override fun toString(): String {
-        return this.cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
-    }
+    override fun toString(): String = this.cookies.entries.joinToString("; ") { "${it.key}=${it.value}" }
 
     fun isEmpty(): Boolean = this.cookies.isEmpty()
 
     fun get(key: String): String? = this.cookies[key]
 
-    fun getPairs(): List<Pair<String, String>> {
-        return this.cookies.entries.map { Pair(it.key, it.value) }
-    }
+    fun getPairs(): List<Pair<String, String>> = this.cookies.entries.map { Pair(it.key, it.value) }
 
     fun setPairs(pairs: Collection<Pair<String, String>>) {
         this.cookies.putAll(pairs)
@@ -59,7 +56,10 @@ class Cookies() {
     /*
     Returns true if the value was updated, false if it was added
      */
-    fun set(key: String, value: String): Boolean {
+    fun set(
+        key: String,
+        value: String,
+    ): Boolean {
         val keyPresent = this.cookies.containsKey(key)
         this.cookies[key] = value
         return keyPresent
@@ -69,7 +69,10 @@ class Cookies() {
     Updates the current Cookies object and returns a pair composed of
     the list of the updated cookie keys and the list of added cookie keys
      */
-    fun update(other: Cookies, onlyUpdateExisting: Boolean = false): Pair<List<String>, List<String>> {
+    fun update(
+        other: Cookies,
+        onlyUpdateExisting: Boolean = false,
+    ): Pair<List<String>, List<String>> {
         val updatedCookies = ArrayList<String>()
         val addedCookies = ArrayList<String>()
         for (pair in other.getPairs()) {
@@ -125,7 +128,5 @@ class Cookies() {
         return true
     }
 
-    override fun hashCode(): Int {
-        return cookies.hashCode()
-    }
+    override fun hashCode(): Int = cookies.hashCode()
 }

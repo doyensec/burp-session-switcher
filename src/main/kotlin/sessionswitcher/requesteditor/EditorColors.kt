@@ -34,9 +34,16 @@ object EditorColors : ColorScheme {
     }
 
     val currentScheme: ColorScheme
-        get() = if (SessionSwitcher.getApi().userInterface()
-                .currentTheme() == Theme.DARK
-        ) DarkModeScheme else LightModeScheme
+        get() =
+            if (SessionSwitcher
+                    .getApi()
+                    .userInterface()
+                    .currentTheme() == Theme.DARK
+            ) {
+                DarkModeScheme
+            } else {
+                LightModeScheme
+            }
 
     override val updatedElement: Color
         get() = currentScheme.updatedElement
@@ -48,5 +55,4 @@ object EditorColors : ColorScheme {
         get() = currentScheme.cookieName
     override val cookieValue: Color
         get() = currentScheme.cookieValue
-
 }

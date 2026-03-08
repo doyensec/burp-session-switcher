@@ -5,30 +5,45 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.settings.SettingsWindow
 import sessionswitcher.ui.Label
 import java.awt.BorderLayout
-import javax.swing.*
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.ImageIcon
+import javax.swing.JButton
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JScrollPane
+import javax.swing.JSeparator
+import javax.swing.JTabbedPane
+import javax.swing.SwingUtilities
 
-class MainSuiteTab(sessionSwitcher: SessionSwitcher) : JPanel(BorderLayout()) {
+class MainSuiteTab(
+    sessionSwitcher: SessionSwitcher,
+) : JPanel(BorderLayout()) {
     private val settingsWindow = SettingsWindow(sessionSwitcher.settings)
 
-    private val mainPanel = JPanel().also {
-        it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-        it.border = BorderFactory.createEmptyBorder(5, 5, 0, 5)
-    }
+    private val mainPanel =
+        JPanel().also {
+            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            it.border = BorderFactory.createEmptyBorder(5, 5, 0, 5)
+        }
 
     init {
         // Title section
         // |- Title
         val topPanel = JPanel(BorderLayout()).also { it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5) }
-        val titlePanel = JPanel().also {
-            it.layout = BoxLayout(it, BoxLayout.X_AXIS)
-        }
+        val titlePanel =
+            JPanel().also {
+                it.layout = BoxLayout(it, BoxLayout.X_AXIS)
+            }
 
         val title = Label("Session Switcher", bold = true, relativeSize = 12.0)
-        val logo = ImageIcon(MainSuiteTab::class.java.getResource("/logo.png")).image.getScaledInstance(
-            32,
-            32,
-            java.awt.Image.SCALE_SMOOTH
-        )
+        val logo =
+            ImageIcon(MainSuiteTab::class.java.getResource("/logo.png")).image.getScaledInstance(
+                32,
+                32,
+                java.awt.Image.SCALE_SMOOTH,
+            )
         titlePanel.add(JLabel(ImageIcon(logo)))
         titlePanel.add(Box.createHorizontalStrut(10))
         titlePanel.add(title)
@@ -54,7 +69,7 @@ class MainSuiteTab(sessionSwitcher: SessionSwitcher) : JPanel(BorderLayout()) {
         // AutoUpdate Rules Section
         val autoUpdateRulesSection = UpdateRuleSection.make(sessionSwitcher)
         mainPanel.add(autoUpdateRulesSection)
-        //mainPanel.add(JSeparator())
+        // mainPanel.add(JSeparator())
 
         // AutoInject Rules Section
         // val autoInjectRulesSection = makeAutoInjectRulesSection()

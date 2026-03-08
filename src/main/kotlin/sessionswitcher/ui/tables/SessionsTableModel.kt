@@ -9,7 +9,9 @@ import java.time.format.DateTimeFormatter
 import java.util.Optional
 import javax.swing.table.AbstractTableModel
 
-class SessionsTableModel(private val sessionCollection: SessionCollection) : AbstractTableModel(),
+class SessionsTableModel(
+    private val sessionCollection: SessionCollection,
+) : AbstractTableModel(),
     ITableModel<Session> {
     private val columnNames = arrayOf("Name", "Host", "Last Updated At", "Last Updated By")
     private val sessions: ArrayList<Session>
@@ -17,23 +19,18 @@ class SessionsTableModel(private val sessionCollection: SessionCollection) : Abs
             return sessionCollection.getSessions().toTypedArray().toCollection(ArrayList())
         }
 
-    override fun getRowCount(): Int {
-        return sessions.size
-    }
+    override fun getRowCount(): Int = sessions.size
 
-    override fun getColumnCount(): Int {
-        return columnNames.size
-    }
+    override fun getColumnCount(): Int = columnNames.size
 
-    override fun getColumnName(column: Int): String {
-        return columnNames[column]
-    }
+    override fun getColumnName(column: Int): String = columnNames[column]
 
-    override fun getColumnClass(columnIndex: Int): Class<*> {
-        return String::class.java
-    }
+    override fun getColumnClass(columnIndex: Int): Class<*> = String::class.java
 
-    override fun getValueAt(rowIndex: Int, columnIndex: Int): Any {
+    override fun getValueAt(
+        rowIndex: Int,
+        columnIndex: Int,
+    ): Any {
         val session: Session
         try {
             session = sessions[rowIndex]
@@ -51,16 +48,17 @@ class SessionsTableModel(private val sessionCollection: SessionCollection) : Abs
 
     private fun formatDate(instant: Instant): String {
         val dateTime = instant.atZone(ZoneId.systemDefault()).toLocalDateTime()
-        val formatter = if (dateTime.toLocalDate().equals(LocalDate.now())) {
-            // Same day, only care about time
-            DateTimeFormatter.ofPattern("HH:mm:ss")
-        } else if (dateTime.toLocalDate().year == LocalDate.now().year) {
-            // Same year, only care about month and day
-            DateTimeFormatter.ofPattern("dd MMM HH:mm:ss")
-        } else {
-            // Different year, show full date
-            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
-        }
+        val formatter =
+            if (dateTime.toLocalDate().equals(LocalDate.now())) {
+                // Same day, only care about time
+                DateTimeFormatter.ofPattern("HH:mm:ss")
+            } else if (dateTime.toLocalDate().year == LocalDate.now().year) {
+                // Same year, only care about month and day
+                DateTimeFormatter.ofPattern("dd MMM HH:mm:ss")
+            } else {
+                // Different year, show full date
+                DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
+            }
         return dateTime.format(formatter)
     }
 

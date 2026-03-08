@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object UrlConditionType :
     StringConditionType(matchOn = "URL", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val url = request.url()
         return this.stringMatches(configuration, url)
     }
