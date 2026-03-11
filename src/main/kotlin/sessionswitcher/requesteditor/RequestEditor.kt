@@ -71,7 +71,7 @@ class RequestEditor private constructor(
             this.editedLabel.text = ""
             this.deleteSessionBtn.isEnabled = selectedSession != null
             this.editSessionBtn.isEnabled = selectedSession != null
-            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Overwrite"
+            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Update from Request"
         }
 
     private val editorUpdateMutex = Mutex()

@@ -51,7 +51,7 @@ class UpdateRuleWindow(
     val tableSection =
         TableSection(
             "Conditions",
-            "Conditions in this list are evaluated with a logical AND",
+            "All of the Conditions in this list must match for the rule to apply. Conditions are evaluated in order.",
             ConditionsTableModel(conditions),
             showRefreshButton = false,
         )

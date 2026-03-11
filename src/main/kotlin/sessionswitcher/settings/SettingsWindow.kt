@@ -59,7 +59,7 @@ class SettingsWindow(
 
     private fun makeAutoUpdateSection(store: SettingsItem.Store) =
         UISection(
-            "Auto Updater",
+            "Auto Update Rules",
             "Set the behavior of Auto Update Rules",
             settings.stopAtFirstUpdateRule.drawCheckbox(store),
             Box.createVerticalGlue(),
