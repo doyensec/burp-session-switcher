@@ -9,74 +9,48 @@
 
 ## :rocket: Introduction
 
-Session Switcher is a Burp Suite extension that allows you to easily switch the "session" (cookies and headers) of an HTTP request to a different one on the fly, tailored for manual authorization testing.
+Session Switcher is a Burp Suite extension that allows you to easily save and switch the "session" (cookies and headers) of an HTTP request to a different one on the fly, tailored specifically for manual authorization testing.
 
 ## :star2: Features
 
-The typical use case for Session Switcher is to replace cookies and headers in a request, in the Repeater or in the Proxy, with only a couple of clicks; the goal is to quickly check for vulnerabilities such as horizontal and vertical authorization issues or IDORs.
+The typical use case for Session Switcher is to replace cookies and headers in a request, such in the Repeater or in the Proxy, with only a couple of clicks; the goal is to quickly check for vulnerabilities such as horizontal and vertical authorization issues and IDORs.
 
-### Request Editor
+### Saving Sessions
+The first step to use the extension is to save some sessions. The primary way to do so is to select the request with the Cookies/Headers you want to save and click the **New** button in the **Sessions** tab of the Request Editor; the extension will automatically copy all cookies and (uncommon) headers from the request.
+
+![Saving a Session](assets/saving_a_session.png)
+
+You can also manually create a Session using the **New** button in the extension's main tab, but it's far easier to start from an existing request.
+
+### Switching Sessions
 
 ![Request Editor](assets/request_editor.png)
 
-This is the main tool of the extension and it has everything you need for manual testing.
+Once you have at least one saved Session, you can use the session selector in the **Session** tab of the Request Editor to swap the session of any (editable) request, such as in the Repeater or in an intercepted request in the Proxy.
 
-Here you have the main session selector, which swaps the request's session with the one you choose. The buttons just under it will allow you to quickly create, delete, modify, and update sessions.
+When you choose a Session from the list, the extension will swap the request's Cookies and Headers with the ones saved in the chosen Session. The buttons just under it will allow you to easily **Edit** or **Delete** the existing session, **Update** it from the current request (i.e. save the request's Cookies/Headers in the selected Session), or create a new one with the **New** button.
+
+By default, the switcher only lists the sessions for the current request's domain. You can change this behavior in the settings.
 
 ### Sessions Tab
 
 ![Main Tab](assets/maintab.png)
 
-The Sessions tab lists all the sessions stored in the project file and allows you to manage them.
+The main Sessions tab lists all the sessions stored in the project file and allows you to manage them. From there, you can check and edit the contents of all the saved sessions.
 
 ### Auto Update Rules
 
 ![Auto Update Rules](assets/autoupdate.png)
 
-The Auto Update feature allows you to set rules to make sure the sessions stay up to date automatically!
+With Auto Updates, you can set some rules that will track browser requests going through the Proxy to automatically keep Sessions up to date.
 
-For example, if you use [PwnFox](https://addons.mozilla.org/it/firefox/addon/pwnfox/), you could create rules that watch for requests with the specified `X-PwnFox-Color` header and automatically update the corresponding session. This way, you will never have to worry about manually updating the session when cookies or authentication tokens expire.
+For example, you could create a rule that tracks all the requests containing the `X-User: alice` header and automatically updates the `alice` session whenever new Cookies/Headers are detected. This way you don't have to manually update the Sessions whenever a JWT expires or you log back into an app after a logout.
 
-### Customizable Behavior
-
-In the extension settings, you can control how it behaves in some situations, such as when updating or swapping sessions.
-
-## :mag_right: How to use it
-
-Some terminology first:
-- **UPDATING** a session means copying cookies and headers **FROM an HTTP request** to the stored session.
-- **INJECTING/swapping/switching/applying** a session means copying the cookies and headers stored in the session **TO an HTTP request**.
-
-### Basic Usage
-
-First of all, you need some Sessions.
-
-1. Start by selecting a request and clicking the "New" button to create a new Session; the extension will automatically copy all cookies and (uncommon) headers from the request.
-2. Once you have at least one session, you can use the selector to swap the session of any editable request, for example, in the Repeater or while intercepting a request in the Proxy
-
-By default, the switcher only lists the sessions for the request's domain. You can change this behavior in the settings.
-
-![Demo](assets/demo.gif)
-
-The buttons in the request editor do the following:
-- **New**: (when no session is selected) creates a new session, copying the cookies and headers from the current request
-- **Update**: (when a session is selected) copies the cookies and headers of the current request **TO** the selected session
-- **Edit**: opens the session edit window
-- **Delete**: deletes the selected session
-
-Note that the buttons only affect the **session** and do not change anything in the request.
-
-### Managing Sessions
-
-You can also create sessions manually from the Session tab. From there, you can manage and check the contents of all the stored sessions; you can also manually edit them if needed.
-
-### Auto Update Rules
-
-You can use these rules to automatically update a session from a matching request received by the proxy. Read more about how to use them in [docs/auto_update_rules.md](docs/auto_update_rules.md).
+Of course more complex conditions are available, make sure to check out [the documentation](docs/auto_update_rules.md) for more details.
 
 ### Settings
 
-You can use the settings to customize how the sessions are updated or injected. Read more about the available settings in [docs/settings.md](docs/settings.md).
+In the extension settings you can set some options, such as how the extension behaves in some situations, such as when updating or swapping sessions. Read more about the available settings in [docs/settings.md](docs/settings.md).
 
 ## :arrow_down: Installation
 You can simply download the latest `.jar` file release and import it in Burp.
