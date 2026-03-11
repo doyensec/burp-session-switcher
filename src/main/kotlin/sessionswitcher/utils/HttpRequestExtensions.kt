@@ -20,20 +20,21 @@ fun HttpRequest.withHeaders(newHeaders: Map<String, String>): Triple<HttpRequest
     var out = this
     for ((k, v) in newHeaders) {
         val existingValue = this.getHeaderValue(k)
-        out = if (existingValue != null) {
-            if (existingValue == v) {
-                Logger.debug("No change for header $k : $v")
-                out
+        out =
+            if (existingValue != null) {
+                if (existingValue == v) {
+                    Logger.debug("No change for header $k : $v")
+                    out
+                } else {
+                    Logger.debug("Updating header $k : $existingValue --> $v")
+                    updated.add(k)
+                    out.withUpdatedHeader(k, v)
+                }
             } else {
-                Logger.debug("Updating header $k : $existingValue --> $v")
-                updated.add(k)
-                out.withUpdatedHeader(k, v)
+                Logger.debug("Adding header $k : $v")
+                added.add(k)
+                out.withAddedHeader(k, v)
             }
-        } else {
-            Logger.debug("Adding header $k : $v")
-            added.add(k)
-            out.withAddedHeader(k, v)
-        }
     }
     return Triple(out, updated, added)
 }
@@ -89,9 +90,7 @@ fun HttpRequest.headersMap(): Map<String, String> {
     return map
 }
 
-fun HttpRequest.getHeaderValue(name: String): String? {
-    return this.mergedHeaders().find { it.name().equals(name, ignoreCase = true) }?.value()
-}
+fun HttpRequest.getHeaderValue(name: String): String? = this.mergedHeaders().find { it.name().equals(name, ignoreCase = true) }?.value()
 
 fun HttpRequest.host(): String {
     val uri = URI(this.url())
@@ -100,6 +99,13 @@ fun HttpRequest.host(): String {
 
 fun HttpRequest.topDomain(): String {
     val host = URI(this.url()).host
-    if (!host.contains(".")) return host // Handle intranet hosts
-    return InternetDomainName.from(host).topPrivateDomain().toString()
+    return try {
+        InternetDomainName.from(host).topPrivateDomain().toString()
+    } catch (_: IllegalArgumentException) {
+        // Handle IPs and other non-domain names
+        host
+    } catch (_: IllegalStateException) {
+        // Handle local and other non-routable domains
+        host
+    }
 }

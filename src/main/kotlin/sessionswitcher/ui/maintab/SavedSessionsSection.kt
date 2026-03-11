@@ -5,9 +5,8 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.sessions.SessionsListUpdateListener
 import sessionswitcher.ui.SaveSessionDialog
-import sessionswitcher.ui.SessionEditWindow
 import sessionswitcher.ui.tables.SessionsTableModel
-import java.util.*
+import java.util.Optional
 import javax.swing.JComponent
 
 object SavedSessionsSection : SessionsListUpdateListener {
@@ -16,11 +15,13 @@ object SavedSessionsSection : SessionsListUpdateListener {
 
     fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection(
-            "Sessions", "Saved sessions for this project",
-            SessionsTableModel(sessionSwitcher.sessions),
-            tableHeight = 20
-        )
+        this.tableSection =
+            TableSection(
+                "Sessions",
+                "Saved sessions for this project",
+                SessionsTableModel(sessionSwitcher.sessions),
+                tableHeight = 20,
+            )
         tableSection.refreshTable()
         tableSection.setNewButtonCallback(this::newButtonCallback)
         tableSection.setEditButtonCallback(this::editButtonCallback)

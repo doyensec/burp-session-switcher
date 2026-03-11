@@ -2,19 +2,27 @@ package sessionswitcher.ui
 
 import sessionswitcher.SessionSwitcher
 import java.awt.Dimension
-import javax.swing.*
-import javax.swing.JOptionPane.*
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JCheckBox
+import javax.swing.JLabel
+import javax.swing.JOptionPane
+import javax.swing.JPanel
 
 class ConfirmationDialog(
     private val sessionSwitcher: SessionSwitcher,
     private val text: String,
-    private val title: String
+    private val title: String,
 ) {
     private var savePreference = false
     private var answer = false
 
     fun show(): Boolean {
-        val frame = sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame()
+        val frame =
+            sessionSwitcher.montoyaApi
+                .userInterface()
+                .swingUtils()
+                .suiteFrame()
 
         val panel = JPanel()
         panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
@@ -26,12 +34,15 @@ class ConfirmationDialog(
         panel.add(Box.createRigidArea(Dimension(0, 5)))
         panel.add(checkBox)
 
-        answer = showConfirmDialog(frame, panel, title, YES_NO_OPTION, WARNING_MESSAGE) == YES_OPTION
+        answer =
+            JOptionPane.showConfirmDialog(frame, panel, title, JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE) ==
+            JOptionPane.YES_OPTION
 
         savePreference = checkBox.isSelected
         return answer
     }
 
     fun shouldSavePreference(): Boolean = savePreference
+
     fun getAnswer(): Boolean = answer
 }

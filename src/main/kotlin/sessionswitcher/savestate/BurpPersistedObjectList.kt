@@ -15,7 +15,10 @@ fun PersistedObject.getChildObjectList(key: String): List<PersistedObject>? {
     return lst
 }
 
-fun PersistedObject.setChildObjectList(key: String, value: List<PersistedObject>) {
+fun PersistedObject.setChildObjectList(
+    key: String,
+    value: List<PersistedObject>,
+) {
     val internalObj = PersistedObject.persistedObject()
     internalObj.setString("key", key)
     internalObj.setInteger("size", value.size)
@@ -33,9 +36,7 @@ fun PersistedObject.deleteChildObjectList(key: String) {
     this.deleteChildObject(listKey)
 }
 
-fun PersistedObject.childObjectListKeys(): Set<String> {
-    return this.childObjectKeys().filter { it.startsWith("objlst_") }.toSet()
-}
+fun PersistedObject.childObjectListKeys(): Set<String> = this.childObjectKeys().filter { it.startsWith("objlst_") }.toSet()
 
 fun getSaveStateKeys(c: Collection<CanSaveData>): PersistedList<String> {
     val lst = PersistedList.persistedStringList()

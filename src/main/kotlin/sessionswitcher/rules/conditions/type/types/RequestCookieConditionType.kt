@@ -7,7 +7,11 @@ import sessionswitcher.sessions.Cookies
 
 object RequestCookieConditionType :
     StringConditionType(matchOn = "Request Cookie", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val cookies = Cookies.fromHttpRequest(request)
         val cookiePairs = cookies.getPairs().map { "${it.first}=${it.second}" }
         return if (configuration.negativeMatch) {
@@ -17,7 +21,6 @@ object RequestCookieConditionType :
         }
     }
 
-    override fun describe(configuration: ConditionConfig): String {
-        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
-    }
+    override fun describe(configuration: ConditionConfig): String =
+        "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
 }

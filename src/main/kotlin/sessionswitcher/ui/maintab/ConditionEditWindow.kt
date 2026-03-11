@@ -7,15 +7,28 @@ import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.type.types.ConditionField
 import sessionswitcher.ui.ButtonPrimary
 import sessionswitcher.ui.UISection
-import java.awt.*
-import java.util.*
-import javax.swing.*
+import java.awt.Dialog
+import java.awt.Dimension
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Insets
+import java.util.Optional
+import javax.swing.JButton
+import javax.swing.JCheckBox
+import javax.swing.JComboBox
+import javax.swing.JComponent
+import javax.swing.JDialog
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JTextField
+import javax.swing.SwingUtilities
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 
-class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<Condition>) :
-    JDialog(owner, if (initialCondition.isEmpty) "New Condition" else "Edit Condition", true) {
-
+class ConditionEditWindow(
+    owner: Dialog,
+    private val initialCondition: Optional<Condition>,
+) : JDialog(owner, if (initialCondition.isEmpty) "New Condition" else "Edit Condition", true) {
     // Flags
     var shouldSave = false
 
@@ -42,18 +55,24 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
 
             val extraFieldsMap = HashMap<String, String>()
             for ((name, field) in this.extraFields) {
-                val value = when (field) {
-                    is JTextField -> {
-                        field.text
+                val value =
+                    when (field) {
+                        is JTextField -> {
+                            field.text
+                        }
+
+                        is JComboBox<*> -> {
+                            field.selectedItem as String
+                        }
+
+                        is JCheckBox -> {
+                            field.isSelected.toString()
+                        }
+
+                        else -> {
+                            throw IllegalStateException("Unexpected field type: ${field.javaClass}")
+                        }
                     }
-                    is JComboBox<*> -> {
-                        field.selectedItem as String
-                    }
-                    is JCheckBox -> {
-                        field.isSelected.toString()
-                    }
-                    else -> throw IllegalStateException("Unexpected field type: ${field.javaClass}")
-                }
                 extraFieldsMap[name] = value
             }
 
@@ -63,9 +82,15 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     fun autoSize() {
         // Pack the window to fit its content
         this.minimumSize = Dimension(500, this.minimumSize.height)
-        //this.preferredSize = this.minimumSize
+        // this.preferredSize = this.minimumSize
         this.pack()
-        this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
+        this.setLocationRelativeTo(
+            SessionSwitcher
+                .getApi()
+                .userInterface()
+                .swingUtils()
+                .suiteFrame(),
+        )
     }
 
     fun showDialog(): Optional<Condition> {
@@ -85,16 +110,21 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
             this.operationSelector.selectedItem = configuration.operation
             this.negativeMatchCheckBox.isSelected = configuration.negativeMatch
             for (fieldDefinition in condition.typeInstance.extraFields) {
-                val value = configuration.extraFields[fieldDefinition.name] ?: throw IllegalStateException("Missing extra field value for ${fieldDefinition.name}")
-                val component = this.extraFields[fieldDefinition.name]
-                    ?: throw IllegalStateException("Missing extra field component for ${fieldDefinition.name}")
+                val value =
+                    configuration.extraFields[fieldDefinition.name]
+                        ?: throw IllegalStateException("Missing extra field value for ${fieldDefinition.name}")
+                val component =
+                    this.extraFields[fieldDefinition.name]
+                        ?: throw IllegalStateException("Missing extra field component for ${fieldDefinition.name}")
                 when (component) {
                     is JTextField -> {
                         component.text = value
                     }
+
                     is JComboBox<*> -> {
                         component.selectedItem = value
                     }
+
                     is JCheckBox -> {
                         component.isSelected = value.toBoolean()
                     }
@@ -106,48 +136,57 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
     private fun generateExtraFieldsComponents() {
         this.extraFields.clear()
         for (field in this.selectedConditionType.extraFields) {
-            val component = when (field.type) {
-                ConditionField.FieldType.TEXT -> {
-                    val defaultText = field.defaultText?: ""
-                    JTextField(defaultText).also {
-                        it.document.addDocumentListener(object : DocumentListener {
-                            override fun insertUpdate(e: DocumentEvent) = validateConfiguration()
-                            override fun removeUpdate(e: DocumentEvent) = validateConfiguration()
-                            override fun changedUpdate(e: DocumentEvent) = validateConfiguration()
-                        })
+            val component =
+                when (field.type) {
+                    ConditionField.FieldType.TEXT -> {
+                        val defaultText = field.defaultText ?: ""
+                        JTextField(defaultText).also {
+                            it.document.addDocumentListener(
+                                object : DocumentListener {
+                                    override fun insertUpdate(e: DocumentEvent) = validateConfiguration()
+
+                                    override fun removeUpdate(e: DocumentEvent) = validateConfiguration()
+
+                                    override fun changedUpdate(e: DocumentEvent) = validateConfiguration()
+                                },
+                            )
+                        }
+                    }
+
+                    ConditionField.FieldType.MULTIPLE_CHOICE -> {
+                        val defaultChoice = field.defaultChoice
+                        val comboBox = JComboBox(field.choices)
+                        if (defaultChoice != null) {
+                            comboBox.selectedItem = defaultChoice
+                        }
+                        comboBox.addActionListener { validateConfiguration() }
+                        comboBox
+                    }
+
+                    ConditionField.FieldType.BOOLEAN -> {
+                        JCheckBox().also {
+                            it.isSelected = field.defaultBoolean
+                            it.addActionListener { validateConfiguration() }
+                        }
                     }
                 }
-                ConditionField.FieldType.MULTIPLE_CHOICE -> {
-                    val defaultChoice = field.defaultChoice
-                    val comboBox = JComboBox(field.choices)
-                    if (defaultChoice != null) {
-                        comboBox.selectedItem = defaultChoice
-                    }
-                    comboBox.addActionListener { validateConfiguration() }
-                    comboBox
-                }
-                ConditionField.FieldType.BOOLEAN -> {
-                    JCheckBox().also {
-                        it.isSelected = field.defaultBoolean
-                        it.addActionListener { validateConfiguration() }
-                    }
-                }
-            }
             this.extraFields[field.name] = component
         }
     }
 
     val controlsPanel = JPanel(GridBagLayout())
+
     private fun redrawControls() {
         controlsPanel.removeAll()
 
-        val controls = arrayOf(
-            Pair("Type", conditionTypesSelector),
-            Pair("Operation", operationSelector),
-            *this.extraFields.map { (name, component) -> Pair(name, component) }.toTypedArray(),
-            Pair("Negative match", negativeMatchCheckBox),
-            Pair("Validation", validationMessageLabel)
-        )
+        val controls =
+            arrayOf(
+                Pair("Type", conditionTypesSelector),
+                Pair("Operation", operationSelector),
+                *this.extraFields.map { (name, component) -> Pair(name, component) }.toTypedArray(),
+                Pair("Negative match", negativeMatchCheckBox),
+                Pair("Validation", validationMessageLabel),
+            )
 
         val c = GridBagConstraints()
         c.insets = Insets(5, 5, 5, 5)
@@ -188,10 +227,11 @@ class ConditionEditWindow(owner: Dialog, private val initialCondition: Optional<
         c.ipadx = 0
         c.weightx = 0.0
         c.gridwidth = 1
-        val buttonPanel = JPanel().also {
-            it.add(saveButton)
-            it.add(cancelButton)
-        }
+        val buttonPanel =
+            JPanel().also {
+                it.add(saveButton)
+                it.add(cancelButton)
+            }
         controlsPanel.add(buttonPanel, c)
     }
 

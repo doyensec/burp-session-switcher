@@ -7,7 +7,7 @@ import sessionswitcher.rules.autoupdate.UpdateRule
 import sessionswitcher.ui.tables.UpdateRuleTableModel
 import java.awt.Color
 import java.awt.Component
-import java.util.*
+import java.util.Optional
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -62,14 +62,16 @@ object UpdateRuleSection {
     }
 
     // Up and Down buttons
-    val upButton = JButton("Up").also {
-        it.isEnabled = false
-        it.addActionListener { upButtonCallback() }
-    }
-    val downButton = JButton("Down").also {
-        it.isEnabled = false
-        it.addActionListener { downButtonCallback() }
-    }
+    val upButton =
+        JButton("Up").also {
+            it.isEnabled = false
+            it.addActionListener { upButtonCallback() }
+        }
+    val downButton =
+        JButton("Down").also {
+            it.isEnabled = false
+            it.addActionListener { downButtonCallback() }
+        }
 
     private fun selectionListener(e: ListSelectionEvent) {
         if (e.valueIsAdjusting) return
@@ -131,55 +133,67 @@ object UpdateRuleSection {
 
     fun make(sessionSwitcher: SessionSwitcher): JComponent {
         this.sessionSwitcher = sessionSwitcher
-        this.tableSection = TableSection(
-            "Auto Update Rules",
-            "Automatically update sessions from matching requests and responses",
-            UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules),
-            otherButtons = arrayOf(upButton, downButton),
-            tableHeight = 15
-        )
+        this.tableSection =
+            TableSection(
+                "Auto Update Rules",
+                "Automatically update sessions from matching requests and responses",
+                UpdateRuleTableModel(sessionSwitcher.updateRulesCollection.updateRules),
+                otherButtons = arrayOf(upButton, downButton),
+                tableHeight = 15,
+            )
         tableSection.refreshTable()
         tableSection.setNewButtonCallback(this::newButtonCallback)
         tableSection.setEditButtonCallback(this::editButtonCallback)
         tableSection.setDeleteButtonCallback(this::deleteButtonCallback)
         tableSection.setDuplicateButtonCallback(this::duplicateButtonCallback)
-        tableSection.table.columnModel.getColumn(0).maxWidth = 30 // For ID column
-        tableSection.table.columnModel.getColumn(3).maxWidth = 50 // For Color column
-        tableSection.table.columnModel.getColumn(3).cellRenderer = ColorRendererCell
+        tableSection.table.columnModel
+            .getColumn(0)
+            .maxWidth = 30 // For ID column
+        tableSection.table.columnModel
+            .getColumn(3)
+            .maxWidth = 60 // For Enabled column
+        tableSection.table.columnModel
+            .getColumn(4)
+            .maxWidth = 40 // For Color column
+        tableSection.table.columnModel
+            .getColumn(4)
+            .cellRenderer = ColorRendererCell
+        (tableSection.table.getDefaultRenderer(Boolean::class.java) as? JComponent)?.let { }
         tableSection.table.selectionModel.addListSelectionListener { this.selectionListener(it) }
+        tableSection.table.autoCreateRowSorter = true
         return tableSection.getComponent()
     }
 
     private fun HighlightColor.toPanel(): JPanel {
         val panel = JPanel()
-        panel.background = when (this) {
-            HighlightColor.RED -> Color.RED
-            HighlightColor.ORANGE -> Color.ORANGE
-            HighlightColor.YELLOW -> Color.YELLOW
-            HighlightColor.GREEN -> Color.GREEN
-            HighlightColor.CYAN -> Color.CYAN
-            HighlightColor.BLUE -> Color.BLUE
-            HighlightColor.PINK -> Color.PINK
-            HighlightColor.MAGENTA -> Color.MAGENTA
-            HighlightColor.GRAY -> Color.GRAY
-            else -> panel.background
-        }
+        panel.background =
+            when (this) {
+                HighlightColor.RED -> Color.RED
+                HighlightColor.ORANGE -> Color.ORANGE
+                HighlightColor.YELLOW -> Color.YELLOW
+                HighlightColor.GREEN -> Color.GREEN
+                HighlightColor.CYAN -> Color.CYAN
+                HighlightColor.BLUE -> Color.BLUE
+                HighlightColor.PINK -> Color.PINK
+                HighlightColor.MAGENTA -> Color.MAGENTA
+                HighlightColor.GRAY -> Color.GRAY
+                else -> panel.background
+            }
         return panel
     }
 
-    private object ColorRendererCell: TableCellRenderer {
+    private object ColorRendererCell : TableCellRenderer {
         override fun getTableCellRendererComponent(
             table: JTable?,
             value: Any?,
             isSelected: Boolean,
             hasFocus: Boolean,
             row: Int,
-            column: Int
+            column: Int,
         ): Component {
             if (table == null) return JPanel()
             val color = value as HighlightColor
             return color.toPanel()
         }
-
     }
 }

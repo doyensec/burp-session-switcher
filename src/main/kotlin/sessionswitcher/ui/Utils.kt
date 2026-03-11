@@ -2,12 +2,34 @@ package sessionswitcher.ui
 
 import burp.api.montoya.ui.Theme
 import sessionswitcher.SessionSwitcher
-import java.awt.*
-import javax.swing.*
+import java.awt.BorderLayout
+import java.awt.Color
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.Font
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.LayoutManager2
+import java.awt.RenderingHints
+import java.awt.Toolkit
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JFrame
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JScrollPane
+import javax.swing.JTable
+import javax.swing.JTextField
 import kotlin.math.min
 
-
-class Label(text: String, bold: Boolean = false, big: Boolean = false, relativeSize: Double = 0.0) : JLabel(text) {
+class Label(
+    text: String,
+    bold: Boolean = false,
+    big: Boolean = false,
+    relativeSize: Double = 0.0,
+) : JLabel(text) {
     init {
         isOpaque = false
         if (big) {
@@ -22,11 +44,14 @@ class Label(text: String, bold: Boolean = false, big: Boolean = false, relativeS
     }
 }
 
-/* Create a window (JFrame) with reasonable defaults. */
-open class Window(windowTitle: String) : JFrame(windowTitle) {
+// Create a window (JFrame) with reasonable defaults.
+open class Window(
+    windowTitle: String,
+    layout: LayoutManager2 = BorderLayout(),
+) : JFrame(windowTitle) {
     init {
         this.defaultCloseOperation = DISPOSE_ON_CLOSE
-        this.layout = BorderLayout()
+        this.layout = layout
     }
 
     open fun autoSize() {
@@ -39,16 +64,24 @@ open class Window(windowTitle: String) : JFrame(windowTitle) {
         this.preferredSize = Dimension(preferredSize.width, reasonableHeight)
 
         // Set the maximum size of the frame to match its content
-        this.maximumSize = Dimension(preferredSize.width, preferredSize.height)
+        // this.maximumSize = Dimension(preferredSize.width, preferredSize.height)
 
         // Set the minimum size to something reasonable as well
         this.minimumSize = Dimension(preferredSize.width, 400)
 
-        this.setLocationRelativeTo(SessionSwitcher.getApi().userInterface().swingUtils().suiteFrame())
+        this.setLocationRelativeTo(
+            SessionSwitcher
+                .getApi()
+                .userInterface()
+                .swingUtils()
+                .suiteFrame(),
+        )
     }
 }
 
-class ButtonPrimary(label: String) : JButton(label) {
+class ButtonPrimary(
+    label: String,
+) : JButton(label) {
     init {
         this.foreground = Color.WHITE
         this.background = getAccentColor()
@@ -56,22 +89,26 @@ class ButtonPrimary(label: String) : JButton(label) {
         this.isBorderPainted = false
     }
 
-    private fun getAccentColor(): Color {
-        return if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
+    private fun getAccentColor(): Color =
+        if (SessionSwitcher.getApi().userInterface().currentTheme() == Theme.DARK) {
             Color(201, 110, 59)
         } else {
             Color(236, 98, 43)
         }
-    }
 }
 
-class UISection(val sectionTitle: String, val description: String?, vararg elements: Component?) : JPanel() {
+class UISection(
+    val sectionTitle: String,
+    val description: String?,
+    vararg elements: Component?,
+) : JPanel() {
     private val gap = 10
 
     init {
-        val innerBox = JPanel().also {
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-        }
+        val innerBox =
+            JPanel().also {
+                it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            }
 
         for (e in elements) {
             if (e != null) {
@@ -82,9 +119,10 @@ class UISection(val sectionTitle: String, val description: String?, vararg eleme
         }
 
         // Set layout
-        val outerBox = JPanel().also {
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-        }
+        val outerBox =
+            JPanel().also {
+                it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+            }
 
         this.layout = BorderLayout()
         this.border = BorderFactory.createEmptyBorder(gap, gap, gap, gap)
@@ -112,8 +150,10 @@ fun JTable.withScrollPane(rows: Int = 15): JScrollPane {
     return scrollPane
 }
 
-
-class TextFieldWithPlaceholder(text: String, var placeholder: String) : JTextField(text) {
+class TextFieldWithPlaceholder(
+    text: String,
+    var placeholder: String,
+) : JTextField(text) {
     override fun paintComponent(g: Graphics?) {
         super.paintComponent(g)
         if (this.placeholder.isEmpty()) return

@@ -5,45 +5,45 @@ import burp.api.montoya.persistence.PersistedObject
 import sessionswitcher.Logger
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.DeserializerFactory
-import java.util.*
+import java.util.UUID
 
 class ConditionConfig private constructor(
     val operation: String,
     val negativeMatch: Boolean,
     val extraFields: Map<String, String>,
-    private val saveStateId: UUID
+    private val saveStateId: UUID,
 ) : CanSaveData {
     constructor(operation: String, negativeMatch: Boolean, extraFields: Map<String, String>) : this(
         operation,
         negativeMatch,
         extraFields.toMap(),
-        UUID.randomUUID()
+        UUID.randomUUID(),
     )
 
     companion object {
-        val Deserializer = object : DeserializerFactory<ConditionConfig>() {
-            override fun deserializeObject(obj: PersistedObject): ConditionConfig {
-                val id = UUID.fromString(obj.getString("id"))
-                Logger.debug("Deserializing ConditionConfig: $id")
-                val operation = obj.getString("operation")
-                val negativeMatch = obj.getBoolean("negativeMatch")
-                val extraFieldsKeys = obj.getStringList("extraFieldsKeys")
-                val extraFields = HashMap<String, String>()
-                for (key in extraFieldsKeys) {
-                    val value = obj.getString("extraField.$key") ?: continue
-                    extraFields[key] = value
+        val Deserializer =
+            object : DeserializerFactory<ConditionConfig>() {
+                override fun deserializeObject(obj: PersistedObject): ConditionConfig {
+                    val id = UUID.fromString(obj.getString("id"))
+                    Logger.debug("Deserializing ConditionConfig: $id")
+                    val operation = obj.getString("operation")
+                    val negativeMatch = obj.getBoolean("negativeMatch")
+                    val extraFieldsKeys = obj.getStringList("extraFieldsKeys")
+                    val extraFields = HashMap<String, String>()
+                    for (key in extraFieldsKeys) {
+                        val value = obj.getString("extraField.$key") ?: continue
+                        extraFields[key] = value
+                    }
+                    return ConditionConfig(operation, negativeMatch, extraFields.toMap(), id)
                 }
-                return ConditionConfig(operation, negativeMatch, extraFields.toMap(), id)
             }
-        }
     }
 
-    override val saveStateKey: String = "UpdateRule.Condition.Config.${saveStateId}"
+    override val saveStateKey: String = "UpdateRule.Condition.Config.$saveStateId"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData>? = null
+    override fun getChildObjectsToSave(): Collection<CanSaveData>? = null
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setString("id", saveStateId.toString())
         obj.setString("operation", operation)
         obj.setBoolean("negativeMatch", negativeMatch)
@@ -56,7 +56,5 @@ class ConditionConfig private constructor(
         return obj
     }
 
-    fun copy(): ConditionConfig {
-        return ConditionConfig(operation, negativeMatch, extraFields.toMap())
-    }
+    fun copy(): ConditionConfig = ConditionConfig(operation, negativeMatch, extraFields.toMap())
 }

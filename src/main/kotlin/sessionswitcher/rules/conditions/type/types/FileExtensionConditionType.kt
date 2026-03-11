@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object FileExtensionConditionType :
     StringConditionType(matchOn = "File Extension", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val path = request.pathWithoutQuery()
         val fileName = path.substringAfterLast("/")
         val fileExtension = fileName.substringAfterLast(".", "")

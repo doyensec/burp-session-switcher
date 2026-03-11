@@ -10,46 +10,59 @@ import javax.swing.JComponent
 import javax.swing.JPopupMenu
 import javax.swing.KeyStroke
 
-class ContextMenu(private val editor: RequestEditor) : MouseAdapter() {
+class ContextMenu(
+    private val editor: RequestEditor,
+) : MouseAdapter() {
     private val popup = JPopupMenu()
 
     // ===== Actions associated with Menu Items
 
-    private val sendToIntruderAction = MenuAction(
-        "Send to Intruder",
-        KeyStroke.getKeyStroke(KeyEvent.VK_I, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
-    ) {
-        editor.sessionSwitcher.montoyaApi.intruder().sendToIntruder(this.getRequest())
-    }
+    private val sendToIntruderAction =
+        MenuAction(
+            "Send to Intruder",
+            KeyStroke.getKeyStroke(KeyEvent.VK_I, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
+        ) {
+            editor.sessionSwitcher.montoyaApi
+                .intruder()
+                .sendToIntruder(this.getRequest())
+        }
 
-    private val sendToRepeaterAction = MenuAction(
-        "Send to Repeater",
-        KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
-    ) {
-        editor.sessionSwitcher.montoyaApi.repeater().sendToRepeater(this.getRequest())
-    }
+    private val sendToRepeaterAction =
+        MenuAction(
+            "Send to Repeater",
+            KeyStroke.getKeyStroke(KeyEvent.VK_R, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
+        ) {
+            editor.sessionSwitcher.montoyaApi
+                .repeater()
+                .sendToRepeater(this.getRequest())
+        }
 
-    private val sendToOrganizerAction = MenuAction(
-        "Send to Organizer",
-        KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
-    ) {
-        editor.sessionSwitcher.montoyaApi.organizer().sendToOrganizer(this.getRequest())
-    }
+    private val sendToOrganizerAction =
+        MenuAction(
+            "Send to Organizer",
+            KeyStroke.getKeyStroke(KeyEvent.VK_O, Toolkit.getDefaultToolkit().menuShortcutKeyMaskEx),
+        ) {
+            editor.sessionSwitcher.montoyaApi
+                .organizer()
+                .sendToOrganizer(this.getRequest())
+        }
 
     /* The following list is currently used for:
      - Enable/Disable (grey-out) context menu items when the user
         right-clicks something that is not actually a GraphQL item, e.g. a point of interest in the scanner results.
      - Provide Keyboard Shortcuts (CTRL+R, CTRL+I, etc)
      */
-    private val sendFromPluginActions = mutableListOf(
-        sendToIntruderAction,
-        sendToRepeaterAction,
-        sendToOrganizerAction
-    )
+    private val sendFromPluginActions =
+        mutableListOf(
+            sendToIntruderAction,
+            sendToRepeaterAction,
+            sendToOrganizerAction,
+        )
 
     private fun getRequest() = editor.request
+
     override fun mousePressed(e: MouseEvent) {
-        if (e.button == MouseEvent.BUTTON3) {    // Right Click only
+        if (e.button == MouseEvent.BUTTON3) { // Right Click only
             this.setContextActions()
             this.popup.show(e.component, e.x, e.y)
         }

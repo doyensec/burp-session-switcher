@@ -1,7 +1,6 @@
 package sessionswitcher.rules.conditions.type.types
 
 import burp.api.montoya.http.message.requests.HttpRequest
-import com.google.gson.Gson
 import com.google.gson.JsonParser
 import sessionswitcher.Logger
 import sessionswitcher.rules.conditions.ConditionConfig
@@ -15,14 +14,24 @@ object JWTPayloadConditionType : ConditionType(
     matchOn = "JWT Claim",
     matchesOnResponse = false,
     availableOperations = listOf("JWT in Header", "JWT in Cookie"),
-    extraFields = listOf(
-        ConditionField.makeTextField("Header/Cookie Name"),
-        ConditionField.makeTextField("Claim Name"),
-        ConditionField.makeMultipleChoiceField("Match Type", StringConditionType.OPERATORS.entries.map {it.description}.toTypedArray()),
-        ConditionField.makeTextField("Claim Value"))
+    extraFields =
+        listOf(
+            ConditionField.makeTextField("Header/Cookie Name"),
+            ConditionField.makeTextField("Claim Name"),
+            ConditionField.makeMultipleChoiceField(
+                "Match Type",
+                StringConditionType.OPERATORS.entries
+                    .map { it.description }
+                    .toTypedArray(),
+            ),
+            ConditionField.makeTextField("Claim Value"),
+        ),
 ) {
-    private val gson = Gson()
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val jwt: String
         when (configuration.operation) {
             "JWT in Header" -> {
@@ -37,6 +46,7 @@ object JWTPayloadConditionType : ConditionType(
                 }
                 jwt = maybeJWT.trim()
             }
+
             "JWT in Cookie" -> {
                 val cookies = Cookies.fromHttpRequest(request)
                 val cookieName =
@@ -48,6 +58,7 @@ object JWTPayloadConditionType : ConditionType(
                 }
                 jwt = cookie
             }
+
             else -> {
                 throw IllegalStateException("Invalid operation: ${configuration.operation}")
             }
@@ -61,15 +72,23 @@ object JWTPayloadConditionType : ConditionType(
         return match
     }
 
-    private fun jwtMatches(jwt: String, configuration: ConditionConfig): Boolean {
+    private fun jwtMatches(
+        jwt: String,
+        configuration: ConditionConfig,
+    ): Boolean {
         try {
             // Parse JWT Payload
             val jwtPayload = jwt.split(".")[1]
-            val jwtPayloadDecoded = Base64.UrlSafe.withPadding(Base64.PaddingOption.ABSENT_OPTIONAL).decode(jwtPayload).toString(Charsets.UTF_8)
+            val jwtPayloadDecoded =
+                Base64.UrlSafe
+                    .withPadding(
+                        Base64.PaddingOption.ABSENT_OPTIONAL,
+                    ).decode(jwtPayload)
+                    .toString(Charsets.UTF_8)
             val jwtPayloadMap = JsonParser.parseString(jwtPayloadDecoded).asJsonObject
 
             // Get correct key
-            val key = configuration.extraFields["Claim Name"]?: throw IllegalStateException("No claim name specified!")
+            val key = configuration.extraFields["Claim Name"] ?: throw IllegalStateException("No claim name specified!")
             val value = jwtPayloadMap[key]
             if (value == null) {
                 Logger.debug("Claim $key not found in JWT")
@@ -83,13 +102,13 @@ object JWTPayloadConditionType : ConditionType(
 
             val strValue = value.asJsonPrimitive.asString
 
-            val operationStr = configuration.extraFields["Match Type"]?: throw IllegalStateException("No match type specified!")
+            val operationStr = configuration.extraFields["Match Type"] ?: throw IllegalStateException("No match type specified!")
             val operation = StringConditionType.OPERATORS.fromDescription(operationStr)
-            val pattern = configuration.extraFields["Claim Value"]?: throw IllegalStateException("No claim value specified!")
+            val pattern = configuration.extraFields["Claim Value"] ?: throw IllegalStateException("No claim value specified!")
             val match = StringConditionType.stringMatches(pattern, operation, strValue, configuration.negativeMatch)
             Logger.debug("String matching: $pattern, $operation, $strValue, $match")
             return match
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             Logger.debug("Fail decoding JWT: ${e.message}")
             return false
         }
@@ -108,14 +127,14 @@ object JWTPayloadConditionType : ConditionType(
             return Pair(false, "Unknown operation! Send bug report.")
         }
 
-        val matchType = configuration.extraFields["Match Type"]?: throw IllegalStateException("No match type specified!")
+        val matchType = configuration.extraFields["Match Type"] ?: throw IllegalStateException("No match type specified!")
         try {
             StringConditionType.OPERATORS.fromDescription(matchType)
         } catch (_: Exception) {
             return Pair(false, "Invalid match type!")
         }
 
-        val pattern = configuration.extraFields["Claim Value"]?: throw IllegalStateException("No claim value specified!")
+        val pattern = configuration.extraFields["Claim Value"] ?: throw IllegalStateException("No claim value specified!")
         if (matchType == OPERATORS.REGEX_MATCH.description) {
             try {
                 Regex(pattern)
@@ -127,10 +146,11 @@ object JWTPayloadConditionType : ConditionType(
     }
 
     override fun describe(configuration: ConditionConfig): String {
-        val headerOrCookie = configuration.extraFields["Header/Cookie Name"]?: throw IllegalStateException("No header/cookie name specified!")
-        val claimName = configuration.extraFields["Claim Name"]?: throw IllegalStateException("No claim name specified!")
-        val claimValue = configuration.extraFields["Claim Value"]?: throw IllegalStateException("No claim value specified!")
-        val matchType = configuration.extraFields["Match Type"]?: throw IllegalStateException("No match type specified!")
+        val headerOrCookie =
+            configuration.extraFields["Header/Cookie Name"] ?: throw IllegalStateException("No header/cookie name specified!")
+        val claimName = configuration.extraFields["Claim Name"] ?: throw IllegalStateException("No claim name specified!")
+        val claimValue = configuration.extraFields["Claim Value"] ?: throw IllegalStateException("No claim value specified!")
+        val matchType = configuration.extraFields["Match Type"] ?: throw IllegalStateException("No match type specified!")
         return "${configuration.operation} \"$headerOrCookie\" has claim \"$claimName\" that ${matchType.lowercase()} \"$claimValue\""
     }
 }

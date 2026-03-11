@@ -9,7 +9,7 @@ object QueryStringConditionType :
     override fun matchesRequest(
         configuration: ConditionConfig,
         request: HttpRequest,
-        matchInfo: MatchInfo
+        matchInfo: MatchInfo,
     ): Boolean {
         request.parameters()
         val queryString = request.query()
@@ -21,7 +21,6 @@ object QueryStringConditionType :
         }
     }
 
-    override fun describe(configuration: ConditionConfig): String {
-        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
-    }
+    override fun describe(configuration: ConditionConfig): String =
+        "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
 }

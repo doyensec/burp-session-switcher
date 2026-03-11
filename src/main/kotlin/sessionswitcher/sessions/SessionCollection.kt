@@ -6,13 +6,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import sessionswitcher.Logger
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.savestate.CanSaveAndLoadData
 import sessionswitcher.savestate.CanSaveData
 import sessionswitcher.savestate.getSaveStateKeys
 import java.lang.ref.WeakReference
 
-class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveAndLoadData {
+class SessionCollection(
+    private val sessionSwitcher: SessionSwitcher,
+) : CanSaveAndLoadData {
     companion object {
         val updateEventCoroutineScope = CoroutineScope(Dispatchers.Default)
         val updateMutex = Mutex()
@@ -23,13 +26,9 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
 
     val size get() = this.sessions.size
 
-    fun getSessionNames(): Set<String> {
-        return this.sessions.keys
-    }
+    fun getSessionNames(): Set<String> = this.sessions.keys
 
-    fun hasSession(key: String): Boolean {
-        return this.sessions.containsKey(key)
-    }
+    fun hasSession(key: String): Boolean = this.sessions.containsKey(key)
 
     fun getSessions(suffix: String = ""): Collection<Session> {
         if (suffix.isNotBlank()) {
@@ -38,9 +37,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         return this.sessions.values
     }
 
-    fun getSession(key: String): Session? {
-        return this.sessions[key]
-    }
+    fun getSession(key: String): Session? = this.sessions[key]
 
     fun deleteSession(key: String) {
         if (this.sessions.containsKey(key)) {
@@ -51,7 +48,7 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
 
             // Delete session
             this.sessions.remove(key)
-            this.deleteChildObjectAsync(session)
+            this.deleteChildObjectFromProjectFileAsync(session)
             fireUpdateEvent()
         }
     }
@@ -62,19 +59,22 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
         }
         val s = Session(name)
         this.sessions[s.name] = s
-        this.updateChildObjectAsync(s)
+        this.updateChildObjectInProjectFileAsync(s)
         fireUpdateEvent()
         return s
     }
 
-    fun duplicateSession(name: String, newName: String): Session {
+    fun duplicateSession(
+        name: String,
+        newName: String,
+    ): Session {
         if (this.hasSession(newName)) {
             throw Exception("Trying to duplicate a session with a name that is already present in the collection: $newName")
         }
         val oldSession = this.getSession(name) ?: throw Exception("Session to duplicate not found: $name")
         val newSession = Session(newName, oldSession)
         this.sessions[newName] = newSession
-        this.updateChildObjectAsync(newSession)
+        this.updateChildObjectInProjectFileAsync(newSession)
         fireUpdateEvent()
         return newSession
     }
@@ -109,22 +109,28 @@ class SessionCollection(private val sessionSwitcher: SessionSwitcher) : CanSaveA
     override val saveStateKey: String
         get() = "SessionCollection"
 
-    override fun getChildrenObjectsToSave(): Collection<CanSaveData> {
-        return this.sessions.values
-    }
+    override fun getChildObjectsToSave(): Collection<CanSaveData> = this.sessions.values
 
-    override fun burpSerialize(): PersistedObject {
-        val obj = PersistedObject.persistedObject()
+    override fun burpSerialize(obj: PersistedObject): PersistedObject {
         obj.setStringList("SavedSessions", getSaveStateKeys(this.sessions.values))
         return obj
     }
 
-    override fun burpDeserialize(obj: PersistedObject) {
-        val sessionsList = obj.getStringList("SavedSessions") ?: return
+    override fun burpDeserialize(obj: PersistedObject): Boolean {
+        val sessionsList = obj.getStringList("SavedSessions") ?: return true
+        if (sessionsList.isEmpty()) return true
 
+        var atLeastOneLoadedSuccessfully = false
         for (sessionId in sessionsList) {
-            val p = Session.Deserializer.deserialize(sessionId) ?: continue
-            this.sessions[p.name] = p
+            try {
+                val p = Session.Deserializer.deserialize(sessionId, obj) ?: continue
+                this.sessions[p.name] = p
+                atLeastOneLoadedSuccessfully = true
+            } catch (_: Exception) {
+                Logger.error("Failed deserializing session: $sessionId")
+                continue
+            }
         }
+        return atLeastOneLoadedSuccessfully
     }
 }

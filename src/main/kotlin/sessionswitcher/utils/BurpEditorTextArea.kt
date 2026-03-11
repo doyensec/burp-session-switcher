@@ -13,4 +13,3 @@ fun JComponent.findComponentWithName(name: String): Component? {
     }
     return null
 }
-

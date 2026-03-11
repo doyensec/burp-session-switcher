@@ -18,23 +18,38 @@ import sessionswitcher.settings.Settings
 import sessionswitcher.settings.SettingsItem
 import sessionswitcher.ui.ConfirmationDialog
 import sessionswitcher.ui.SaveSessionDialog
-import sessionswitcher.ui.SessionEditWindow
+import sessionswitcher.ui.maintab.SessionEditWindow
 import sessionswitcher.utils.host
 import sessionswitcher.utils.topDomain
-import java.awt.*
-import java.util.*
-import javax.swing.*
+import java.awt.BorderLayout
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.FlowLayout
+import java.awt.Font
+import java.util.Optional
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JComboBox
+import javax.swing.JLabel
+import javax.swing.JPanel
 
-class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, val readOnly: Boolean) :
-    ExtensionProvidedHttpRequestEditor, SessionsListUpdateListener {
+class RequestEditor private constructor(
+    val sessionSwitcher: SessionSwitcher,
+    val readOnly: Boolean,
+) : ExtensionProvidedHttpRequestEditor,
+    SessionsListUpdateListener {
     companion object {
-        class Provider(private val plugin: SessionSwitcher) : HttpRequestEditorProvider {
-            override fun provideHttpRequestEditor(creationContext: EditorCreationContext): ExtensionProvidedHttpRequestEditor {
-                return RequestEditor(plugin, creationContext.editorMode() == EditorMode.READ_ONLY)
-            }
+        class Provider(
+            private val plugin: SessionSwitcher,
+        ) : HttpRequestEditorProvider {
+            override fun provideHttpRequestEditor(creationContext: EditorCreationContext): ExtensionProvidedHttpRequestEditor =
+                RequestEditor(plugin, creationContext.editorMode() == EditorMode.READ_ONLY)
         }
 
         private var provider: Provider? = null
+
         fun getProvider(plugin: SessionSwitcher): Provider {
             if (provider == null) provider = Provider(plugin)
             return provider as Provider
@@ -56,7 +71,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             this.editedLabel.text = ""
             this.deleteSessionBtn.isEnabled = selectedSession != null
             this.editSessionBtn.isEnabled = selectedSession != null
-            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Update"
+            this.newOrOverwriteBtn.text = if (selectedSession == null) "New" else "Overwrite"
         }
 
     private val editorUpdateMutex = Mutex()
@@ -64,16 +79,15 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     private var originalRequest: HttpRequest? = null
     private var originalRequestModified: Boolean = false
     private var isUpdatingUI: Boolean = false
-    private var _selectedSession: Session? = null
-    private var selectedSession: Session?
-        get() = this._selectedSession
-        set(s) = runBlocking {
+    private var selectedSession: Session? = null
+
+    private fun setSelectedSession(s: Session?) =
+        runBlocking {
             if (isUpdatingUI) return@runBlocking
-            Logger.info("Selected session set")
 
             val original = originalRequest ?: HttpRequest.httpRequest()
             val request = original.withMethod(original.method())
-            _selectedSession = s
+            selectedSession = s
             editedLabel.text = ""
             if (s != null) {
                 Logger.info("Session is ${s.name}")
@@ -92,6 +106,7 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
                 originalRequestModified = false
             }
         }
+
     // END State-holding stuff
 
     // Session stuff
@@ -132,19 +147,20 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             val oldSession = selectedSession
 
             val request = originalRequest
-            val hostFilter: String = if (request == null) {
-                // If request is null, do not filter
-                ""
-            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
-                // Filter by subdomain (entire host)
-                request.host()
-            } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
-                // Filter by main domain
-                request.topDomain()
-            } else {
-                // No filter
-                ""
-            }
+            val hostFilter: String =
+                if (request == null) {
+                    // If request is null, do not filter
+                    ""
+                } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_SUBDOMAIN) {
+                    // Filter by subdomain (entire host)
+                    request.host()
+                } else if (settings.filterSessionMode.get() == Settings.FilterSessionMode.BY_DOMAIN) {
+                    // Filter by main domain
+                    request.topDomain()
+                } else {
+                    // No filter
+                    ""
+                }
             isUpdatingUI = true
             sessionsComboBox.removeAllItems()
             sessionsComboBox.addItem(SESSION_NONE)
@@ -177,11 +193,12 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
             // Ask confirmation dialog if needed
             val doNotAskOverwrite = this.sessionSwitcher.settings.editorDoNotAskOverwriteConfirmation
             if (!doNotAskOverwrite.get()) {
-                val dialog = ConfirmationDialog(
-                    sessionSwitcher,
-                    "Do you want to overwrite the selected session with the data from the original request?",
-                    "Confirm Overwrite"
-                )
+                val dialog =
+                    ConfirmationDialog(
+                        sessionSwitcher,
+                        "Do you want to overwrite the selected session with the data from the original request?",
+                        "Confirm Overwrite",
+                    )
                 dialog.show()
                 if (!dialog.getAnswer()) {
                     // User canceled
@@ -203,11 +220,11 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
         session.updateFromRequest(
             req,
             settings.cookiesUpdateMode.get(),
-            settings.headersUpdateMode.get()
+            settings.headersUpdateMode.get(),
         )
 
         // Apply the new session and refresh the list for good measure
-        this.selectedSession = session
+        this.setSelectedSession(session)
         runBlocking {
             updateSessionsList()
         }
@@ -224,88 +241,100 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
     }
 
     private fun selectedSessionChanged() {
-        Logger.info("Selected session changed")
-        val selected = (this.sessionsComboBox.selectedItem ?: return) as Session
-        when (selected) {
-            SESSION_NONE -> {
-                Logger.info("Selected session null")
-                this.selectedSession = null
-            }
-
-            else -> {
-                Logger.info("Selected session NOT null")
-                this.selectedSession = selected
-            }
+        Logger.verbose("Selected session changed to ${this.sessionsComboBox.selectedItem}")
+        var selected: Session? = (this.sessionsComboBox.selectedItem ?: return) as Session
+        if (selected == SESSION_NONE) {
+            selected = null
+        }
+        if (readOnly) {
+            // In read-only mode, we don't want to change the displayed request,
+            // just the saved request for a possible "update" operation,
+            // so we skip the update logic and set the value directly
+            this.selectedSession = selected
+            // Let's re-set the same request to trigger the UI update
+            this.httpRequest = this.httpRequest
+        } else {
+            this.setSelectedSession(selected)
         }
     }
 
     // END Session stuff
 
     private var component = JPanel(BorderLayout())
-    private val editedLabel = JLabel("").also {
-        it.font = it.font.deriveFont(Font.BOLD)
-    }
-    private val sessionsComboBox = JComboBox<Session>().also {
-        it.maximumSize = it.preferredSize
-        it.minimumSize = Dimension(300, it.preferredSize.height)
-        it.preferredSize = Dimension(300, it.preferredSize.height)
-        it.toolTipText = "Select a session"
-        it.addActionListener { this.selectedSessionChanged() }
-        it.isEnabled = !this.readOnly
-    }
-    private val newOrOverwriteBtn = JButton("New").also {
-        it.isEnabled = true
-        it.addActionListener {
-            this.newOrUpdateBtnHandler()
+    private val editedLabel =
+        JLabel("").also {
+            it.font = it.font.deriveFont(Font.BOLD)
         }
-    }
-    private val editSessionBtn = JButton("Edit").also {
-        it.isEnabled = false
-        it.addActionListener {
-            this.editSelectedSession()
+    private val sessionsComboBox =
+        JComboBox<Session>().also {
+            it.maximumSize = it.preferredSize
+            it.minimumSize = Dimension(300, it.preferredSize.height)
+            it.preferredSize = Dimension(300, it.preferredSize.height)
+            it.toolTipText = "Select a session"
+            it.addActionListener { this.selectedSessionChanged() }
         }
-    }
-    private val deleteSessionBtn = JButton("Delete").also {
-        it.isEnabled = false
-        it.addActionListener {
-            this.deleteSelectedSession()
+    private val newOrOverwriteBtn =
+        JButton("New").also {
+            it.isEnabled = true
+            it.addActionListener {
+                this.newOrUpdateBtnHandler()
+            }
         }
-    }
+    private val editSessionBtn =
+        JButton("Edit").also {
+            it.isEnabled = false
+            it.addActionListener {
+                this.editSelectedSession()
+            }
+        }
+    private val deleteSessionBtn =
+        JButton("Delete").also {
+            it.isEnabled = false
+            it.addActionListener {
+                this.deleteSelectedSession()
+            }
+        }
 
     // End UI Stuff
 
     init {
-        val sessionLabelPanel = JPanel().also {
-            it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
-            it.add(this.sessionsComboBox)
-            it.add(editedLabel)
-        }
+        val sessionLabelPanel =
+            JPanel().also {
+                it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
+                it.add(this.sessionsComboBox)
+                it.add(editedLabel)
+            }
 
-        val buttonPanel = JPanel().also {
-            it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
-            it.add(this.newOrOverwriteBtn)
-            it.add(this.editSessionBtn)
-            it.add(this.deleteSessionBtn)
-        }
+        val buttonPanel =
+            JPanel().also {
+                it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
+                it.add(this.newOrOverwriteBtn)
+                it.add(this.editSessionBtn)
+                it.add(this.deleteSessionBtn)
+            }
 
-        val switchSessionLabelPanel = JPanel().also {
-            it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
-            it.add(JLabel("Switch Session:"))
-        }
+        val switchSessionLabelPanel =
+            JPanel().also {
+                it.layout = FlowLayout(FlowLayout.LEFT, 5, 0)
+                val switcherLabelText = if (this.readOnly) "Update Session:" else "Switch Session:"
+                it.add(JLabel(switcherLabelText))
+            }
 
-        val rootContainer = JPanel().also {
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.add(switchSessionLabelPanel)
-            it.add(Box.createRigidArea(Dimension(0, 4)))
-            it.add(sessionLabelPanel)
-            it.add(Box.createRigidArea(Dimension(0, 10)))
-            it.add(buttonPanel)
-        }
+        val rootContainer =
+            JPanel().also {
+                it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+                it.add(switchSessionLabelPanel)
+                it.add(Box.createRigidArea(Dimension(0, 4)))
+                it.add(sessionLabelPanel)
+                it.add(Box.createRigidArea(Dimension(0, 10)))
+                it.add(buttonPanel)
+            }
 
-        val borderPanel = JPanel(BorderLayout()).also {
-            it.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
-            it.add(rootContainer)
-        }
+        val borderPanel =
+            JPanel(BorderLayout()).also {
+                it.border = BorderFactory.createEmptyBorder(10, 10, 10, 10)
+                it.add(rootContainer)
+            }
 
         this.component.add(BorderLayout.PAGE_START, borderPanel)
         this.component.add(BorderLayout.CENTER, this.editor)
@@ -332,13 +361,9 @@ class RequestEditor private constructor(val sessionSwitcher: SessionSwitcher, va
 
     override fun caption(): String = "Sessions"
 
-    override fun uiComponent(): Component {
-        return this.component
-    }
+    override fun uiComponent(): Component = this.component
 
-    override fun selectedData(): Selection? {
-        return null
-    }
+    override fun selectedData(): Selection? = null
 
     override fun isModified(): Boolean = this.originalRequestModified && !this.readOnly
 

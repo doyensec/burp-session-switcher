@@ -3,24 +3,28 @@ package sessionswitcher.rules.conditions.type.types
 import sessionswitcher.rules.conditions.ConditionConfig
 import sessionswitcher.rules.conditions.type.ConditionType
 
-abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) :
-    ConditionType(
+abstract class StringConditionType(
+    matchOn: String,
+    matchesOnResponse: Boolean,
+) : ConditionType(
         matchOn,
         matchesOnResponse,
         availableOperations = OPERATORS.entries.map { it.description },
-        extraFields = listOf(ConditionField.makeTextField("Pattern"))
+        extraFields = listOf(ConditionField.makeTextField("Pattern")),
     ) {
-    enum class OPERATORS(val description: String) {
+    enum class OPERATORS(
+        val description: String,
+    ) {
         EXACT_MATCH("Matches exactly"),
         CONTAINS("Contains"),
         STARTS_WITH("Starts with"),
         ENDS_WITH("Ends with"),
-        REGEX_MATCH("Matches Regex");
+        REGEX_MATCH("Matches Regex"),
+        ;
 
         companion object {
-            fun fromDescription(description: String): OPERATORS {
-                return entries.find { it.description == description } ?: throw IllegalArgumentException("Unknown operation: $description")
-            }
+            fun fromDescription(description: String): OPERATORS =
+                entries.find { it.description == description } ?: throw IllegalArgumentException("Unknown operation: $description")
         }
     }
 
@@ -29,34 +33,39 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) 
             pattern: String,
             operation: OPERATORS,
             value: String,
-            negativeMatch: Boolean
+            negativeMatch: Boolean,
         ): Boolean {
-            val match = when (operation) {
-                OPERATORS.STARTS_WITH -> {
-                    value.lowercase().startsWith(pattern.lowercase())
-                }
+            val match =
+                when (operation) {
+                    OPERATORS.STARTS_WITH -> {
+                        value.lowercase().startsWith(pattern.lowercase())
+                    }
 
-                OPERATORS.CONTAINS -> {
-                    value.lowercase().contains(pattern.lowercase())
-                }
+                    OPERATORS.CONTAINS -> {
+                        value.lowercase().contains(pattern.lowercase())
+                    }
 
-                OPERATORS.ENDS_WITH -> {
-                    value.lowercase().endsWith(pattern.lowercase())
-                }
+                    OPERATORS.ENDS_WITH -> {
+                        value.lowercase().endsWith(pattern.lowercase())
+                    }
 
-                OPERATORS.EXACT_MATCH -> {
-                    value.equals(pattern, ignoreCase = true)
-                }
+                    OPERATORS.EXACT_MATCH -> {
+                        value.equals(pattern, ignoreCase = true)
+                    }
 
-                OPERATORS.REGEX_MATCH -> {
-                    value.matches(pattern.toRegex())
+                    OPERATORS.REGEX_MATCH -> {
+                        value.matches(pattern.toRegex())
+                    }
                 }
-            }
             return match xor negativeMatch
         }
     }
 
-    fun stringMatches(configuration: ConditionConfig, value: String, negativeMatch: Boolean = false): Boolean {
+    fun stringMatches(
+        configuration: ConditionConfig,
+        value: String,
+        negativeMatch: Boolean = false,
+    ): Boolean {
         val operation = OPERATORS.fromDescription(configuration.operation)
         val pattern = configuration.extraFields["Pattern"] ?: throw IllegalArgumentException("Pattern is null!")
 
@@ -85,20 +94,36 @@ abstract class StringConditionType(matchOn: String, matchesOnResponse: Boolean) 
     override fun describe(configuration: ConditionConfig): String {
         val pattern = configuration.extraFields["Pattern"] ?: throw IllegalArgumentException("Pattern is null!")
 
-        val operation = if (configuration.negativeMatch) {
-            when (configuration.operation) {
-                OPERATORS.EXACT_MATCH.description -> "does NOT match exactly"
-                OPERATORS.CONTAINS.description -> "does NOT contain"
-                OPERATORS.STARTS_WITH.description -> "does NOT start with"
-                OPERATORS.ENDS_WITH.description -> "does NOT end with"
-                OPERATORS.REGEX_MATCH.description -> "does NOT match Regex"
-                else -> {
-                    configuration.operation
+        val operation =
+            if (configuration.negativeMatch) {
+                when (configuration.operation) {
+                    OPERATORS.EXACT_MATCH.description -> {
+                        "does NOT match exactly"
+                    }
+
+                    OPERATORS.CONTAINS.description -> {
+                        "does NOT contain"
+                    }
+
+                    OPERATORS.STARTS_WITH.description -> {
+                        "does NOT start with"
+                    }
+
+                    OPERATORS.ENDS_WITH.description -> {
+                        "does NOT end with"
+                    }
+
+                    OPERATORS.REGEX_MATCH.description -> {
+                        "does NOT match Regex"
+                    }
+
+                    else -> {
+                        configuration.operation
+                    }
                 }
+            } else {
+                configuration.operation.lowercase()
             }
-        } else {
-            configuration.operation.lowercase()
-        }
         return "${this.matchOn} $operation \"$pattern\""
     }
 }

@@ -9,7 +9,7 @@ object ResponseBodyConditionType :
     override fun matchesResponse(
         configuration: ConditionConfig,
         response: HttpResponse,
-        matchInfo: MatchInfo
+        matchInfo: MatchInfo,
     ): Boolean {
         val body = response.bodyToString()
         if (body.isNullOrBlank()) {

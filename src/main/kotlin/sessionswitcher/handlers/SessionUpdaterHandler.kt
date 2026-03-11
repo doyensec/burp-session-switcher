@@ -9,14 +9,14 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getHeaderValue
 
-class SessionUpdaterHandler(private val sessionSwitcher: SessionSwitcher) : SessionHandlingAction {
+class SessionUpdaterHandler(
+    private val sessionSwitcher: SessionSwitcher,
+) : SessionHandlingAction {
     companion object {
         const val HEADER_NAME = "X-SessionSwitcher-Update"
     }
 
-    override fun name(): String {
-        return "Update SessionSwitcher Session"
-    }
+    override fun name(): String = "Update SessionSwitcher Session"
 
     override fun performAction(actionData: SessionHandlingActionData): ActionResult {
         var request = actionData.request()
@@ -41,7 +41,10 @@ class SessionUpdaterHandler(private val sessionSwitcher: SessionSwitcher) : Sess
         return ActionResult.actionResult(request)
     }
 
-    private fun updateSession(session: Session, httpRequest: HttpRequest) {
+    private fun updateSession(
+        session: Session,
+        httpRequest: HttpRequest,
+    ) {
         val settings = this.sessionSwitcher.settings
         session.updateFromRequest(
             httpRequest,

@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object RequestHeaderConditionType :
     StringConditionType(matchOn = "Request Header", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val headers = request.headers().map { it.toString() }
         return if (configuration.negativeMatch) {
             headers.none { this.stringMatches(configuration, it, false) }
@@ -15,7 +19,6 @@ object RequestHeaderConditionType :
         }
     }
 
-    override fun describe(configuration: ConditionConfig): String {
-        return "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
-    }
+    override fun describe(configuration: ConditionConfig): String =
+        "${if (configuration.negativeMatch) "No" else "Any"} ${this.matchOn} ${configuration.operation.lowercase()} \"${configuration.extraFields["Pattern"]}\""
 }

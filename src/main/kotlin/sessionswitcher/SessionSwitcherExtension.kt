@@ -4,7 +4,9 @@ import burp.api.montoya.BurpExtension
 import burp.api.montoya.MontoyaApi
 import burp.api.montoya.extension.ExtensionUnloadingHandler
 
-class SessionSwitcherExtension : BurpExtension, ExtensionUnloadingHandler {
+class SessionSwitcherExtension :
+    BurpExtension,
+    ExtensionUnloadingHandler {
     companion object {
         val VERSION = SessionSwitcherExtension::class.java.`package`.implementationVersion ?: "Unknown"
     }

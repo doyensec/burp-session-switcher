@@ -1,7 +1,9 @@
 package sessionswitcher.rules.conditions.type.types
 
-class ConditionField private constructor(val name: String, val type: FieldType) {
-
+class ConditionField private constructor(
+    val name: String,
+    val type: FieldType,
+) {
     var choices: Array<String>? = null
         private set
     var defaultText: String? = null
@@ -31,16 +33,26 @@ class ConditionField private constructor(val name: String, val type: FieldType) 
     }
 
     companion object {
-        fun makeTextField(name: String, defaultText: String? = null) = ConditionField(name, defaultText)
-        fun makeMultipleChoiceField(name: String, choices: Array<String>, defaultChoice: String? = null) = ConditionField(name, choices, defaultChoice)
-        fun makeBooleanField(name: String, defaultBoolean: Boolean? = null) = ConditionField(name, defaultBoolean)
+        fun makeTextField(
+            name: String,
+            defaultText: String? = null,
+        ) = ConditionField(name, defaultText)
+
+        fun makeMultipleChoiceField(
+            name: String,
+            choices: Array<String>,
+            defaultChoice: String? = null,
+        ) = ConditionField(name, choices, defaultChoice)
+
+        fun makeBooleanField(
+            name: String,
+            defaultBoolean: Boolean? = null,
+        ) = ConditionField(name, defaultBoolean)
     }
 
     public enum class FieldType {
         TEXT,
         MULTIPLE_CHOICE,
-        BOOLEAN
+        BOOLEAN,
     }
-
-
 }

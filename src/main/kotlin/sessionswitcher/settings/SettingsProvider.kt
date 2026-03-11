@@ -1,15 +1,51 @@
 package sessionswitcher.settings
 
 interface SettingsProvider {
-    fun getBoolean(key: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT): Boolean?
-    fun getInt(key: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT): Int?
-    fun getString(key: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT): String?
+    fun getBoolean(
+        key: String,
+        store: SettingsItem.Store,
+    ): Boolean?
 
-    fun setBoolean(key: String, value: Boolean, store: SettingsItem.Store = SettingsItem.Store.PROJECT)
-    fun setInt(key: String, value: Int, store: SettingsItem.Store = SettingsItem.Store.PROJECT)
-    fun setString(key: String, value: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT)
+    fun getInt(
+        key: String,
+        store: SettingsItem.Store,
+    ): Int?
 
-    fun deleteBoolean(key: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT)
-    fun deleteInt(key: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT)
-    fun deleteString(key: String, store: SettingsItem.Store = SettingsItem.Store.PROJECT)
+    fun getString(
+        key: String,
+        store: SettingsItem.Store,
+    ): String?
+
+    fun setBoolean(
+        key: String,
+        value: Boolean,
+        store: SettingsItem.Store,
+    )
+
+    fun setInt(
+        key: String,
+        value: Int,
+        store: SettingsItem.Store,
+    )
+
+    fun setString(
+        key: String,
+        value: String,
+        store: SettingsItem.Store,
+    )
+
+    fun deleteBoolean(
+        key: String,
+        store: SettingsItem.Store,
+    )
+
+    fun deleteInt(
+        key: String,
+        store: SettingsItem.Store,
+    )
+
+    fun deleteString(
+        key: String,
+        store: SettingsItem.Store,
+    )
 }

@@ -6,12 +6,21 @@ import java.time.format.DateTimeFormatter
 class Logger {
     companion object {
         private val default = Logger()
+
         fun debug(msg: String) = default.log(msg, Level.DEBUG)
+
         fun verbose(msg: String) = default.log(msg, Level.VERBOSE)
+
         fun info(msg: String) = default.log(msg, Level.INFO)
+
         fun warning(msg: String) = default.log(msg, Level.WARNING)
+
         fun error(msg: String) = default.log(msg, Level.ERROR)
+
         fun critical(msg: String) = default.log(msg, Level.CRITICAL)
+
+        fun printStackTrace(e: Exception) = default.printStackTrace(e)
+
         fun setLevel(level: Level) {
             default.level = level
         }
@@ -27,10 +36,11 @@ class Logger {
         INFO,
         WARNING,
         ERROR,
-        CRITICAL
+        CRITICAL,
     }
 
     private var level = Level.DEBUG
+
     fun setLevel(level: Level) {
         this.level = level
     }
@@ -51,31 +61,33 @@ class Logger {
         )
     }
 
-    fun printStackTrace() {
-        for ((idx, e) in Thread.currentThread().stackTrace.withIndex()) {
-            println("$idx: ${e.fileName}:${e.lineNumber} :: ${e.className}.${e.methodName}")
-        }
+    fun printStackTrace(e: Exception) {
+        System.err.print(format(e.stackTraceToString(), Level.ERROR))
     }
 
-    private fun log(msg: String, level: Level) {
+    private fun log(
+        msg: String,
+        level: Level,
+    ) {
         if (level < this.level) return
-
-        if (level < Level.WARNING) {
-            println(format(msg, level))
-        } else {
-            System.err.println(format(msg, level))
-        }
+        println(format(msg, level))
     }
 
     fun debug(msg: String) = log(msg, Level.DEBUG)
+
     fun verbose(msg: String) = log(msg, Level.VERBOSE)
+
     fun info(msg: String) = log(msg, Level.INFO)
+
     fun warning(msg: String) = log(msg, Level.WARNING)
+
     fun error(msg: String) = log(msg, Level.ERROR)
+
     fun critical(msg: String) = log(msg, Level.CRITICAL)
+
     private val fileName get(): String = Thread.currentThread().stackTrace[6].fileName ?: "null"
     private val lineNumber get(): Int = Thread.currentThread().stackTrace[6].lineNumber
-    private val _fullClassName get(): String = Thread.currentThread().stackTrace[6].className
+    private val fullClassName get(): String = Thread.currentThread().stackTrace[6].className
     private val shortClassName
         get(): String {
             val fullClass = Thread.currentThread().stackTrace[6].className
@@ -84,16 +96,21 @@ class Logger {
     private val methodName get(): String = Thread.currentThread().stackTrace[6].methodName
     private val timeStampFormat = DateTimeFormatter.ofPattern("MM-dd HH:mm:ss")
     private val timeStamp get(): String = LocalDateTime.now().format(timeStampFormat)
-    private fun format(msg: String, level: Level? = null): String {
-        val prefix = when (level) {
-            Level.DEBUG -> "[D]"
-            Level.VERBOSE -> "[V]"
-            Level.INFO -> "[I]"
-            Level.WARNING -> "[W]"
-            Level.ERROR -> "[E]"
-            Level.CRITICAL -> "[C]"
-            else -> ""
-        }
+
+    private fun format(
+        msg: String,
+        level: Level? = null,
+    ): String {
+        val prefix =
+            when (level) {
+                Level.DEBUG -> "[D]"
+                Level.VERBOSE -> "[V]"
+                Level.INFO -> "[I]"
+                Level.WARNING -> "[W]"
+                Level.ERROR -> "[E]"
+                Level.CRITICAL -> "[C]"
+                else -> ""
+            }
         return "$prefix[$timeStamp][$shortClassName.$methodName()] $msg"
     }
 }

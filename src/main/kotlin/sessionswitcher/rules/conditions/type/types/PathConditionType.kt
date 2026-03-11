@@ -6,7 +6,11 @@ import sessionswitcher.rules.conditions.MatchInfo
 
 object PathConditionType :
     StringConditionType(matchOn = "Path", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val url = request.pathWithoutQuery()
         return this.stringMatches(configuration, url)
     }

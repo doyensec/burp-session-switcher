@@ -10,14 +10,14 @@ import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
 import sessionswitcher.utils.getHeaderValue
 
-class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher) : SessionHandlingAction {
+class SessionInjectorHandler(
+    private val sessionSwitcher: SessionSwitcher,
+) : SessionHandlingAction {
     companion object {
         const val HEADER_NAME = "X-SessionSwitcher-Inject"
     }
 
-    override fun name(): String {
-        return "Inject SessionSwitcher Session"
-    }
+    override fun name(): String = "Inject SessionSwitcher Session"
 
     override fun performAction(actionData: SessionHandlingActionData): ActionResult {
         var request = actionData.request()
@@ -50,7 +50,8 @@ class SessionInjectorHandler(private val sessionSwitcher: SessionSwitcher) : Ses
         return ActionResult.actionResult(newRequest, annotations)
     }
 
-    private fun injectSession(session: Session, httpRequest: HttpRequest): HttpRequest {
-        return session.apply(httpRequest).first
-    }
+    private fun injectSession(
+        session: Session,
+        httpRequest: HttpRequest,
+    ): HttpRequest = session.apply(httpRequest).first
 }

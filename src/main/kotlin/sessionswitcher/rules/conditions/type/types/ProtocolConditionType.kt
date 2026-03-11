@@ -9,12 +9,18 @@ object ProtocolConditionType :
     ConditionType(
         matchOn = "Protocol",
         matchesOnResponse = false,
-        availableOperations = listOf("HTTP", "HTTPS")
+        availableOperations = listOf("HTTP", "HTTPS"),
     ) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
-        return (request.httpService().secure() && configuration.operation == "HTTPS") || (!request.httpService()
-            .secure() && configuration.operation == "HTTP")
-    }
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean =
+        (request.httpService().secure() && configuration.operation == "HTTPS") || (
+            !request
+                .httpService()
+                .secure() && configuration.operation == "HTTP"
+        )
 
     override fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String> = Pair(true, "")
 

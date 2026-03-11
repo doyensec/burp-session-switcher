@@ -14,13 +14,17 @@ abstract class ConditionType(
 ) {
     // Main functions called during evaluation
 
-    open fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
-        return false
-    }
+    open fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean = false
 
-    open fun matchesResponse(configuration: ConditionConfig, response: HttpResponse, matchInfo: MatchInfo): Boolean {
-        return false
-    }
+    open fun matchesResponse(
+        configuration: ConditionConfig,
+        response: HttpResponse,
+        matchInfo: MatchInfo,
+    ): Boolean = false
 
     // Function called during rule creation to check if fields are ok
     abstract fun validateConfiguration(configuration: ConditionConfig): Pair<Boolean, String>

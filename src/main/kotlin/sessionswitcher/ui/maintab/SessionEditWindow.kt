@@ -1,19 +1,34 @@
-package sessionswitcher.ui
+package sessionswitcher.ui.maintab
 
 import burp.api.montoya.ui.Theme
 import sessionswitcher.SessionSwitcher
 import sessionswitcher.sessions.Session
-import sessionswitcher.ui.maintab.TableSection
+import sessionswitcher.ui.ButtonPrimary
+import sessionswitcher.ui.TextFieldWithPlaceholder
 import sessionswitcher.ui.tables.PairListTableModel
-import java.awt.*
+import java.awt.Component
+import java.awt.Dimension
+import java.awt.GridBagConstraints
+import java.awt.GridBagLayout
+import java.awt.Image
+import java.awt.Insets
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.*
-import javax.swing.*
+import java.util.Optional
+import javax.swing.AbstractCellEditor
+import javax.swing.BorderFactory
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.ImageIcon
+import javax.swing.JButton
+import javax.swing.JDialog
+import javax.swing.JLabel
+import javax.swing.JPanel
+import javax.swing.JTable
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.table.DefaultTableCellRenderer
@@ -21,13 +36,17 @@ import javax.swing.table.TableCellEditor
 import javax.swing.table.TableCellRenderer
 import kotlin.math.min
 
-class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private val initialSession: Optional<Session>) :
-    JDialog(
-        sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame(),
+class SessionEditWindow(
+    private val sessionSwitcher: SessionSwitcher,
+    private val initialSession: Optional<Session>,
+) : JDialog(
+        sessionSwitcher.montoyaApi
+            .userInterface()
+            .swingUtils()
+            .suiteFrame(),
         if (initialSession.isEmpty) "New Session" else "Edit Session",
-        true
+        true,
     ) {
-
     // Stored data
     private val headers = mutableListOf<Pair<String, String>>()
     private val cookies = mutableListOf<Pair<String, String>>()
@@ -44,26 +63,28 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
     val hostField = TextFieldWithPlaceholder("", "example.com")
     val headerTableModel = PairListTableModel(headers)
     val cookieTableModel = PairListTableModel(cookies)
-    val headerTableSection = TableSection(
-        "Headers",
-        null,
-        headerTableModel,
-        showRefreshButton = false,
-        showDeleteButton = false,
-        showDuplicateButton = false,
-        showEditButton = false,
-        showNewButton = false
-    )
-    val cookieTableSection = TableSection(
-        "Cookies",
-        null,
-        cookieTableModel,
-        showRefreshButton = false,
-        showDeleteButton = false,
-        showDuplicateButton = false,
-        showEditButton = false,
-        showNewButton = false
-    )
+    val headerTableSection =
+        TableSection(
+            "Headers",
+            null,
+            headerTableModel,
+            showRefreshButton = false,
+            showDeleteButton = false,
+            showDuplicateButton = false,
+            showEditButton = false,
+            showNewButton = false,
+        )
+    val cookieTableSection =
+        TableSection(
+            "Cookies",
+            null,
+            cookieTableModel,
+            showRefreshButton = false,
+            showDeleteButton = false,
+            showDuplicateButton = false,
+            showEditButton = false,
+            showNewButton = false,
+        )
 
     private fun loadInitialSession() {
         if (initialSession.isPresent) {
@@ -80,8 +101,12 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
     fun autoSize() {
         // Gets the size of the screen the Burp window is on (for multi-monitor setups)
-        val screenSize = sessionSwitcher.montoyaApi.userInterface().swingUtils()
-            .suiteFrame().graphicsConfiguration.device.displayMode
+        val screenSize =
+            sessionSwitcher.montoyaApi
+                .userInterface()
+                .swingUtils()
+                .suiteFrame()
+                .graphicsConfiguration.device.displayMode
 
         val reasonableHeight = min(this.preferredSize.height, screenSize.height - 50)
         this.maximumSize = Dimension(screenSize.width, reasonableHeight)
@@ -90,7 +115,12 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
         // Pack the window to fit its content
         this.pack()
-        this.setLocationRelativeTo(sessionSwitcher.montoyaApi.userInterface().swingUtils().suiteFrame())
+        this.setLocationRelativeTo(
+            sessionSwitcher.montoyaApi
+                .userInterface()
+                .swingUtils()
+                .suiteFrame(),
+        )
     }
 
     fun refreshTables() {
@@ -112,7 +142,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             session.headers.putAll(headers)
             session.cookies.setPairs(cookies)
         }
-        sessionSwitcher.sessions.updateChildObjectAsync(session)
+        sessionSwitcher.sessions.updateChildObjectInProjectFileAsync(session)
         return session
     }
 
@@ -145,24 +175,41 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         saveButton.isEnabled = false
 
         // Set the renderer for the new row placeholder
-        headerTableSection.table.columnModel.getColumn(0).cellRenderer = NewRowCellRenderer()
-        cookieTableSection.table.columnModel.getColumn(0).cellRenderer = NewRowCellRenderer()
+        headerTableSection.table.columnModel
+            .getColumn(0)
+            .cellRenderer = NewRowCellRenderer()
+        cookieTableSection.table.columnModel
+            .getColumn(0)
+            .cellRenderer = NewRowCellRenderer()
         val theme = sessionSwitcher.montoyaApi.userInterface().currentTheme()
         val headerTableDeleteButtonCell =
             DeleteButtonCell(headerTableSection.table, theme) { row -> headers.removeAt(row) }
         val cookieTableDeleteButtonCell =
             DeleteButtonCell(cookieTableSection.table, theme) { row -> cookies.removeAt(row) }
-        headerTableSection.table.columnModel.getColumn(2).cellRenderer = headerTableDeleteButtonCell
-        cookieTableSection.table.columnModel.getColumn(2).cellRenderer = cookieTableDeleteButtonCell
-        headerTableSection.table.columnModel.getColumn(2).cellEditor = headerTableDeleteButtonCell
-        cookieTableSection.table.columnModel.getColumn(2).cellEditor = cookieTableDeleteButtonCell
-        headerTableSection.table.columnModel.getColumn(2).maxWidth = 50
-        cookieTableSection.table.columnModel.getColumn(2).maxWidth = 50
+        headerTableSection.table.columnModel
+            .getColumn(2)
+            .cellRenderer = headerTableDeleteButtonCell
+        cookieTableSection.table.columnModel
+            .getColumn(2)
+            .cellRenderer = cookieTableDeleteButtonCell
+        headerTableSection.table.columnModel
+            .getColumn(2)
+            .cellEditor = headerTableDeleteButtonCell
+        cookieTableSection.table.columnModel
+            .getColumn(2)
+            .cellEditor = cookieTableDeleteButtonCell
+        headerTableSection.table.columnModel
+            .getColumn(2)
+            .maxWidth = 50
+        cookieTableSection.table.columnModel
+            .getColumn(2)
+            .maxWidth = 50
 
-        val controls = arrayOf(
-            Pair("Session Name:", nameField),
-            Pair("Session Hostname:", hostField),
-        )
+        val controls =
+            arrayOf(
+                Pair("Session Name:", nameField),
+                Pair("Session Hostname:", hostField),
+            )
 
         val textFieldPanel = JPanel(GridBagLayout())
         val c = GridBagConstraints()
@@ -195,25 +242,28 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         }
 
         // Build the main window
-        val panel = JPanel().also {
-            it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
-            it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
-            it.add(textFieldPanel)
-            it.add(Box.createVerticalStrut(5))
-            it.add(headerTableSection.getComponent())
-            it.add(cookieTableSection.getComponent())
-            it.add(JPanel().also { p ->
-                p.add(Box.createHorizontalStrut(5))
-                p.layout = BoxLayout(p, BoxLayout.X_AXIS)
-                p.add(validationLabel)
-                p.add(Box.createHorizontalGlue())
-                p.add(saveButton)
-                p.add(Box.createHorizontalStrut(5))
-                p.add(cancelButton)
-                p.add(Box.createHorizontalStrut(5))
-            })
-            it.add(Box.createVerticalStrut(5))
-        }
+        val panel =
+            JPanel().also {
+                it.border = BorderFactory.createEmptyBorder(5, 5, 5, 5)
+                it.layout = BoxLayout(it, BoxLayout.Y_AXIS)
+                it.add(textFieldPanel)
+                it.add(Box.createVerticalStrut(5))
+                it.add(headerTableSection.getComponent())
+                it.add(cookieTableSection.getComponent())
+                it.add(
+                    JPanel().also { p ->
+                        p.add(Box.createHorizontalStrut(5))
+                        p.layout = BoxLayout(p, BoxLayout.X_AXIS)
+                        p.add(validationLabel)
+                        p.add(Box.createHorizontalGlue())
+                        p.add(saveButton)
+                        p.add(Box.createHorizontalStrut(5))
+                        p.add(cancelButton)
+                        p.add(Box.createHorizontalStrut(5))
+                    },
+                )
+                it.add(Box.createVerticalStrut(5))
+            }
 
         // Set button listeners
         saveButton.addActionListener {
@@ -226,11 +276,14 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         }
 
         // Add listeners for validation
-        val listener = object : DocumentListener {
-            override fun insertUpdate(e: DocumentEvent) = checkEnableSaveButton()
-            override fun removeUpdate(e: DocumentEvent) = checkEnableSaveButton()
-            override fun changedUpdate(e: DocumentEvent) = checkEnableSaveButton()
-        }
+        val listener =
+            object : DocumentListener {
+                override fun insertUpdate(e: DocumentEvent) = checkEnableSaveButton()
+
+                override fun removeUpdate(e: DocumentEvent) = checkEnableSaveButton()
+
+                override fun changedUpdate(e: DocumentEvent) = checkEnableSaveButton()
+            }
         nameField.document.addDocumentListener(listener)
         hostField.document.addDocumentListener(listener)
         headerTableModel.addEditListener(this::tableEditListener)
@@ -244,7 +297,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
     private fun validateFields(): Pair<Boolean, String> {
         val sessionName = nameField.text.trim()
-        if (!Session.isValidName(sessionName)) {
+        if (!Session.Companion.isValidName(sessionName)) {
             return Pair(false, "Session name is invalid. Allowed characters: [A-Za-z0-9._-]")
         }
         if (initialSession.isEmpty && sessionSwitcher.sessions.hasSession(sessionName)) {
@@ -253,7 +306,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
 
         // Try validate hostname
         val host = hostField.text.trim()
-        val urlText = "https://${host}"
+        val urlText = "https://$host"
         try {
             val uri = URI(urlText)
             if (uri.host != host) {
@@ -278,7 +331,10 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
     }
 
     @Suppress("UNUSED_PARAMETER")
-    fun tableEditListener(row: Int, column: Int) {
+    fun tableEditListener(
+        row: Int,
+        column: Int,
+    ) {
         checkEnableSaveButton()
     }
 
@@ -289,7 +345,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             isSelected: Boolean,
             hasFocus: Boolean,
             row: Int,
-            column: Int
+            column: Int,
         ): Component? {
             val lastRow = (table?.rowCount ?: 0) - 1
             return if (row == lastRow && column == 0 && ((value == null) || (value == ""))) {
@@ -300,8 +356,15 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         }
     }
 
-    class DeleteButtonCell(val table: JTable, theme: Theme, val action: (Int) -> (Unit)) : AbstractCellEditor(),
-        TableCellEditor, TableCellRenderer, ActionListener, MouseListener {
+    class DeleteButtonCell(
+        val table: JTable,
+        theme: Theme,
+        val action: (Int) -> (Unit),
+    ) : AbstractCellEditor(),
+        TableCellEditor,
+        TableCellRenderer,
+        ActionListener,
+        MouseListener {
         val fullSizeIcon =
             ImageIcon(DeleteButtonCell::class.java.getResource("/icons/${theme.name.lowercase()}/delete.png"))
         val icon = ImageIcon(fullSizeIcon.image.getScaledInstance(16, 16, Image.SCALE_SMOOTH))
@@ -320,7 +383,7 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             isSelected: Boolean,
             hasFocus: Boolean,
             row: Int,
-            column: Int
+            column: Int,
         ): Component? {
             if (table == null) return renderButton
             val lastRow = (table.rowCount - 1)
@@ -330,16 +393,14 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
             return renderButton
         }
 
-        override fun getCellEditorValue(): Any {
-            return "delete"
-        }
+        override fun getCellEditorValue(): Any = "delete"
 
         override fun getTableCellEditorComponent(
             table: JTable?,
             value: Any?,
             isSelected: Boolean,
             row: Int,
-            column: Int
+            column: Int,
         ): Component? {
             if (table == null) return renderButton
             val lastRow = (table.rowCount - 1)
@@ -369,7 +430,9 @@ class SessionEditWindow(private val sessionSwitcher: SessionSwitcher, private va
         }
 
         override fun mouseClicked(e: MouseEvent?) {}
+
         override fun mouseEntered(e: MouseEvent?) {}
+
         override fun mouseExited(e: MouseEvent?) {}
     }
 }

@@ -7,7 +7,11 @@ import sessionswitcher.utils.host
 
 object DomainNameConditionType :
     StringConditionType(matchOn = "Domain Name", matchesOnResponse = false) {
-    override fun matchesRequest(configuration: ConditionConfig, request: HttpRequest, matchInfo: MatchInfo): Boolean {
+    override fun matchesRequest(
+        configuration: ConditionConfig,
+        request: HttpRequest,
+        matchInfo: MatchInfo,
+    ): Boolean {
         val domainName = request.host()
         return this.stringMatches(configuration, domainName)
     }

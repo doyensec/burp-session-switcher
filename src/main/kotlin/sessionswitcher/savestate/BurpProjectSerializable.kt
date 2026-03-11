@@ -3,10 +3,9 @@ package sessionswitcher.savestate
 import burp.api.montoya.persistence.PersistedObject
 
 interface BurpSerializable {
-    fun burpSerialize(): PersistedObject
+    fun burpSerialize(obj: PersistedObject): PersistedObject
 }
 
 interface BurpDeserializable {
-    fun burpDeserialize(obj: PersistedObject)
+    fun burpDeserialize(obj: PersistedObject): Boolean
 }
-

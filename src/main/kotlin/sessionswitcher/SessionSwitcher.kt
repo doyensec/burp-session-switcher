@@ -1,9 +1,8 @@
 package sessionswitcher
 
 import burp.api.montoya.MontoyaApi
+import burp.api.montoya.persistence.PersistedObject
 import kotlinx.coroutines.runBlocking
-import sessionswitcher.handlers.SessionInjectorHandler
-import sessionswitcher.handlers.SessionUpdaterHandler
 import sessionswitcher.requesteditor.RequestEditor
 import sessionswitcher.rules.autoupdate.AutoUpdateProxyListener
 import sessionswitcher.rules.autoupdate.UpdateRulesCollection
@@ -17,12 +16,15 @@ import sessionswitcher.ui.maintab.MainSuiteTab
 
 class SessionSwitcher private constructor(
     val montoyaApi: MontoyaApi,
-    val settingsProvider: SettingsProvider
+    val settingsProvider: SettingsProvider,
 ) {
-
     // Singleton pattern to ensure the extension is not initialized more than once
     companion object {
+        const val SERIALIZED_DATA_VERSION_KEY = "SerializedDataVersion"
+        const val SERIALIZED_DATA_VERSION = 2
+
         private lateinit var montoyaApi: MontoyaApi
+
         fun getApi(): MontoyaApi {
             if (!this::montoyaApi.isInitialized) {
                 throw Exception("Montoya API not initialized yet.")
@@ -38,9 +40,10 @@ class SessionSwitcher private constructor(
         }
 
         private lateinit var instance: SessionSwitcher
+
         fun init(
             montoyaApi: MontoyaApi,
-            settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi) // Allow to override this to use this as a library
+            settingsProvider: SettingsProvider = BurpSettingsProvider(montoyaApi), // Allow to override this to use this as a library
         ): SessionSwitcher {
             if (this::instance.isInitialized) {
                 throw Exception("SessionSwitcher instance already initialized.")
@@ -79,14 +82,6 @@ class SessionSwitcher private constructor(
             montoyaApi.userInterface().registerContextMenuItemsProvider(ContextMenuProvider(this))
         }
 
-        // Register session handlers
-        if (settings.registerUpdaterHandler.get()) {
-            montoyaApi.http().registerSessionHandlingAction(SessionUpdaterHandler(this))
-        }
-        if (settings.registerInjectorHandler.get()) {
-            montoyaApi.http().registerSessionHandlingAction(SessionInjectorHandler(this))
-        }
-
         // Register proxy listeners
         autoUpdateProxyListener = AutoUpdateProxyListener(this)
         montoyaApi.proxy().registerRequestHandler(autoUpdateProxyListener)
@@ -94,8 +89,7 @@ class SessionSwitcher private constructor(
 
         // Reload data from the project file
         runBlocking {
-            this@SessionSwitcher.sessions.loadFromProjectFile()
-            this@SessionSwitcher.updateRulesCollection.loadFromProjectFile()
+            this@SessionSwitcher.loadDataFromProjectFile()
         }
 
         // Register the extension main tab
@@ -105,8 +99,69 @@ class SessionSwitcher private constructor(
         }
     }
 
-    fun unload() = runBlocking {
-        autoUpdateProxyListener.stop()
-        CanSaveData.joinAll()
+    suspend fun tryDeserializeData(store: PersistedObject): Boolean {
+        var loadedCorrectly = true
+        val firstLevelKeys = store.childObjectKeys()
+        loadedCorrectly =
+            loadedCorrectly and (!firstLevelKeys.contains(this.sessions.saveStateKey) or this.sessions.loadFromDataStore(store))
+        loadedCorrectly =
+            loadedCorrectly and
+            (!firstLevelKeys.contains(this.updateRulesCollection.saveStateKey) or this.updateRulesCollection.loadFromDataStore(store))
+        return loadedCorrectly
     }
+
+    suspend fun loadDataFromProjectFile() {
+        val store = montoyaApi.persistence().extensionData()
+
+        val serializedDataVersion = store.getInteger(SERIALIZED_DATA_VERSION_KEY)
+        if (serializedDataVersion == null) {
+            // New project, no data yet
+            store.setInteger(SERIALIZED_DATA_VERSION_KEY, SERIALIZED_DATA_VERSION)
+            return
+        }
+
+        val shouldTryLoadIncompatibleVersion = settings.tryLoadDifferentSavedDataVersion.get()
+
+        if (serializedDataVersion < SERIALIZED_DATA_VERSION) {
+            if (shouldTryLoadIncompatibleVersion) {
+                Logger.info("Saved data was made with an older SessionSwitcher version, trying to load it anyway.")
+                val loadedCorrectly = tryDeserializeData(store)
+                if (loadedCorrectly) {
+                    Logger.info("Data loaded successfully, upgrading saved data version to current one")
+                    store.setInteger(SERIALIZED_DATA_VERSION_KEY, SERIALIZED_DATA_VERSION)
+                } else {
+                    Logger.warning("Data could not be loaded.")
+                }
+            } else {
+                Logger.warning("Saved data was made with an older SessionSwitcher version, not loading it.")
+                return
+            }
+        } else if (serializedDataVersion > SERIALIZED_DATA_VERSION) {
+            if (shouldTryLoadIncompatibleVersion) {
+                val loadedCorrectly = tryDeserializeData(store)
+                if (loadedCorrectly) {
+                    Logger.info("Data loaded successfully.")
+                } else {
+                    Logger.warning("Data could not be loaded.")
+                }
+                Logger.warning("Saved data was made with a newer SessionSwitcher version, trying to load it anyway.")
+            } else {
+                Logger.warning("Saved data was made with a newer SessionSwitcher version, not loading it.")
+                return
+            }
+        } else {
+            val loadedCorrectly = tryDeserializeData(store)
+            if (loadedCorrectly) {
+                Logger.info("Saved data loaded successfully")
+            } else {
+                Logger.warning("Saved data could not be loaded.")
+            }
+        }
+    }
+
+    fun unload() =
+        runBlocking {
+            autoUpdateProxyListener.stop()
+            CanSaveData.joinAll()
+        }
 }
