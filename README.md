@@ -4,7 +4,9 @@
 ![GitHub](https://img.shields.io/github/license/doyensec/burp-session-switcher?logo=github&color=darkgreen)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/doyensec/burp-session-switcher?label=latest%20release&logo=github)
 
-![Banner](assets/header.png)
+<p align="center">
+<img src="assets/header.png" height="350">
+</p>
 
 
 ## :rocket: Introduction
@@ -20,13 +22,13 @@ The typical use case for Session Switcher is to replace cookies and headers in a
 ### Saving Sessions
 The first step to use the extension is to save some sessions. The primary way to do so is to select the request with the Cookies/Headers you want to save and click the **New** button in the **Sessions** tab of the Request Editor; the extension will automatically copy all cookies and (uncommon) headers from the request.
 
-![Saving a Session](assets/saving_a_session.png)
+<img src="assets/saving_a_session.png" height="240">
 
 You can also manually create a Session using the **New** button in the extension's main tab, but it's far easier to start from an existing request.
 
 ### Switching Sessions
 
-![Request Editor](assets/request_editor.png)
+<img src="assets/request_editor.png" height="200">
 
 Once you have at least one saved Session, you can use the session selector in the **Session** tab of the Request Editor to swap the session of any (editable) request, such as in the Repeater or in an intercepted request in the Proxy.
 
@@ -36,13 +38,13 @@ By default, the switcher only lists the sessions for the current request's domai
 
 ### Sessions Tab
 
-![Main Tab](assets/maintab.png)
+<img src="assets/maintab.png" height="300">
 
 The main Sessions tab lists all the sessions stored in the project file and allows you to manage them. From there, you can check and edit the contents of all the saved sessions.
 
 ### Auto Update Rules
 
-![Auto Update Rules](assets/autoupdate.png)
+<img src="assets/autoupdate.png" height="260">
 
 With Auto Updates, you can set some rules that will track browser requests going through the Proxy to automatically keep Sessions up to date.
 
