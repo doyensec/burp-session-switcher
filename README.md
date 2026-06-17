@@ -11,6 +11,8 @@
 
 Session Switcher is a Burp Suite extension that allows you to easily save and switch the "session" (cookies and headers) of an HTTP request to a different one on the fly, tailored specifically for manual authorization testing.
 
+Launch Blog Post: [https://blog.doyensec.com/2026/06/17/session-switcher.html](https://blog.doyensec.com/2026/06/17/session-switcher.html)
+
 ## :star2: Features
 
 The typical use case for Session Switcher is to replace cookies and headers in a request, such in the Repeater or in the Proxy, with only a couple of clicks; the goal is to quickly check for vulnerabilities such as horizontal and vertical authorization issues and IDORs.
